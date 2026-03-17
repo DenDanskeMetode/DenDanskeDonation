@@ -7,3 +7,10 @@ Alle
 
 Møde
 Planlægning
+
+**Docker tests**
+22:00 - 23:30
+
+Felix
+
+[Kodning, Testing, Bugfixing]

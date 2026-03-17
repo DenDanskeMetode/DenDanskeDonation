@@ -1,0 +1,27 @@
+schemaVersion: "2.0.0"
+
+# Test at de rigtige filer er kopieret ind i containeren
+fileExistenceTests:
+  - name: "server.js findes"
+    path: "/app/server.js"
+    shouldExist: true
+
+  - name: "package.json findes"
+    path: "/app/package.json"
+    shouldExist: true
+
+  - name: "node_modules er installeret"
+    path: "/app/node_modules"
+    shouldExist: true
+
+# Test at Node er tilgængeligt og i den rigtige version
+commandTests:
+  - name: "Node version er 18"
+    command: "node"
+    args: ["--version"]
+    expectedOutput: ["v18."]
+
+  - name: "server.js kan læses af node uden fejl"
+    command: "node"
+    args: ["--check", "/app/server.js"]
+    exitCode: 0

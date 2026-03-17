@@ -1,0 +1,27 @@
+schemaVersion: "2.0.0"
+
+# Test at React-appen er bygget og kopieret til nginx
+fileExistenceTests:
+  - name: "index.html er bygget og klar"
+    path: "/usr/share/nginx/html/index.html"
+    shouldExist: true
+
+  - name: "static mappe med JS og CSS findes"
+    path: "/usr/share/nginx/html/static"
+    shouldExist: true
+
+  - name: "favicon findes"
+    path: "/usr/share/nginx/html/favicon.ico"
+    shouldExist: true
+
+# Test at nginx er tilgængeligt og kører
+commandTests:
+  - name: "nginx binary findes"
+    command: "which"
+    args: ["nginx"]
+    exitCode: 0
+
+  - name: "nginx config er gyldig"
+    command: "nginx"
+    args: ["-t"]
+    exitCode: 0
