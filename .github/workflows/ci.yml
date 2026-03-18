@@ -17,9 +17,6 @@ jobs:
       - name: Byg Docker images
         run: docker compose build
 
-      - name: Vis alle images
-        run: docker images
-
       - name: Installer container-structure-test
         run: |
           curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
@@ -44,3 +41,16 @@ jobs:
             --image dendanskedonation-db \
             --config tests/docker/database.structure-test.yaml
 
+      - name: Start containers
+        run: |
+          docker compose up -d
+          sleep 5
+
+      - name: Healthcheck backend
+        run: curl -f http://localhost:5000 || exit 1
+
+      - name: Kør Jest tests
+        run: |
+          cd frontend
+          npm install
+          npm test -- --watchAll=false
