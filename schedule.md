@@ -11,3 +11,14 @@
 ### Docker tests (Kodning, Testing, Bugfixing)
 * 22:00 - 23:30
 * Felix
+
+### workflow and boilerplate building
+* 3½ time total
+* Christian
+
+# 18/3
+
+### Catch up møde og planlægning (møde, planlægning)
+* 12:40 - 13.30
+* Alle
+
