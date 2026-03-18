@@ -22,6 +22,10 @@
 * 12:40 - 13.30
 * Alle
 
+### UI Design (design)
+* 13.30 - 15.30
+* Victor
+
 ### Kodning af diverse opgaver (Kodning)
 * 13:30 - 
 * Alle
