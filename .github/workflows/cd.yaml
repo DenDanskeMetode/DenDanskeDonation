@@ -26,9 +26,9 @@ jobs:
 
             cd /opt/DenDanskeDonation
 
-            git pull origin main
+            sudo git pull origin main
 
-            docker compose down --remove-orphans
-            docker system prune -af
-            docker compose up -d --build
+            sudo docker compose down --remove-orphans
+            sudo docker system prune -af
+            sudo docker compose up -d --build
           EOF

@@ -18,3 +18,7 @@
 * 12:40 - 13.30
 * Alle
 
+
+### workflow and boilerplate building
+* 3½ time total
+* Christian
