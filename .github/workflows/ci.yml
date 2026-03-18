@@ -17,6 +17,9 @@ jobs:
       - name: Byg Docker images
         run: docker compose build
 
+      - name: Vis alle images
+        run: docker images
+
       - name: Installer container-structure-test
         run: |
           curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
