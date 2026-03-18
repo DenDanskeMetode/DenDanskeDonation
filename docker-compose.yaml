@@ -16,18 +16,15 @@ services:
     depends_on:
       - server
 
-  services:
-    db:
-      build: .
-      container_name: postgres_db
+  db:
+    build: ./dbServer
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-      environment:
-        POSTGRES_USER: myuser
-        POSTGRES_PASSWORD: mypassword
-        POSTGRES_DB: mydatabase
-
-      volumes:
-        - postgres_data:/var/lib/postgresql/data
-
-  volumes:
-    postgres_data:
+volumes:
+  postgres_data:
