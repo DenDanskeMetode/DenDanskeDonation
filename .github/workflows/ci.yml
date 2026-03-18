@@ -1,0 +1,36 @@
+name: CI - Docker Structure Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  docker-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Hent koden
+        uses: actions/checkout@v4
+
+      - name: Byg Docker images
+        run: docker compose build
+
+      - name: Installer container-structure-test
+        run: |
+          curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
+          chmod +x container-structure-test-linux-amd64
+          sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+
+      - name: Kør backend tests
+        run: |
+          container-structure-test test \
+            --image dendanskedonation-server \
+            --config tests/docker/backend.structure-test.yaml
+
+      - name: Kør frontend tests
+        run: |
+          container-structure-test test \
+            --image dendanskedonation-client \
+            --config tests/docker/frontend.structure-test.yaml
