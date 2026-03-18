@@ -13,7 +13,7 @@
 * Felix
 
 ### workflow and boilerplate building
-* 3½ time total
+* 2½ time total
 * Christian
 
 # 18/3
