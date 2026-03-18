@@ -41,6 +41,6 @@ jobs:
       - name: Kør database tests
         run: |
           container-structure-test test \
-            --image dendanskedonation-dbserver \
+            --image dendanskedonation-db \
             --config tests/docker/database.structure-test.yaml
 
