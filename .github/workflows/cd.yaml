@@ -25,6 +25,6 @@ jobs:
             "set -e && \
              cd /opt/DenDanskeDonation && \
              git pull origin main && \
-             docker compose down && \
+             docker-compose down && \
              docker system prune -af && \
-             docker compose up -d --build"
+             docker-compose up -d --build"
