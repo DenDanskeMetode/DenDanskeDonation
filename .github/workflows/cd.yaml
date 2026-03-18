@@ -1,0 +1,34 @@
+name: Deploy to VM (Docker Compose - Clean Rebuild)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add VM to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.VM_IPV4 }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        run: |
+          ssh ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IPV4 }} << 'EOF'
+            set -e
+
+            cd /opt/DenDanskeDonation
+
+            git pull origin main
+
+            docker compose down --remove-orphans
+            docker system prune -af
+            docker compose up -d --build
+          EOF
