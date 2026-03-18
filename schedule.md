@@ -29,3 +29,7 @@
 ### Kodning af diverse opgaver (Kodning)
 * 13:30 - 
 * Alle
+
+### Møde og catch-up
+* 15.30 - 16.00
+* Alle
