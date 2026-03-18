@@ -1,4 +1,4 @@
-name: Deploy to VM (Docker Compose - Clean Rebuild)
+name: Deploy to VM (Docker Compose)
 
 on:
   push:
@@ -21,10 +21,9 @@ jobs:
 
       - name: Deploy via SSH
         run: |
-          ssh -T ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IPV4 }} \
+          ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -T ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IPV4 }} \
             "set -e && \
              cd /opt/DenDanskeDonation && \
              git pull origin main && \
              docker-compose down && \
-             docker system prune -af && \
-             docker-compose up -d --build"
+             DOCKER_BUILDKIT=1 docker-compose up -d --build"
