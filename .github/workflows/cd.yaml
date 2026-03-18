@@ -21,14 +21,10 @@ jobs:
 
       - name: Deploy via SSH
         run: |
-          ssh -T ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IPV4 }} bash << 'EOF'
-            set -e
-
-            cd /opt/DenDanskeDonation
-
-            sudo git pull origin main
-
-            sudo docker compose down --remove-orphans
-            sudo docker system prune -af
-            sudo docker compose up -d --build
-          EOF 
+          ssh -T ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IPV4 }} \
+            "set -e && \
+             cd /opt/DenDanskeDonation && \
+             git pull origin main && \
+             docker compose down --remove-orphans && \
+             docker system prune -af && \
+             docker compose up -d --build"
