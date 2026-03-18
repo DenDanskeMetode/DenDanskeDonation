@@ -50,4 +50,7 @@ jobs:
         run: curl -f http://localhost:5000 || exit 1
 
       - name: Kør Jest tests
-        run: docker compose exec -T client npm test -- --watchAll=false
+        run: |
+          cd frontend
+          npm install
+          npm test -- --watchAll=false
