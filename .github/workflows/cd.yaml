@@ -28,14 +28,7 @@ jobs:
 
             sudo git pull origin main
 
-<<<<<<< Docker-Workflow
-            docker compose down --remove-orphans
-            docker system prune -af
-            docker compose up -d --build
-          EOF
-=======
             sudo docker compose down --remove-orphans
             sudo docker system prune -af
             sudo docker compose up -d --build
           EOF
->>>>>>> main

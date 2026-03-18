@@ -1,0 +1,12 @@
+schemaVersion: "2.0.0"
+
+fileExistenceTests:
+  - name: "init.sql er kopieret ind i containeren"
+    path: "/docker-entrypoint-initdb.d/init.sql"
+    shouldExist: true
+
+commandTests:
+  - name: "PostgreSQL version er 16"
+    command: "postgres"
+    args: ["--version"]
+    expectedOutput: ["16."]

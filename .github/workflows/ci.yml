@@ -34,3 +34,10 @@ jobs:
           container-structure-test test \
             --image dendanskedonation-client \
             --config tests/docker/frontend.structure-test.yaml
+
+      - name: Kør database tests
+        run: |
+          container-structure-test test \
+            --image dendanskedonation-dbserver \
+            --config tests/docker/database.structure-test.yaml
+

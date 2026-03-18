@@ -13,7 +13,7 @@
 * Felix
 
 ### workflow and boilerplate building
-* 2½ time total
+* 3½ time total
 * Christian
 
 # 18/3
@@ -22,3 +22,6 @@
 * 12:40 - 13.30
 * Alle
 
+### Kodning af diverse opgaver (Kodning)
+* 13:30 - 
+* Alle
