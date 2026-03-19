@@ -70,5 +70,5 @@
 * Alle
 
 ### Kampagne frontend videreudvikling (frontend)
-* 14:00 - 
+* 14:00 - 17:00
 * Victor
