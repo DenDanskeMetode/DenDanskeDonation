@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './CreateCampaignModal.css';
 
 function CreateCampaignModal({ onClose }) {
@@ -8,6 +8,11 @@ function CreateCampaignModal({ onClose }) {
   const [tags, setTags] = useState([]);
   const [images, setImages] = useState([]);
   const [closing, setClosing] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
 
   function handleClose() {
     setClosing(true);
@@ -36,6 +41,9 @@ function CreateCampaignModal({ onClose }) {
         <button className="modal-back-btn" onClick={handleClose}>‹</button>
         <h2>Opret kampagne</h2>
       </div>
+
+      {/* Scrollable body */}
+      <div className="modal-body">
 
       {/* Images */}
       <div className="image-row">
@@ -115,6 +123,8 @@ function CreateCampaignModal({ onClose }) {
         <span className="form-label">Samarbeidspartnere</span>
         <input className="form-input" placeholder="Tilføj samarbeidspartner" />
       </div>
+
+      </div>{/* end modal-body */}
 
       {/* Actions */}
       <div className="modal-actions">

@@ -9,6 +9,11 @@
   max-width: 480px;
   margin: 0 auto;
   animation: slideInLeft 0.26s ease;
+  overflow: hidden;
+}
+
+.modal-body {
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -216,8 +221,8 @@
   display: flex;
   gap: 12px;
   padding: 16px 16px 32px;
-  margin-top: auto;
   border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
 }
 
 .draft-btn {
