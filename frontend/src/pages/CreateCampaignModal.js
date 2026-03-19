@@ -81,6 +81,10 @@ function CreateCampaignModal({ onClose }) {
         placeholder="Fortæl hvad din indsamlingskampagne går ud på. Hvad er motivationen bag kampagnen, og hvorfor skal folk donere?"
         value={description}
         onChange={e => setDescription(e.target.value)}
+        onInput={e => {
+          e.target.style.height = 'auto';
+          e.target.style.height = Math.min(e.target.scrollHeight, 180) + 'px';
+        }}
       />
 
       {/* Goal */}

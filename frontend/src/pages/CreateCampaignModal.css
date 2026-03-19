@@ -140,12 +140,16 @@
   color: #555;
   border: none;
   outline: none;
-  padding: 0 16px 20px;
+  padding: 0 16px;
+  margin-bottom: 20px;
   width: 100%;
   background: transparent;
   resize: none;
   line-height: 1.55;
   min-height: 90px;
+  max-height: 180px;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .campaign-desc-input::placeholder {
