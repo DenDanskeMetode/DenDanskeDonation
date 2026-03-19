@@ -4,6 +4,9 @@ import { Elements } from "@stripe/react-stripe-js";
 import './App.css';
 import Home from './pages/Home';
 import Campaigns from './pages/Campaigns';
+import Login from './pages/Login';
+import LoginOrRegister from './pages/LoginOrRegister';
+import Register from './pages/Register';
 import NotFound from './pages/NotFound';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
