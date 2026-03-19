@@ -1,38 +1,126 @@
-.App {
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  color: #1a1a2e;
+  background: #f9f9fb;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-block;
+  padding: 0.55rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: opacity 0.2s, background 0.2s;
+}
+.btn-primary { background: #c0392b; color: #fff; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-outline { background: transparent; border-color: #fff; color: #fff; }
+.btn-outline:hover { background: rgba(255,255,255,0.15); }
+.btn-large { padding: 0.8rem 2rem; font-size: 1.05rem; }
+
+/* ── Navbar ── */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.navbar-brand { font-size: 1.25rem; font-weight: 700; color: #c0392b; }
+.navbar-links { display: flex; gap: 1.5rem; list-style: none; align-items: center; }
+.navbar-links a { color: #333; font-size: 0.95rem; }
+.navbar-links a:hover { color: #c0392b; }
+
+/* ── Hero ── */
+.hero {
+  background: linear-gradient(135deg, #c0392b 0%, #922b21 100%);
+  color: #fff;
+  padding: 6rem 2rem;
   text-align: center;
 }
+.hero-content { max-width: 680px; margin: 0 auto; }
+.hero h1 { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 1rem; }
+.hero-subtitle { font-size: 1.15rem; opacity: 0.9; margin-bottom: 2rem; line-height: 1.6; }
+.hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* ── Sections ── */
+.features, .causes {
+  padding: 4rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+.features h2, .causes h2 {
+  font-size: 1.8rem;
+  margin-bottom: 2.5rem;
+  color: #1a1a2e;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* ── Card grid ── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+/* ── Card ── */
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  text-align: left;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 0.75rem;
+}
+.card-icon { font-size: 2rem; }
+.card h3 { font-size: 1.1rem; }
+.card p { color: #555; font-size: 0.95rem; line-height: 1.5; flex: 1; }
+
+/* ── Cause card extras ── */
+.cause-image-placeholder {
+  width: 100%;
+  height: 140px;
+  background: linear-gradient(135deg, #f5b7b1, #fadbd8);
+  border-radius: 8px;
+}
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: #c0392b;
+  border-radius: 4px;
+  transition: width 0.4s;
+}
+.cause-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  color: #777;
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  padding: 2rem;
+  background: #1a1a2e;
+  color: #aaa;
+  font-size: 0.88rem;
 }
