@@ -85,5 +85,9 @@
 * Christian
 
 ### Imagestorage and Image API
-* 20:15 -
+* 20:15 - 21:20
+* Christian
+
+### general backend cleanup and readme.md for interagtion with frontend tomorrow
+* 21:20
 * Christian
