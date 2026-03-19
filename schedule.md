@@ -57,6 +57,10 @@
 * 10:10 - 13:00
 * Victor
 
+### backend opsætning af RestAPI samt kommunikationslag med DB
+* 10:10 - 12:30
+* Chrisitan
+
 ### Betalingssystem opsætning
 * 10:10 - 13:20
 * Felix
@@ -69,6 +73,13 @@
 * 13:00 - 14:00
 * Alle
 
+### buisness logic og TS debugging i backend
+* 13:30 - 15:00
+
 ### Kampagne frontend videreudvikling (frontend)
 * 14:00 - 17:00
 * Victor
+
+### Backend udvikling på restAPIet
+* 19:00 -
+* Christian
