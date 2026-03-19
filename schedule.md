@@ -54,7 +54,7 @@
 * Nicholas
 
 ### Kampagne oversigt frontend (frontend)
-* 10:10 - 
+* 10:10 - 13:00
 * Victor
 
 ### Betalingssystem opsætning
@@ -68,3 +68,7 @@
 ### Møde og fælles VM bug fixing (bugfixing, møde, planlægning)
 * 13:00 - 14:00
 * Alle
+
+### Kampagne frontend videreudvikling (frontend)
+* 14:00 - 
+* Victor
