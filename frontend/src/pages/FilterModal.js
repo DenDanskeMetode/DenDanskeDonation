@@ -32,6 +32,12 @@ const SECTIONS = [
 function FilterModal({ selected, onApply, onReset, onClose }) {
   const [local, setLocal] = useState(selected);
   const [openSection, setOpenSection] = useState(null);
+  const [closing, setClosing] = useState(false);
+
+  function close() {
+    setClosing(true);
+    setTimeout(onClose, 240);
+  }
 
   function toggle(sectionKey, option) {
     setLocal(prev => {
@@ -47,15 +53,16 @@ function FilterModal({ selected, onApply, onReset, onClose }) {
   }
 
   function apply() {
-    onApply(local);
+    setClosing(true);
+    setTimeout(() => onApply(local), 240);
   }
 
   return (
-    <div className="filter-overlay" onClick={onClose}>
+    <div className={`filter-overlay${closing ? ' closing' : ''}`} onClick={close}>
       <div className="filter-sheet" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="filter-header">
-          <button className="filter-close-btn" onClick={onClose}>✕</button>
+          <button className="filter-close-btn" onClick={close}>✕</button>
           <span className="filter-title">Filtrer og sortér</span>
           <button className="filter-reset-btn" onClick={reset}>Nulstil</button>
         </div>

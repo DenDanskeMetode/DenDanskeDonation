@@ -3,43 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import './Home.css';
 import CreateCampaignModal from './CreateCampaignModal';
 import FilterModal from './FilterModal';
-
-const campaigns = [
-  {
-    id: 1,
-    title: 'Hjælp os med at købe en fisk til vores lærer',
-    location: 'København',
-    time: 'for 2 uger siden',
-    raised: 470,
-    goal: 550,
-    image: '/images/fisk.jpg',
-  },
-  {
-    id: 2,
-    title: 'Hjælp os med at holde en fest for vores hund',
-    location: 'Roskilde',
-    time: 'for 4 dage siden',
-    raised: 720,
-    goal: 1000,
-    image: '/images/party-dog.jpg',
-  },
-  {
-    id: 3,
-    title: 'Støt vores skoleklasse på tur til Berlin',
-    location: 'Aarhus',
-    time: 'for 1 uge siden',
-    raised: 3200,
-    goal: 5000,
-    image: '/images/dendanskemetode.png',
-  },
-];
+import campaigns from '../data/campaigns';
 
 const filters = ['Tæt på mig', 'Overraskelse', 'Kategori', 'Ny'];
 
 function CampaignCard({ campaign }) {
+  const navigate = useNavigate();
   const pct = Math.min((campaign.raised / campaign.goal) * 100, 100);
   return (
-    <div className="campaign-card">
+    <div className="campaign-card" onClick={() => navigate(`/campaigns/${campaign.id}`, { state: campaign })}>
       <img src={campaign.image} alt={campaign.title} className="campaign-image-placeholder" />
       <div className="campaign-body">
         <div className="campaign-progress-row">
