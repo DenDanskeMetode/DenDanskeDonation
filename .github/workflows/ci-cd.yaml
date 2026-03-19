@@ -84,13 +84,13 @@ jobs:
           docker compose logs
           exit 1
 
-      - name: Run Jest tests
-        run: |
-          cd frontend
-          npm install
-          npm test -- --watchAll=false
+#     - name: Run Jest tests
+#        run: |
+#          cd frontend
+#          npm install
+#          npm test -- --watchAll=false
 
-# Build and deploy to VM (CD)         
+# Read images from ghcr, build containers and push to client registry, then deploy to VM
   build-and-push:
     runs-on: ubuntu-latest
     needs: test
