@@ -54,5 +54,9 @@
 * Nicholas
 
 ### Kampagne oversigt frontend (frontend)
-* 10:10 - 12.30
+* 10:10 - 
 * Victor
+
+### Møde og fælles VM bug fixing (bugfixing, møde, planlægning)
+* 13:00 - 14:00
+* Alle
