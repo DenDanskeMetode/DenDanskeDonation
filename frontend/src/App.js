@@ -1,20 +1,18 @@
-import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './App.css';
+import Home from './pages/Home';
+import Campaigns from './pages/Campaigns';
+import NotFound from './pages/NotFound';
 
 function App() {
-  const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    fetch("http://localhost:5000/api/message")
-      .then((res) => res.json())
-      .then((data) => setMessage(data.message))
-      .catch((err) => console.error(err));
-  }, []);
-
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>React + Express App</h1>
-      <p>{message}</p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/campaigns" element={<Campaigns />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
