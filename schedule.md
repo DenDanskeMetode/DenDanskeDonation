@@ -33,3 +33,6 @@
 ### Møde og catch-up
 * 15.30 - 16.00
 * Alle
+### db server og connections
+* 13:30 - 15:30 & 17:50 - 18:30
+* Christian

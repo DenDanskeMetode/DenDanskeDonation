@@ -9,6 +9,14 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=5432
+      - POSTGRES_USER=giraf
+      - POSTGRES_PASSWORD=bearattack
+      - POSTGRES_DB=mydatabase
+    depends_on:
+      - db
+    command: npm start
 
   client:
     image: ghcr.io/dendanskemetode/dendanskedonation/client:latest

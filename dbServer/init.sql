@@ -1,5 +1,25 @@
-CREATE TABLE example (
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE campains (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+
+CREATE TABLE donations (
+    id SERIAL PRIMARY KEY,
+    from_user INTEGER NOT NULL,
+    to_campain INTEGER NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (from_user) REFERENCES users(id),
+    FOREIGN KEY (to_campain) REFERENCES campains(id)
+)
