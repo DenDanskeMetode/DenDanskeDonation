@@ -1,26 +1,24 @@
-import { useState } from "react";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
-import PaymentForm from "./components/PaymentForm";
+import './App.css';
+import Home from './pages/Home';
+import Campaigns from './pages/Campaigns';
+import NotFound from './pages/NotFound';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
 function App() {
-  const [amount, setAmount] = useState(100);
-
   return (
-    <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Den Danske Donation</h1>
-      <input
-        type="number"
-        value={amount}
-        onChange={(e) => setAmount(Number(e.target.value))}
-        placeholder="Beløb i kr."
-      />
-      <Elements stripe={stripePromise}>
-        <PaymentForm amount={amount} from_user={1} to_campain={1} />
-      </Elements>
-    </div>
+    <Elements stripe={stripePromise}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </Elements>
   );
 }
 
