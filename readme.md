@@ -1,1 +1,1 @@
-wow! cool! awesome! epic! 123!
+Cool awesome project!
