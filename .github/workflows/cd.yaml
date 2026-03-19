@@ -28,21 +28,21 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/dendanskedonation/server:latest
+          tags: ghcr.io/dendanskemetode/dendanskedonation/server:latest
 
       - name: Build and push client
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/dendanskedonation/client:latest
+          tags: ghcr.io/dendanskemetode/dendanskedonation/client:latest
 
       - name: Build and push db
         uses: docker/build-push-action@v5
         with:
           context: ./dbServer
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/dendanskedonation/db:latest
+          tags: ghcr.io/dendanskemetode/dendanskedonation/db:latest
 
   deploy:
     runs-on: ubuntu-latest
