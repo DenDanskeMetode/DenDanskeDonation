@@ -45,41 +45,43 @@ function CampaignDetail() {
 
   return (
     <div className="cd-page">
-      {/* Header */}
-      <div className="cd-header">
-        <button className="cd-back-btn" onClick={() => navigate('/')}>‹</button>
-        <h2 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Tilbage</h2>
-      </div>
-
-      {/* Hero */}
-      <div className="cd-hero">
-        <CircularProgress
-          raised={campaign.raised}
-          goal={campaign.goal}
-          image={campaign.image}
-          title={campaign.title}
-        />
-        <p className="cd-raised-text">
-          <strong>{campaign.raised}kr</strong> ud af {campaign.goal}kr doneret
-        </p>
-      </div>
-
-      {/* Content */}
-      <div className="cd-content">
-        {/* Creator */}
-        <div className="cd-creator">
-          <div className="cd-avatar" />
-          <span className="cd-creator-name">{campaign.creator ?? 'Ukendt'}</span>
+      <div className="cd-scroll">
+        {/* Header */}
+        <div className="cd-header">
+          <button className="cd-back-btn" onClick={() => navigate('/')}>‹</button>
+          <h2 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Tilbage</h2>
         </div>
 
-        <h1 className="cd-title">{campaign.title}</h1>
+        {/* Hero */}
+        <div className="cd-hero">
+          <CircularProgress
+            raised={campaign.raised}
+            goal={campaign.goal}
+            image={campaign.image}
+            title={campaign.title}
+          />
+          <p className="cd-raised-text">
+            <strong>{campaign.raised}kr</strong> ud af {campaign.goal}kr doneret
+          </p>
+        </div>
 
-        <div className="cd-desc-box">
-          <p className="cd-desc">{campaign.description ?? 'Ingen beskrivelse tilgængelig.'}</p>
+        {/* Content */}
+        <div className="cd-content">
+          {/* Creator */}
+          <div className="cd-creator">
+            <div className="cd-avatar" />
+            <span className="cd-creator-name">{campaign.creator ?? 'Ukendt'}</span>
+          </div>
+
+          <h1 className="cd-title">{campaign.title}</h1>
+
+          <div className="cd-desc-box">
+            <p className="cd-desc">{campaign.description ?? 'Ingen beskrivelse tilgængelig.'}</p>
+          </div>
         </div>
       </div>
 
-      {/* Donate button */}
+      {/* Donate button — fixed at bottom */}
       <div className="cd-footer">
         <button className="cd-donate-btn">Donér Nu</button>
       </div>
