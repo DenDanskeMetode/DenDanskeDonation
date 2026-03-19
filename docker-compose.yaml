@@ -4,9 +4,8 @@ services:
     build: ./backend
     ports:
       - "5000:5000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
       - DB_HOST=db
@@ -36,6 +35,8 @@ services:
     image: ghcr.io/dendanskemetode/dendanskedonation/db:latest
     build: ./dbServer
     container_name: postgres_db
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: giraf
       POSTGRES_PASSWORD: bearattack
