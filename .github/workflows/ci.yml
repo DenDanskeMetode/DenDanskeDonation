@@ -26,19 +26,19 @@ jobs:
       - name: Kør backend tests
         run: |
           container-structure-test test \
-            --image dendanskedonation-server \
+            --image ghcr.io/dendanskemetode/dendanskedonation/server:latest \
             --config tests/docker/backend.structure-test.yaml
 
       - name: Kør frontend tests
         run: |
           container-structure-test test \
-            --image dendanskedonation-client \
+            --image ghcr.io/dendanskemetode/dendanskedonation/client:latest \
             --config tests/docker/frontend.structure-test.yaml
 
       - name: Kør database tests
         run: |
           container-structure-test test \
-            --image dendanskedonation-db \
+            --image ghcr.io/dendanskemetode/dendanskedonation/db:latest \
             --config tests/docker/database.structure-test.yaml
 
       - name: Start containers
