@@ -163,4 +163,5 @@ jobs:
              cd /opt/DenDanskeDonation && \
              git pull origin main && \
              docker-compose pull && \
+             docker-compose down && \
              docker-compose up -d --no-build"
