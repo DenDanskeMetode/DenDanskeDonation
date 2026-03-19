@@ -81,5 +81,9 @@
 * Victor
 
 ### Backend udvikling på restAPIet
-* 19:00 -
+* 19:00 - 20:15
+* Christian
+
+### Imagestorage and Image API
+* 20:15 -
 * Christian
