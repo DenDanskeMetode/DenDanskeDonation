@@ -10,7 +10,7 @@ const campaigns = [
     time: 'for 2 uger siden',
     raised: 470,
     goal: 550,
-    bgColor: '#2d6a4f',
+    image: '/images/fisk.jpg',
   },
   {
     id: 2,
@@ -19,7 +19,7 @@ const campaigns = [
     time: 'for 4 dage siden',
     raised: 720,
     goal: 1000,
-    bgColor: '#f3e5d0',
+    image: '/images/party-dog.jpg',
   },
   {
     id: 3,
@@ -28,7 +28,7 @@ const campaigns = [
     time: 'for 1 uge siden',
     raised: 3200,
     goal: 5000,
-    bgColor: '#fce4ec',
+    image: '/images/dendanskemetode.png',
   },
 ];
 
@@ -38,10 +38,7 @@ function CampaignCard({ campaign }) {
   const pct = Math.min((campaign.raised / campaign.goal) * 100, 100);
   return (
     <div className="campaign-card">
-      <div
-        className="campaign-image-placeholder"
-        style={{ background: campaign.bgColor }}
-      />
+      <img src={campaign.image} alt={campaign.title} className="campaign-image-placeholder" />
       <div className="campaign-body">
         <div className="campaign-progress-row">
           <div className="progress-bar">
