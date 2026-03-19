@@ -17,7 +17,7 @@ function CreateCampaignModal({ onClose }) {
   function handleImageUpload(e) {
     const files = Array.from(e.target.files);
     const urls = files.map(f => URL.createObjectURL(f));
-    setImages(prev => [...prev, ...urls].slice(0, 4));
+    setImages(prev => [...prev, ...urls].slice(0, 6));
   }
 
   function removeImage(index) {
@@ -52,7 +52,7 @@ function CreateCampaignModal({ onClose }) {
             </button>
           </div>
         ))}
-        {images.length < 4 && (
+        {images.length < 6 && (
           <label className="img-box-placeholder">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <rect x="3" y="3" width="18" height="18" rx="3" />
