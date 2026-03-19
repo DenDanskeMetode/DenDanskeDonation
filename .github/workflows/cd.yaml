@@ -26,4 +26,4 @@ jobs:
              cd /opt/DenDanskeDonation && \
              git pull origin main && \
              docker-compose down && \
-             DOCKER_BUILDKIT=1 docker-compose up -d --build"
+             docker-compose up -d --build"
