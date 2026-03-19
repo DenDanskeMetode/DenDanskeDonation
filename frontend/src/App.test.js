@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('viser overskrift', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  const overskrift = screen.getByText(/React \+ Express App/i);
+  expect(overskrift).toBeInTheDocument();
 });

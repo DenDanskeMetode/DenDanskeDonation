@@ -13,7 +13,7 @@
 * Felix
 
 ### workflow and boilerplate building
-* 2½ time total
+* 3½ time total
 * Christian
 
 # 18/3
@@ -22,6 +22,17 @@
 * 12:40 - 13.30
 * Alle
 
+### UI Design (design)
+* 13.30 - 15.30
+* Victor
+
+### Kodning af diverse opgaver (Kodning)
+* 13:30 - 
+* Alle
+
+### Møde og catch-up
+* 15.30 - 16.00
+* Alle
 ### db server og connections
 * 13:30 - 15:30 & 17:50 - 18:30
 * Christian

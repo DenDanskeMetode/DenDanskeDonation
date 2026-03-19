@@ -1,5 +1,6 @@
 services:
   server:
+    image: ghcr.io/dendanskemetode/dendanskedonation/server:latest
     build: ./backend
     ports:
       - "5000:5000"
@@ -18,6 +19,7 @@ services:
     command: npm start
 
   client:
+    image: ghcr.io/dendanskemetode/dendanskedonation/client:latest
     build: ./frontend
     ports:
       - "3000:80"
@@ -25,14 +27,15 @@ services:
       - server
 
   db:
+    image: ghcr.io/dendanskemetode/dendanskedonation/db:latest
     build: ./dbServer
     container_name: postgres_db
-    env_file:
-      - .env
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydatabase
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
 
 volumes:
-    postgres_data:
+  postgres_data:
