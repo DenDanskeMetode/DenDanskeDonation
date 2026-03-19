@@ -17,12 +17,39 @@
   padding-top: 60px;
 }
 
+/* ── Profile button ── */
+.profile-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  flex-shrink: 0;
+}
+
+.profile-btn:hover {
+  background: #e4e4e4;
+}
+
+/* ── Search row ── */
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 16px 12px;
+}
+
 /* ── Search bar ── */
 .search-bar {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 8px 16px 12px;
+  flex: 1;
   background: #f0f0f0;
   border-radius: 12px;
   padding: 10px 14px;
