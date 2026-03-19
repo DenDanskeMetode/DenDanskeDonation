@@ -56,3 +56,7 @@
 ### Kampagne oversigt frontend (frontend)
 * 10:10 - 12.30
 * Victor
+
+### Betalingssystem opsætning
+* 10:10 - 13:20
+* Felix
