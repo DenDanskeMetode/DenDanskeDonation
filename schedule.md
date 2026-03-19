@@ -89,5 +89,5 @@
 * Christian
 
 ### general backend cleanup and readme.md for interagtion with frontend tomorrow
-* 21:20
+* 21:20 - 23:25
 * Christian
