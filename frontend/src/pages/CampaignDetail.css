@@ -1,11 +1,17 @@
 /* ── Page ── */
 .cd-page {
   background: #fff;
-  min-height: 100vh;
+  height: 100vh;
   max-width: 480px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.cd-scroll {
+  flex: 1;
+  overflow-y: auto;
 }
 
 /* ── Header ── */
@@ -128,6 +134,7 @@
 .cd-footer {
   padding: 16px 20px 36px;
   border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
 }
 
 .cd-donate-btn {
