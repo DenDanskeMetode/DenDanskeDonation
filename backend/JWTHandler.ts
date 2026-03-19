@@ -17,7 +17,7 @@ export interface JWTPayload {
   username: string;
 }
 
-export function issueToken(payload: JWTPayload, expiresIn: SignOptions['expiresIn'] = '2y'): string {
+export function issueToken(payload: JWTPayload, expiresIn: SignOptions['expiresIn'] = '2h'): string {
   return jwt.sign(payload, secret, { expiresIn });
 }
 

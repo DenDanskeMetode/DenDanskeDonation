@@ -27,3 +27,6 @@ forevertoken
 
 # env
 .env
+
+# compiled ts
+dist/

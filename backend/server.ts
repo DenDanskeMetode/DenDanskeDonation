@@ -36,8 +36,24 @@ const pool = new Pool({
 // Import handlers
 import { UserManager } from './userHandler.js';
 import CampaignManager from './campaignHandler.js';
+import ImageHandler from './imageHandler.js';
+import DonationManager from './donationHandler.js';
 import { issueToken, validateToken } from './JWTHandler.js';
 import bcrypt from 'bcrypt';
+import multer from 'multer';
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (allowed.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Unsupported file type: ${file.mimetype}`));
+    }
+  },
+});
 
 app.get("/", (req: Request, res: Response) => {
   res.send("API is running...");
@@ -110,30 +126,32 @@ function authenticateJWT(req: Request, res: Response, next: NextFunction) {
 // Register endpoint
 app.post("/api/register", async (req: Request, res: Response) => {
   try {
-    const { username, email, firstname, surname, password } = req.body;
-    
+    const { username, email, firstname, surname, password, age, gender } = req.body;
+
     // Validate input
     if (!username || !email || !firstname || !surname || !password) {
       return res.status(400).json({ error: "All fields are required" });
     }
-    
+
     // Check if user already exists
     const userExists = await UserManager.userExists(email);
     if (userExists) {
       return res.status(409).json({ error: "User with this email already exists" });
     }
-    
+
     // Hash password
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(password, saltRounds);
-    
+
     // Create user
     const newUser = await UserManager.createUser({
       username,
       email,
       firstname,
       surname,
-      password_hash
+      password_hash,
+      age: age ?? null,
+      gender: gender ?? null,
     });
     
     // Issue JWT token
@@ -182,8 +200,51 @@ app.get("/api/user/:userId", authenticateJWT, async (req: Request, res: Response
   }
 });
 
-// Public endpoint to get all campaigns
-app.get("/api/campaigns", async (req: Request, res: Response) => {
+// Protected endpoint to create a campaign
+app.post("/api/campaigns", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const { title, description, tags, goal, milestones, city_name } = req.body;
+
+    if (!title) {
+      return res.status(400).json({ error: "title is required" });
+    }
+
+    const campaign = await CampaignManager.createCampaign({
+      title, description, tags, goal, milestones, city_name,
+      created_by: req.user!.userId,
+    });
+
+    res.status(201).json(campaign);
+  } catch (error) {
+    console.error("Error creating campaign:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to update a campaign
+app.patch("/api/campaigns/:campaignId", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const campaignId = parseInt(req.params.campaignId as string);
+    const { title, description, tags, goal, milestones, city_name, is_complete } = req.body;
+    const fields = { title, description, tags, goal, milestones, city_name, is_complete };
+    const updates = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No valid fields provided" });
+    }
+
+    const campaign = await CampaignManager.updateCampaign(campaignId, updates, req.user!.userId);
+    res.json(campaign);
+  } catch (error: any) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
+    if (error.status === 403) return res.status(403).json({ error: error.message });
+    console.error("Error updating campaign:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to get all campaigns
+app.get("/api/campaigns", authenticateJWT, async (req: Request, res: Response) => {
   try {
     const campaigns = await CampaignManager.getAllCampaigns();
     res.json(campaigns);
@@ -193,8 +254,8 @@ app.get("/api/campaigns", async (req: Request, res: Response) => {
   }
 });
 
-// Public endpoint to get a specific campaign by ID
-app.get("/api/campaigns/:campaignId", async (req: Request, res: Response) => {
+// Protected endpoint to get a specific campaign by ID
+app.get("/api/campaigns/:campaignId", authenticateJWT, async (req: Request, res: Response) => {
   const campaignId = parseInt(req.params.campaignId as string);
   try {
     const campaign = await CampaignManager.getCampaignById(campaignId);
@@ -210,6 +271,198 @@ app.get("/api/campaigns/:campaignId", async (req: Request, res: Response) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// Protected endpoint to make a donation
+app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const { to_campaign, amount } = req.body;
+
+    if (!to_campaign || amount === undefined) {
+      return res.status(400).json({ error: "to_campaign and amount are required" });
+    }
+
+    const donation = await DonationManager.donate({
+      from_user: req.user!.userId,
+      to_campaign,
+      amount,
+    });
+
+    res.status(201).json(donation);
+  } catch (error: any) {
+    if (error.message?.includes('Amount must be') || error.message?.includes('required')) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error("Error processing donation:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
+
+// Protected endpoint to delete a campaign (own campaigns only)
+app.delete("/api/campaigns/:campaignId", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const campaignId = parseInt(req.params.campaignId as string);
+    await CampaignManager.deleteCampaign(campaignId, req.user!.userId);
+    res.status(204).send();
+  } catch (error: any) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
+    if (error.status === 403) return res.status(403).json({ error: error.message });
+    console.error("Error deleting campaign:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to add an image to a campaign (own campaigns only)
+app.post("/api/campaigns/:campaignId/images", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const campaignId = parseInt(req.params.campaignId as string);
+    const { imageId } = req.body;
+
+    if (!imageId || typeof imageId !== 'number') {
+      return res.status(400).json({ error: "imageId is required and must be a number" });
+    }
+
+    await CampaignManager.addImage(campaignId, imageId, req.user!.userId);
+    res.status(201).json({ message: "Image added to campaign" });
+  } catch (error: any) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
+    if (error.status === 403) return res.status(403).json({ error: error.message });
+    console.error("Error adding image to campaign:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to get all images for a campaign
+app.get("/api/campaigns/:campaignId/images", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const campaignId = parseInt(req.params.campaignId as string);
+    const images = await CampaignManager.getImages(campaignId);
+    res.json(images);
+  } catch (error) {
+    console.error("Error fetching campaign images:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to delete own account
+app.delete("/api/user/:userId", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId as string);
+
+    if (!req.user || req.user.userId !== userId) {
+      return res.status(403).json({ error: "You can only delete your own account" });
+    }
+
+    const deleted = await UserManager.deleteUser(userId);
+    if (!deleted) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to update user details
+app.patch("/api/user/:userId", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId as string);
+
+    if (!req.user || req.user.userId !== userId) {
+      return res.status(403).json({ error: "You can only update your own details" });
+    }
+
+    const { username, email, firstname, surname, age, gender } = req.body;
+    const fields = { username, email, firstname, surname, age, gender };
+    const updates = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "No valid fields provided" });
+    }
+
+    const updated = await UserManager.updateUser(userId, updates);
+    if (!updated) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const { password_hash, ...safe } = updated;
+    res.json(safe);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to upload an image and set it as the user's profile picture
+app.put("/api/user/:userId/profile-picture", authenticateJWT, upload.any(), async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId as string);
+
+    if (!req.user || req.user.userId !== userId) {
+      return res.status(403).json({ error: "You can only update your own profile picture" });
+    }
+
+    const file = (req.files as Express.Multer.File[])?.[0];
+    if (!file) {
+      return res.status(400).json({ error: "An image file is required" });
+    }
+
+    const uploaded = await ImageHandler.uploadImage(file.buffer, file.mimetype, userId);
+
+    const updated = await UserManager.setProfilePicture(userId, uploaded.id);
+    if (!updated) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const { password_hash, ...safe } = updated;
+    res.json(safe);
+  } catch (error) {
+    console.error("Error setting profile picture:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to upload an image
+app.post("/api/images", authenticateJWT, upload.any(), async (req: Request, res: Response) => {
+  try {
+    const file = (req.files as Express.Multer.File[])?.[0];
+    if (!file) {
+      return res.status(400).json({ error: "An image file is required" });
+    }
+
+    const image = await ImageHandler.uploadImage(file.buffer, file.mimetype, req.user!.userId);
+    res.status(201).json(image);
+  } catch (error: any) {
+    if (error.message?.startsWith('Unsupported MIME type')) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error("Error uploading image:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to get an image by ID
+app.get("/api/images/:imageId", authenticateJWT, async (req: Request, res: Response) => {
+  const imageId = parseInt(req.params.imageId as string);
+  try {
+    const image = await ImageHandler.getImage(imageId);
+
+    if (!image) {
+      return res.status(404).json({ error: "Image not found" });
+    }
+
+    res.setHeader('Content-Type', image.mime_type);
+    res.send(image.data);
+  } catch (error) {
+    console.error(`Error fetching image ${imageId}:`, error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+export { app };

@@ -5,7 +5,10 @@ import bcrypt from 'bcrypt';
 import {
   getUserById,
   getAllUsers,
-  createUser
+  createUser,
+  updateUser,
+  deleteUser,
+  setProfilePicture
 } from './dbHandler.js';
 
 interface User {
@@ -15,6 +18,9 @@ interface User {
   firstname: string;
   surname: string;
   password_hash: string;
+  age?: number | null;
+  gender?: string | null;
+  profile_picture?: number | null;
   created_at?: string;
   updated_at?: string;
   donations?: any[];
@@ -26,6 +32,8 @@ interface UserCreationData {
   firstname: string;
   surname: string;
   password_hash: string;
+  age?: number | null;
+  gender?: string | null;
 }
 
 export class UserManager {
@@ -111,6 +119,39 @@ export class UserManager {
       return await createUser(userData);
     } catch (error) {
       console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Set the profile picture for a user
+   * @param userId - The ID of the user
+   * @param imageId - The ID of the image to set as profile picture
+   * @returns Promise<User | null> - Updated user or null if not found
+   */
+  static async updateUser(userId: number, fields: Partial<Pick<User, 'username' | 'email' | 'firstname' | 'surname' | 'age' | 'gender'>>): Promise<User | null> {
+    try {
+      return await updateUser(userId, fields);
+    } catch (error) {
+      console.error(`Error updating user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  static async deleteUser(userId: number): Promise<boolean> {
+    try {
+      return await deleteUser(userId);
+    } catch (error) {
+      console.error(`Error deleting user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  static async setProfilePicture(userId: number, imageId: number): Promise<User | null> {
+    try {
+      return await setProfilePicture(userId, imageId);
+    } catch (error) {
+      console.error(`Error setting profile picture for user ${userId}:`, error);
       throw error;
     }
   }

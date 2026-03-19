@@ -5,6 +5,9 @@ CREATE TABLE users (
     firstname VARCHAR(100) NOT NULL,
     surname VARCHAR(100) NOT NULL,
     password_hash TEXT NOT NULL,
+    age INTEGER,
+    gender VARCHAR(50),
+    profile_picture INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -18,8 +21,30 @@ CREATE TABLE campaigns (
     is_complete BOOLEAN DEFAULT FALSE,
     milestones TEXT[],
     city_name VARCHAR(100),
+    created_by INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+);
+
+CREATE TABLE images (
+    id SERIAL PRIMARY KEY,
+    data BYTEA NOT NULL,
+    mime_type VARCHAR(50) NOT NULL,
+    uploaded_by INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+
+ALTER TABLE users ADD CONSTRAINT fk_profile_picture FOREIGN KEY (profile_picture) REFERENCES images(id);
+
+CREATE TABLE campaign_images (
+    campaign_id INTEGER NOT NULL,
+    image_id INTEGER NOT NULL,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (campaign_id, image_id),
+    FOREIGN KEY (campaign_id) REFERENCES campaigns(id),
+    FOREIGN KEY (image_id) REFERENCES images(id)
 );
 
 CREATE TABLE donations (

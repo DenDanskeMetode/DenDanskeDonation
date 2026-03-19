@@ -116,9 +116,9 @@ async function getAllCampaigns() {
 
 async function createUser(userData) {
   try {
-    const { username, email, firstname, surname, password_hash } = userData;
-    const query = 'INSERT INTO users (username, email, firstname, surname, password_hash) VALUES ($1, $2, $3, $4, $5) RETURNING *';
-    const result = await executeQuery(query, [username, email, firstname, surname, password_hash]);
+    const { username, email, firstname, surname, password_hash, age, gender } = userData;
+    const query = 'INSERT INTO users (username, email, firstname, surname, password_hash, age, gender) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
+    const result = await executeQuery(query, [username, email, firstname, surname, password_hash, age ?? null, gender ?? null]);
     return result[0];
   } catch (error) {
     console.error('Error creating user:', error);
@@ -128,14 +128,29 @@ async function createUser(userData) {
 
 async function createCampaign(campaignData) {
   try {
-    const { title, description, tags, goal, milestones, city_name } = campaignData;
-    const query = 'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *';
-    const result = await executeQuery(query, [title, description, tags, goal, milestones, city_name]);
+    const { title, description, tags, goal, milestones, city_name, created_by } = campaignData;
+    const query = 'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
+    const result = await executeQuery(query, [title, description, tags, goal, milestones, city_name, created_by]);
     return result[0];
   } catch (error) {
     console.error('Error creating campaign:', error);
     throw error;
   }
+}
+
+async function updateCampaign(campaignId, fields) {
+  const allowed = ['title', 'description', 'tags', 'goal', 'milestones', 'city_name', 'is_complete'];
+  const updates = Object.keys(fields).filter(k => allowed.includes(k));
+
+  if (updates.length === 0) throw new Error('No valid fields to update');
+
+  const setClauses = updates.map((k, i) => `${k} = $${i + 1}`).join(', ');
+  const values = updates.map(k => fields[k]);
+  values.push(campaignId);
+
+  const query = `UPDATE campaigns SET ${setClauses}, updated_at = CURRENT_TIMESTAMP WHERE id = $${values.length} RETURNING *`;
+  const result = await executeQuery(query, values);
+  return result[0] || null;
 }
 
 async function createDonation(donationData) {
@@ -150,6 +165,101 @@ async function createDonation(donationData) {
   }
 }
 
+async function deleteUser(userId) {
+  try {
+    const result = await executeQuery('DELETE FROM users WHERE id = $1 RETURNING id', [userId]);
+    return result.length > 0;
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    throw error;
+  }
+}
+
+async function deleteCampaign(campaignId) {
+  try {
+    const result = await executeQuery('DELETE FROM campaigns WHERE id = $1 RETURNING id', [campaignId]);
+    return result.length > 0;
+  } catch (error) {
+    console.error('Error deleting campaign:', error);
+    throw error;
+  }
+}
+
+async function addImageToCampaign(campaignId, imageId) {
+  try {
+    const query = 'INSERT INTO campaign_images (campaign_id, image_id) VALUES ($1, $2) RETURNING *';
+    const result = await executeQuery(query, [campaignId, imageId]);
+    return result[0];
+  } catch (error) {
+    console.error('Error adding image to campaign:', error);
+    throw error;
+  }
+}
+
+async function getCampaignImages(campaignId) {
+  try {
+    const query = `
+      SELECT i.id, i.mime_type, i.uploaded_by, i.created_at, ci.added_at
+      FROM images i
+      JOIN campaign_images ci ON i.id = ci.image_id
+      WHERE ci.campaign_id = $1
+      ORDER BY ci.added_at ASC
+    `;
+    return await executeQuery(query, [campaignId]);
+  } catch (error) {
+    console.error('Error getting campaign images:', error);
+    throw error;
+  }
+}
+
+async function updateUser(userId, fields) {
+  const allowed = ['username', 'email', 'firstname', 'surname', 'age', 'gender'];
+  const updates = Object.keys(fields).filter(k => allowed.includes(k));
+
+  if (updates.length === 0) throw new Error('No valid fields to update');
+
+  const setClauses = updates.map((k, i) => `${k} = $${i + 1}`).join(', ');
+  const values = updates.map(k => fields[k]);
+  values.push(userId);
+
+  const query = `UPDATE users SET ${setClauses}, updated_at = CURRENT_TIMESTAMP WHERE id = $${values.length} RETURNING *`;
+  const result = await executeQuery(query, values);
+  return result[0] || null;
+}
+
+async function setProfilePicture(userId, imageId) {
+  try {
+    const query = 'UPDATE users SET profile_picture = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *';
+    const result = await executeQuery(query, [imageId, userId]);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error setting profile picture:', error);
+    throw error;
+  }
+}
+
+async function getImageById(imageId) {
+  try {
+    const result = await executeQuery('SELECT * FROM images WHERE id = $1', [imageId]);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error getting image by ID:', error);
+    throw error;
+  }
+}
+
+async function createImage(imageData) {
+  try {
+    const { data, mime_type, uploaded_by } = imageData;
+    const query = 'INSERT INTO images (data, mime_type, uploaded_by) VALUES ($1, $2, $3) RETURNING id, mime_type, uploaded_by, created_at';
+    const result = await executeQuery(query, [data, mime_type, uploaded_by]);
+    return result[0];
+  } catch (error) {
+    console.error('Error creating image:', error);
+    throw error;
+  }
+}
+
 export {
   getUserById,
   getCampaignById,
@@ -157,5 +267,14 @@ export {
   getAllCampaigns,
   createUser,
   createCampaign,
+  updateCampaign,
+  deleteCampaign,
+  deleteUser,
   createDonation,
+  addImageToCampaign,
+  getCampaignImages,
+  updateUser,
+  setProfilePicture,
+  getImageById,
+  createImage,
 };
