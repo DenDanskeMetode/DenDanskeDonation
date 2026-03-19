@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import LoginOrRegister from './pages/LoginOrRegister';
 import Register from './pages/Register';
 import NotFound from './pages/NotFound';
+import CampaignDetail from './pages/CampaignDetail';
 
 const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
@@ -20,6 +21,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/campaigns/:id" element={<CampaignDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

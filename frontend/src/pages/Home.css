@@ -14,7 +14,7 @@
   top: 0;
   z-index: 10;
   background: #fff;
-  padding-top: 60px;
+  padding-top: 10px;
 }
 
 /* ── Profile button ── */
@@ -230,12 +230,14 @@
   position: fixed;
   bottom: 28px;
   right: calc(50% - 240px + 16px);
-  width: 56px;
-  height: 56px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   background: #4caf50;
   color: #fff;
-  font-size: 1.8rem;
+  font-size: 4rem;
+  line-height: 1;
+  padding-bottom: 2px;
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
