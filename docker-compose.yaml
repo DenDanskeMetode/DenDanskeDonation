@@ -7,6 +7,8 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
       - DB_HOST=db
@@ -30,9 +32,11 @@ services:
     image: ghcr.io/dendanskemetode/dendanskedonation/db:latest
     build: ./dbServer
     container_name: postgres_db
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: giraf
+      POSTGRES_PASSWORD: bearattack
       POSTGRES_DB: mydatabase
     volumes:
       - postgres_data:/var/lib/postgresql/data

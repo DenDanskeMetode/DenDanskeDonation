@@ -21,7 +21,9 @@ yarn-debug.log*
 yarn-error.log*
 
 #Christian filer som skal ignoreres
-testScripts/
+restartDocker.sh
+runBackendOnly.sh
+forevertoken
 
 # env
 .env
