@@ -8,12 +8,21 @@
   position: relative;
 }
 
+/* ── Sticky header ── */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  padding-top: 60px;
+}
+
 /* ── Search bar ── */
 .search-bar {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 16px 16px 12px;
+  margin: 8px 16px 12px;
   background: #f0f0f0;
   border-radius: 12px;
   padding: 10px 14px;
@@ -140,6 +149,8 @@
 .campaign-image-placeholder {
   width: 100%;
   height: 180px;
+  object-fit: cover;
+  display: block;
 }
 
 .campaign-body {
