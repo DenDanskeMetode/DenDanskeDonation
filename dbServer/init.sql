@@ -12,7 +12,7 @@ CREATE TABLE campains (
     name VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 CREATE TABLE donations (
     id SERIAL PRIMARY KEY,
@@ -22,4 +22,4 @@ CREATE TABLE donations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (from_user) REFERENCES users(id),
     FOREIGN KEY (to_campain) REFERENCES campains(id)
-)
+);

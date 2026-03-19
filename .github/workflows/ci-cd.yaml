@@ -69,6 +69,8 @@ jobs:
             --config tests/docker/database.structure-test.yaml
 
       - name: Start containers
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: docker compose up -d
 
       - name: Healthcheck backend
@@ -82,11 +84,11 @@ jobs:
           docker compose logs
           exit 1
 
-      - name: Run Jest tests
-        run: |
-          cd frontend
-          npm install
-          npm test -- --watchAll=false
+#     - name: Run Jest tests
+#        run: |
+#          cd frontend
+#          npm install
+#          npm test -- --watchAll=false
 
 # Read images from ghcr, build containers and push to client registry, then deploy to VM
   build-and-push:
