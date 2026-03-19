@@ -3,6 +3,8 @@ const cors = require("cors");
 const { Pool } = require("pg");
 require("dotenv").config();
 
+const paymentRoutes = require('./routes/payment');
+
 const app = express();
 const PORT = 5000;
 
@@ -36,6 +38,8 @@ app.get("/api/users", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+app.use('/api/payments', paymentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

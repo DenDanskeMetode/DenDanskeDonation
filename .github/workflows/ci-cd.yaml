@@ -69,6 +69,8 @@ jobs:
             --config tests/docker/database.structure-test.yaml
 
       - name: Start containers
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: docker compose up -d
 
       - name: Healthcheck backend
