@@ -1,1 +1,1 @@
-wow! cool! awesome! epic! 123! 123!
+wow! cool! awesome! epic! 123!
