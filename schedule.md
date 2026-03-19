@@ -53,4 +53,6 @@
 * 9:00-11:00
 * Nicholas
 
-
+### Kampagne oversigt frontend (frontend)
+* 10:10 - 12.30
+* Victor
