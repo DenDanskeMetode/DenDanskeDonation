@@ -1,5 +1,6 @@
 # 17/3
 
+
 ### Intro og sætte os ind i opgaven (møde, planlægning)
 * 10:00 - 13:00
 * Alle
@@ -16,7 +17,9 @@
 * 3½ time total
 * Christian
 
+
 # 18/3
+
 
 ### Catch up møde og planlægning (møde, planlægning)
 * 12:40 - 13.30
@@ -33,6 +36,21 @@
 ### Møde og catch-up
 * 15.30 - 16.00
 * Alle
+
 ### db server og connections
 * 13:30 - 15:30 & 17:50 - 18:30
 * Christian
+
+
+# 19/3
+
+
+### Dagsorden møde
+* 10:00-10:10
+* Alle
+
+### ci/cd fix
+* 9:00-11:00
+* Nicholas
+
+
