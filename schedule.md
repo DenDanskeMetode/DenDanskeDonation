@@ -22,3 +22,6 @@
 * 12:40 - 13.30
 * Alle
 
+### db server og connections
+* 13:30 - 15:30 & 17:50 - 18:30
+* Christian
