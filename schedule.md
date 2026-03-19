@@ -61,6 +61,10 @@
 * 10:10 - 13:20
 * Felix
 
+### Signup og login (frontend)
+* 11:00 - 13:00
+* Nicholas
+
 ### Møde og fælles VM bug fixing (bugfixing, møde, planlægning)
 * 13:00 - 14:00
 * Alle
