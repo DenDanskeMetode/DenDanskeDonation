@@ -2,8 +2,8 @@ schemaVersion: "2.0.0"
 
 # Test at de rigtige filer er kopieret ind i containeren
 fileExistenceTests:
-  - name: "server.js findes"
-    path: "/app/server.js"
+  - name: "server.js findes i dist"
+    path: "/app/dist/server.js"
     shouldExist: true
 
   - name: "package.json findes"
@@ -23,5 +23,5 @@ commandTests:
 
   - name: "server.js kan læses af node uden fejl"
     command: "node"
-    args: ["--check", "/app/server.js"]
+    args: ["--check", "/app/dist/server.js"]
     exitCode: 0

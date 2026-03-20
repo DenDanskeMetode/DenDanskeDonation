@@ -68,6 +68,12 @@ jobs:
             --image ghcr.io/dendanskemetode/dendanskedonation/db:latest \
             --config tests/docker/database.structure-test.yaml
 
+      - name: Create .env file
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+        run: |
+          echo "STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}" > .env
+
       - name: Start containers
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}

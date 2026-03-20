@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    // 📁 Structure
+    "rootDir": "./",
+    "outDir": "./dist",
+
+    // ⚙️ Node compatibility
+    "module": "NodeNext",
+    "target": "es2020",
+    "lib": ["es2020"],
+    "types": ["node"],
+
+    // 🔄 Interop
+    "esModuleInterop": true,
+    "moduleResolution": "nodenext",
+
+    // 🛠️ Output
+    "sourceMap": true,
+
+    // 🔒 Strictness
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

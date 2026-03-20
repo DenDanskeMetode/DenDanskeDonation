@@ -54,8 +54,12 @@
 * Nicholas
 
 ### Kampagne oversigt frontend (frontend)
-* 10:10 - 
+* 10:10 - 13:00
 * Victor
+
+### backend opsætning af RestAPI samt kommunikationslag med DB
+* 10:10 - 12:30
+* Chrisitan
 
 ### Betalingssystem opsætning
 * 10:10 - 13:20
@@ -68,3 +72,22 @@
 ### Møde og fælles VM bug fixing (bugfixing, møde, planlægning)
 * 13:00 - 14:00
 * Alle
+
+### buisness logic og TS debugging i backend
+* 13:30 - 15:00
+
+### Kampagne frontend videreudvikling (frontend)
+* 14:00 - 17:00
+* Victor
+
+### Backend udvikling på restAPIet
+* 19:00 - 20:15
+* Christian
+
+### Imagestorage and Image API
+* 20:15 - 21:20
+* Christian
+
+### general backend cleanup and readme.md for interagtion with frontend tomorrow
+* 21:20 - 23:25
+* Christian
