@@ -108,6 +108,6 @@
 * 11:00 -
 * Victor
 
-### CI/CD bugfixing and improvements (CI/CD, bugfixing, kodning)
-* 11:00 - 
+### CI/CD bugfixing and improvements & payment integration with UI (CI/CD, bugfixing, kodning)
+* 11:00 - 15:20
 * Felix
