@@ -1,15 +1,40 @@
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import './css/CampaignDetail.css';
 import useCampaignsStore from '../store/useCampaignsStore';
 import CircularProgress from '../components/CircularProgress';
 
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Lige nu';
+  if (mins < 60) return `${mins} min siden`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} t siden`;
+  const days = Math.floor(hours / 24);
+  return `${days} d siden`;
+}
+
 function CampaignDetail() {
   const { state } = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
-  const campaigns = useCampaignsStore((state) => state.campaigns);
+  const campaigns = useCampaignsStore((s) => s.campaigns);
 
   const campaign = state ?? campaigns.find(c => c.id === Number(id));
+
+  const [donations, setDonations] = useState([]);
+
+  useEffect(() => {
+    if (!campaign) return;
+    const token = localStorage.getItem('token');
+    fetch(`/api/campaigns/${campaign.id}/donations`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setDonations(Array.isArray(data) ? data : []))
+      .catch(() => setDonations([]));
+  }, [campaign]);
 
   if (!campaign) {
     navigate('/');
@@ -25,17 +50,37 @@ function CampaignDetail() {
           <h2 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>Tilbage</h2>
         </div>
 
-        {/* Hero */}
+        {/* Hero row: image left, donations right */}
         <div className="cd-hero">
-          <CircularProgress
-            raised={campaign.raised}
-            goal={campaign.goal}
-            image={campaign.image}
-            title={campaign.title}
-          />
-          <p className="cd-raised-text">
-            <strong>{campaign.raised}kr</strong> ud af {campaign.goal}kr doneret
-          </p>
+          <div className="cd-hero-left">
+            <CircularProgress
+              raised={campaign.raised}
+              goal={campaign.goal}
+              image={campaign.image}
+              title={campaign.title}
+              size={150}
+            />
+            <p className="cd-raised-text">
+              <strong>{campaign.raised}kr</strong>
+              <br />
+              <span>af {campaign.goal}kr</span>
+            </p>
+          </div>
+
+          <div className="cd-donations-panel">
+            <p className="cd-donations-title">Donationer</p>
+            {donations.length === 0 ? (
+              <p className="cd-no-donations">Ingen donationer endnu</p>
+            ) : (
+              donations.map(d => (
+                <div key={d.id} className="cd-donation-entry">
+                  <div className="cd-donation-who">{d.sender_firstname ?? d.sender_username}</div>
+                  <div className="cd-donation-amount">{d.amount} kr</div>
+                  <div className="cd-donation-when">{timeAgo(d.created_at)}</div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
         {/* Content */}
