@@ -153,6 +153,22 @@ async function updateCampaign(campaignId, fields) {
   return result[0] || null;
 }
 
+async function getDonationsByCampaign(campaignId) {
+  try {
+    const query = `
+      SELECT d.id, d.amount, d.created_at, u.username as sender_username, u.firstname as sender_firstname
+      FROM donations d
+      JOIN users u ON d.from_user = u.id
+      WHERE d.to_campaign = $1
+      ORDER BY d.created_at DESC
+    `;
+    return await executeQuery(query, [campaignId]);
+  } catch (error) {
+    console.error('Error getting donations by campaign:', error);
+    throw error;
+  }
+}
+
 async function createDonation(donationData) {
   try {
     const { from_user, to_campaign, amount } = donationData;
@@ -271,6 +287,7 @@ export {
   deleteCampaign,
   deleteUser,
   createDonation,
+  getDonationsByCampaign,
   addImageToCampaign,
   getCampaignImages,
   updateUser,

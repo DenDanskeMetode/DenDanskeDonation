@@ -5,7 +5,7 @@ function CircularProgress({ raised, goal, image, title, size = 220, strokeWidth 
   const offset = circumference * (1 - pct / 100);
 
   return (
-    <div className="cd-progress-wrap">
+    <div className="cd-progress-wrap" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="cd-ring">
         <circle
           cx={size / 2} cy={size / 2} r={radius}
