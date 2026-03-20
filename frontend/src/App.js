@@ -3,10 +3,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import './App.css';
 import Home from './pages/Home';
-import Campaigns from './pages/Campaigns';
 import Login from './pages/Login';
-import LoginOrRegister from './pages/LoginOrRegister';
-import Register from './pages/Register';
 import NotFound from './pages/NotFound';
 import CampaignDetail from './pages/CampaignDetail';
 import Profile from './pages/Profile';
@@ -23,14 +20,11 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/:id" element={<CampaignDetail />} />
           <Route path="/campaigns/:id/edit" element={<CampaignSettings />} />
           <Route path="/donations/:id" element={<DonationDetail />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/loginregister" element={<LoginOrRegister />} />
-          <Route path="/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
