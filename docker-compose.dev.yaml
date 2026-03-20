@@ -2,19 +2,24 @@ services:
   server:
     build:
       context: ./backend
-    command: npm run dev
+      dockerfile: Dockerfile.dev
     ports:
       - "5000:5000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
     env_file:
       - .env
     environment:
       - NODE_ENV=development
       - DB_HOST=db
       - DB_PORT=5432
+      - POSTGRES_USER=giraf
+      - POSTGRES_PASSWORD=bearattack
+      - POSTGRES_DB=mydatabase
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - db
 
   client:
     build:
@@ -22,21 +27,23 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_51TCd9b4HA5votMsYw5mKy2hgwPvkgIwXgTVHv2HP4sLsRqotExeTNKBQeN4jAxNnxEaIghAFiZy5Xa7YuY2kr6Vm004XE27mIW
+      - WATCHPACK_POLLING=true
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - server
 
   db:
-    image: ghcr.io/dendanskemetode/dendanskedonation/db:latest
     build: ./dbServer
     container_name: postgres_db
+    env_file:
+      - .env
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
+      POSTGRES_USER: giraf
+      POSTGRES_PASSWORD: bearattack
       POSTGRES_DB: mydatabase
     volumes:
       - postgres_data:/var/lib/postgresql/data

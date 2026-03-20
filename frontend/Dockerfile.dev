@@ -5,9 +5,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-EXPOSE 3000
-
-# Polling is required for hot reload to work inside Docker on Windows/Mac
+# Polling required for hot reload inside Docker on Windows/Mac
 ENV WATCHPACK_POLLING=true
+
+EXPOSE 3000
 
 CMD ["npm", "start"]
