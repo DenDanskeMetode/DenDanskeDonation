@@ -12,12 +12,18 @@ jobs:
 
     steps:
       - name: Checkout
+        run: |
+          echo ":I am jelqing it so hard rn"
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
+        run: |
+          echo ":gooning..."
         uses: docker/setup-buildx-action@v3
 
       - name: Build server image
+        run: |
+          echo ":im cumming lois"
         uses: docker/build-push-action@v5
         with:
           context: ./backend
