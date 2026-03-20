@@ -99,3 +99,11 @@
 ### Profile pages and navigation (general UI work)
 * 8:00 -
 * Nicholas
+
+### Møde og planlægnign (møde, planlægning)
+* 10:15 - 11:00
+* Alle
+
+### Backend integration til frontend (frontend, bugfixing, kodning)
+* 11:00 -
+* Victor
