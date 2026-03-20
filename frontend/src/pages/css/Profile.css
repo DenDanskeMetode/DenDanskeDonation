@@ -29,6 +29,27 @@
   background: rgba(255, 255, 255, 0.4);
 }
 
+/* ── Logout button ── */
+.profile-logout-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  padding: 6px 12px;
+  background: rgba(211, 47, 47, 0.82);
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.profile-logout-btn:hover {
+  background: rgba(211, 47, 47, 1);
+}
+
 /* ── Tab bar ── */
 .profile-tabs {
   display: flex;

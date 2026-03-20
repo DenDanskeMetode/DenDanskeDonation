@@ -1,9 +1,12 @@
 -- Insert test users with the new schema
 INSERT INTO users (username, email, firstname, surname, password_hash, age, gender)
 VALUES
-  ('johndoe', 'john@example.com', 'John', 'Doe', 'hashedpassword123', 30, 'male'),
-  ('janedoe', 'jane@example.com', 'Jane', 'Doe', 'hashedpassword456', 28, 'female'),
-  ('bobsmith', 'bob@example.com', 'Bob', 'Smith', 'hashedpassword789', 35, 'male');
+  ('johndoe', 'john@example.com', 'John', 'Doe', '$2b$10$mU5V2/MYI.E61pbtdd/C0OmFI1YfiJv/X0.megRpqd3E2DVGnsALy', 30, 'male'),
+  ('janedoe', 'jane@example.com', 'Jane', 'Doe', '$2b$10$.0EE0ic2Tjr2eDHgGF0oX.hqAa39B.5mwnDIvncDwwaebZndeVKK.', 28, 'female'),
+  ('bobsmith', 'bob@example.com', 'Bob', 'Smith', '$2b$10$zorXorKv396DRdm/Siaj1e5Husp8rayKYnmAnjZt4YzvYDNZCOQNG', 35, 'male');
+-- john@example.com : hashedpassword123
+-- jane@example.com : hashedpassword456
+-- bob@example.com : hashedpassword789
 
 -- Insert test campaigns with the new schema
 INSERT INTO campaigns (title, description, tags, goal, is_complete, milestones, city_name, created_by)
