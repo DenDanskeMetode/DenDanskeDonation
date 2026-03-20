@@ -63,6 +63,21 @@ app.get("/api/message", (req: Request, res: Response) => {
   res.json({ message: "Hello from backend 🚀" });
 });
 
+// Check if a user exists by email
+app.get("/api/user-exists", async (req: Request, res: Response) => {
+  const { email } = req.query;
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: "email query parameter is required" });
+  }
+  try {
+    const exists = await UserManager.userExists(email);
+    res.json(exists);
+  } catch (error) {
+    console.error("Error checking user existence:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Login endpoint
 app.post("/api/login", async (req: Request, res: Response) => {
   try {

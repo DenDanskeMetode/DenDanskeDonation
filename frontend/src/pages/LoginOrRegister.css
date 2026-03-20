@@ -33,6 +33,18 @@
   color: #1a1a1a;
   text-align: center;
   margin-bottom: 24px;
+  animation: title-fade-in 0.3s ease-out both;
+}
+
+@keyframes title-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Form ── */
@@ -67,6 +79,14 @@
   border-color: #4caf50;
 }
 
+/* ── Error message ── */
+.login-error {
+  font-size: 0.88rem;
+  color: #d32f2f;
+  text-align: center;
+  margin: 0;
+}
+
 /* ── Primary button ── */
 .login-btn-primary {
   width: 100%;
@@ -81,6 +101,20 @@
   transition: opacity 0.15s;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+}
+
+.login-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.login-btn-spinner {
+  border-color: rgba(255,255,255,0.35);
+  border-top-color: #fff;
 }
 
 @media (hover: hover) {
@@ -140,6 +174,85 @@
   .login-btn-social:hover {
     background: #efefef;
   }
+}
+
+/* ── Email input wrapper & status icons ── */
+.email-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.email-input-wrapper .login-input {
+  padding-right: 44px;
+}
+
+.email-status-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.email-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #4caf50;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.email-checkmark {
+  font-size: 18px;
+  font-weight: 700;
+  color: #4caf50;
+  line-height: 1;
+}
+
+/* ── Inline row (Alder + Køn) ── */
+.login-input-row {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.login-input-row .login-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Select styling ── */
+select.login-input {
+  cursor: pointer;
+  color: #333;
+}
+
+select.login-input.login-select--placeholder {
+  color: #aaa;
+}
+
+/* ── Password field slide-in ── */
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.login-input--slide-in {
+  animation: slide-down 0.22s ease-out both;
 }
 
 /* ── Small screens ── */
