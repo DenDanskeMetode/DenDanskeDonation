@@ -286,6 +286,7 @@ app.get("/api/campaigns/:campaignId", authenticateJWT, async (req: Request, res:
   }
 });
 
+<<<<<<< HEAD
 // Payment endpoints for donations
 app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Request, res: Response) => {
   const { amount, from_user, to_campaign } = req.body;
@@ -298,6 +299,22 @@ app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Req
     return res.status(400).json({ error: "Campaign ID required" });
   }
 
+=======
+// Protected endpoint to get all donations for a campaign
+app.get("/api/campaigns/:campaignId/donations", authenticateJWT, async (req: Request, res: Response) => {
+  const campaignId = parseInt(req.params.campaignId as string);
+  try {
+    const donations = await DonationManager.getDonationsByCampaign(campaignId);
+    res.json(donations);
+  } catch (error) {
+    console.error(`Error fetching donations for campaign ${campaignId}:`, error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to make a donation
+app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
+>>>>>>> main
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount * 100,

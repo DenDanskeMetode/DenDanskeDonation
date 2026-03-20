@@ -41,10 +41,78 @@
 /* ── Hero ── */
 .cd-hero {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
   padding: 16px 16px 8px;
   gap: 14px;
+}
+
+.cd-hero-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+/* ── Donations panel ── */
+.cd-donations-panel {
+  flex: 1;
+  min-width: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  background: #f7f7f7;
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cd-donations-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+
+.cd-no-donations {
+  font-size: 0.85rem;
+  color: #bbb;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.cd-donation-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 0;
+  border-bottom: 1px solid #ebebeb;
+}
+
+.cd-donation-entry:last-child {
+  border-bottom: none;
+}
+
+.cd-donation-who {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.cd-donation-amount {
+  font-size: 0.88rem;
+  color: #4caf50;
+  font-weight: 700;
+}
+
+.cd-donation-when {
+  font-size: 0.76rem;
+  color: #aaa;
 }
 
 /* ── Circular progress ring ── */
@@ -71,13 +139,15 @@
 
 /* ── Raised text ── */
 .cd-raised-text {
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   color: #555;
   text-align: center;
+  line-height: 1.5;
 }
 
 .cd-raised-text strong {
   color: #1a1a1a;
+  font-size: 0.95rem;
 }
 
 /* ── Content ── */
