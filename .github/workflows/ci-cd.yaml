@@ -79,7 +79,7 @@ jobs:
       - name: Run frontend Jest tests
         run: |
           cd frontend
-          npm ci
+          npm install --legacy-peer-deps
           npm test -- --watchAll=false --passWithNoTests
 
       - name: Create .env file
