@@ -71,12 +71,12 @@ jobs:
       - name: Create .env file
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           echo "STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}" > .env
+          echo "JWT_SECRET=${JWT_SECRET}" >> .env
 
       - name: Start containers
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: docker compose up -d
 
       - name: Healthcheck backend
