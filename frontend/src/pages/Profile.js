@@ -33,6 +33,17 @@ function Profile() {
         </svg>
       </button>
 
+      <button
+        className="profile-logout-btn"
+        onClick={() => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          navigate('/login');
+        }}
+      >
+        Log ud
+      </button>
+
       <ProfileHeader user={user} />
 
       <div className="profile-tabs">

@@ -30,3 +30,6 @@ forevertoken
 
 # compiled ts
 dist/
+
+#claude config
+.claude

@@ -1,12 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
 import './App.css';
 import Home from './pages/Home';
-import Campaigns from './pages/Campaigns';
 import Login from './pages/Login';
-import LoginOrRegister from './pages/LoginOrRegister';
-import Register from './pages/Register';
 import NotFound from './pages/NotFound';
 import CampaignDetail from './pages/CampaignDetail';
 import Profile from './pages/Profile';
@@ -17,20 +14,21 @@ const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
   : null;
 
+function PrivateRoute({ children }) {
+  return localStorage.getItem('token') ? children : <Navigate to="/login" replace />;
+}
+
 function App() {
   return (
     <Elements stripe={stripePromise}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/campaigns" element={<Campaigns />} />
-          <Route path="/campaigns/:id" element={<CampaignDetail />} />
-          <Route path="/campaigns/:id/edit" element={<CampaignSettings />} />
-          <Route path="/donations/:id" element={<DonationDetail />} />
-          <Route path="/profile" element={<Profile />} />
+          <Route path="/" element={<PrivateRoute><Home /></PrivateRoute>} />
+          <Route path="/campaigns/:id" element={<PrivateRoute><CampaignDetail /></PrivateRoute>} />
+          <Route path="/campaigns/:id/edit" element={<PrivateRoute><CampaignSettings /></PrivateRoute>} />
+          <Route path="/donations/:id" element={<PrivateRoute><DonationDetail /></PrivateRoute>} />
+          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/login" element={<Login />} />
-          <Route path="/loginregister" element={<LoginOrRegister />} />
-          <Route path="/register" element={<Register />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
