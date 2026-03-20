@@ -1,13 +1,16 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useState } from 'react';
 import './css/CampaignDetail.css';
 import useCampaignsStore from '../store/useCampaignsStore';
 import CircularProgress from '../components/CircularProgress';
+import DonationModal from '../components/DonationModal';
 
 function CampaignDetail() {
   const { state } = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
   const campaigns = useCampaignsStore((state) => state.campaigns);
+  const [showDonationModal, setShowDonationModal] = useState(false);
 
   const campaign = state ?? campaigns.find(c => c.id === Number(id));
 
@@ -15,6 +18,8 @@ function CampaignDetail() {
     navigate('/');
     return null;
   }
+
+  const userId = localStorage.getItem('userId');
 
   return (
     <div className="cd-page">
@@ -56,8 +61,20 @@ function CampaignDetail() {
 
       {/* Donate button — fixed at bottom */}
       <div className="cd-footer">
-        <button className="cd-donate-btn">Donér Nu</button>
+        <button className="cd-donate-btn" onClick={() => setShowDonationModal(true)}>Donér Nu</button>
       </div>
+
+      {/* Donation Modal */}
+      {showDonationModal && userId && (
+        <DonationModal
+          campaign={campaign}
+          userId={parseInt(userId)}
+          onClose={() => setShowDonationModal(false)}
+          onSuccess={() => {
+            setShowDonationModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

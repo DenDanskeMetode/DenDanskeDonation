@@ -1,0 +1,199 @@
+/* ── Overlay ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: #fff;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+  animation: slideInLeft 0.26s ease;
+  overflow: hidden;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.modal-overlay.closing {
+  animation: slideOutLeft 0.26s ease forwards;
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes slideOutLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+
+/* ── Header ── */
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 16px 12px;
+}
+
+.modal-back-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #222;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.modal-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* ── Donation Body ── */
+.donation-body {
+  padding: 20px 16px;
+}
+
+.donation-section {
+  margin-bottom: 24px;
+}
+
+.donation-label {
+  font-size: 0.95rem;
+  color: #666;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+/* ── Quick amounts ── */
+.quick-amounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.amount-btn {
+  padding: 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.amount-btn:hover {
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+.amount-btn.active {
+  background: #4caf50;
+  color: #fff;
+  border-color: #4caf50;
+}
+
+/* ── Custom amount ── */
+.custom-amount-section {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.custom-amount-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.custom-amount-input:focus {
+  border-color: #4caf50;
+}
+
+.custom-amount-input::placeholder {
+  color: #bbb;
+}
+
+.currency {
+  color: #888;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* ── Payment section ── */
+.payment-section {
+  background: #f9f9f9;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.payment-section form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-section button {
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  background: #4caf50;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.payment-section button:hover {
+  background: #43a047;
+}
+
+.payment-section button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.payment-section p {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 8px 0 0 0;
+}
+
+/* ── Bottom actions ── */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  padding: 16px 16px 32px;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.cancel-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  background: #e8e8e8;
+  color: #333;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #ddd;
+}
