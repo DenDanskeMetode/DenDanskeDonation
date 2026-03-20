@@ -71,12 +71,12 @@ jobs:
       - name: Create .env file
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           echo "STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}" > .env
+          echo "JWT_SECRET=${JWT_SECRET}" >> .env
 
       - name: Start containers
-        env:
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: docker compose up -d
 
       - name: Healthcheck backend
@@ -164,12 +164,16 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -T ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IPV4 }} \
             "set -e && \
              echo '$GHCR_TOKEN' | docker login ghcr.io -u '$GHCR_USER' --password-stdin && \
              cd /opt/DenDanskeDonation && \
              git pull origin main && \
+             echo 'STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY' > .env && \
+             echo 'JWT_SECRET=$JWT_SECRET' >> .env && \
              docker-compose pull && \
              docker-compose down && \
              docker-compose up -d --no-build"
