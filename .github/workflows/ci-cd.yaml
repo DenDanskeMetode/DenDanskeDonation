@@ -70,7 +70,9 @@ jobs:
 
       - name: Run backend Jest tests
         run: |
-          cd tests
+          cd backend
+          npm install
+          cd ../tests
           npm install
           npm test
 
