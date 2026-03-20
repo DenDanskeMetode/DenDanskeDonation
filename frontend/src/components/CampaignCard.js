@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import './CampaignCard.css';
+import './css/CampaignCard.css';
 
 function CampaignCard({ campaign, onClick }) {
   const navigate = useNavigate();

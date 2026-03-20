@@ -1,40 +1,13 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import './CampaignDetail.css';
-import campaigns from '../data/campaigns';
-
-function CircularProgress({ raised, goal, image, title }) {
-  const pct = Math.min((raised / goal) * 100, 100);
-  const size = 220;
-  const strokeWidth = 7;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference * (1 - pct / 100);
-
-  return (
-    <div className="cd-progress-wrap">
-      <svg width={size} height={size} className="cd-ring">
-        <circle
-          cx={size / 2} cy={size / 2} r={radius}
-          fill="none" stroke="#e0e0e0" strokeWidth={strokeWidth}
-        />
-        <circle
-          cx={size / 2} cy={size / 2} r={radius}
-          fill="none" stroke="#4caf50" strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
-        />
-      </svg>
-      <img src={image} alt={title} className="cd-ring-img" />
-    </div>
-  );
-}
+import './css/CampaignDetail.css';
+import useCampaignsStore from '../store/useCampaignsStore';
+import CircularProgress from '../components/CircularProgress';
 
 function CampaignDetail() {
   const { state } = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
+  const campaigns = useCampaignsStore((state) => state.campaigns);
 
   const campaign = state ?? campaigns.find(c => c.id === Number(id));
 
