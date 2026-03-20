@@ -8,8 +8,13 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=5432
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
 
   client:
     build:

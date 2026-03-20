@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Home.css';
-import CreateCampaignModal from './CreateCampaignModal';
-import FilterModal from './FilterModal';
-import campaigns from '../data/campaigns';
+import './css/Home.css';
+import CreateCampaignModal from '../components/CreateCampaignModal';
+import FilterModal from '../components/FilterModal';
+import useCampaignsStore from '../store/useCampaignsStore';
 import CampaignCard from '../components/CampaignCard';
 
 const filters = ['Tæt på mig', 'Overraskelse', 'Kategori', 'Ny'];
 
 function Home() {
+  const campaigns = useCampaignsStore((state) => state.campaigns);
   const [activeFilter, setActiveFilter] = useState(filters[0]);
   const [showModal, setShowModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);

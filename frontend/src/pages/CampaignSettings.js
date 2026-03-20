@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import campaigns from '../data/campaigns';
-import '../pages/CreateCampaignModal.css';
-import './CampaignSettings.css';
+import useCampaignsStore from '../store/useCampaignsStore';
+import '../components/css/CreateCampaignModal.css';
+import './css/CampaignSettings.css';
+import ImageUploader from '../components/ImageUploader';
 
 function CampaignSettings() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const campaigns = useCampaignsStore((state) => state.campaigns);
+  const updateCampaign = useCampaignsStore((state) => state.updateCampaign);
   const campaign = campaigns.find(c => c.id === Number(id));
 
   const [title, setTitle] = useState(campaign?.title || '');
@@ -59,35 +62,7 @@ function CampaignSettings() {
       {/* Scrollable body */}
       <div className="modal-body">
 
-        {/* Images */}
-        <div className="image-row">
-          {images.map((src, i) => (
-            <div key={i} className="img-box">
-              <img src={src} alt="" className="img-preview" />
-              <button className="img-delete-btn" onClick={() => removeImage(i)}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6l-1 14H6L5 6" />
-                  <path d="M10 11v6M14 11v6" />
-                  <path d="M9 6V4h6v2" />
-                </svg>
-              </button>
-            </div>
-          ))}
-          {images.length < 6 && (
-            <label className="img-box-placeholder">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="3" />
-                <circle cx="8.5" cy="8.5" r="1.5" />
-                <polyline points="21 15 16 10 5 21" />
-                <line x1="18" y1="5" x2="18" y2="9" />
-                <line x1="16" y1="7" x2="20" y2="7" />
-              </svg>
-              Tilføj billede
-              <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleImageUpload} />
-            </label>
-          )}
-        </div>
+        <ImageUploader images={images} onUpload={handleImageUpload} onRemove={removeImage} />
 
         {/* Title */}
         <input
@@ -148,7 +123,15 @@ function CampaignSettings() {
       {/* Actions */}
       <div className="modal-actions">
         <button className="draft-btn">Gem udkast</button>
-        <button className="publish-btn">Publicér</button>
+        <button
+          className="publish-btn"
+          onClick={() => {
+            updateCampaign(campaign.id, { title, description, goal, tags, partners, images });
+            navigate(-1);
+          }}
+        >
+          Publicér
+        </button>
       </div>
     </div>
   );

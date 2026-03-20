@@ -91,3 +91,11 @@
 ### general backend cleanup and readme.md for interagtion with frontend tomorrow
 * 21:20 - 23:25
 * Christian
+
+
+# 20/3
+
+
+### Profile pages and navigation (general UI work)
+* 8:00 -
+* Nicholas

@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import './DonationDetail.css';
+import './css/DonationDetail.css';
 
 function DetailRow({ label, value }) {
   return (

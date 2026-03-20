@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import './ProfileHeader.css';
+import './css/ProfileHeader.css';
 
 function ProfileHeader({ user }) {
   const [avatarSrc, setAvatarSrc] = useState(user.avatar);

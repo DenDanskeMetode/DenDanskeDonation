@@ -2,43 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileHeader from '../components/ProfileHeader';
 import CampaignCard from '../components/CampaignCard';
-import campaigns from '../data/campaigns';
-import './Profile.css';
-
-const mockUser = {
-  name: 'Emily Wang',
-  avatar: '/images/default-avatar.jpg',
-  totalDonated: '2.413 kr.',
-  totalRaised: '23.512 kr.',
-  donors: 357,
-};
-
-const mockDonations = [
-  {
-    id: 1,
-    campaign: 'Hjælp os med at holde en fest for vores hund',
-    amount: '100 kr.',
-    date: 'for 2 dage siden',
-    fullDate: '18. marts 2026',
-    image: '/images/party-dog.jpg',
-    transactionId: 'TXN-00184732',
-    paymentMethod: 'Visa •••• 4212',
-    status: 'Gennemført',
-    campaignId: 2,
-  },
-  {
-    id: 2,
-    campaign: 'Støt vores skoleklasse på tur til Berlin',
-    amount: '250 kr.',
-    date: 'for 1 uge siden',
-    fullDate: '13. marts 2026',
-    image: '/images/dendanskemetode.png',
-    transactionId: 'TXN-00181105',
-    paymentMethod: 'Mastercard •••• 8871',
-    status: 'Gennemført',
-    campaignId: 3,
-  },
-];
+import useUserStore from '../store/useUserStore';
+import useCampaignsStore from '../store/useCampaignsStore';
+import './css/Profile.css';
 
 function DonationItem({ donation, onClick }) {
   return (
@@ -55,6 +21,9 @@ function DonationItem({ donation, onClick }) {
 function Profile() {
   const [activeTab, setActiveTab] = useState('campaigns');
   const navigate = useNavigate();
+  const user = useUserStore((state) => state.user);
+  const donations = useUserStore((state) => state.donations);
+  const campaigns = useCampaignsStore((state) => state.campaigns);
 
   return (
     <div className="profile-page">
@@ -64,7 +33,7 @@ function Profile() {
         </svg>
       </button>
 
-      <ProfileHeader user={mockUser} />
+      <ProfileHeader user={user} />
 
       <div className="profile-tabs">
         <button
@@ -90,7 +59,7 @@ function Profile() {
           </div>
         ) : (
           <div className="donation-list">
-            {mockDonations.map(d => (
+            {donations.map(d => (
               <DonationItem key={d.id} donation={d} onClick={() => navigate(`/donations/${d.id}`, { state: d })} />
             ))}
           </div>
