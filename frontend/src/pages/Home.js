@@ -4,30 +4,9 @@ import './Home.css';
 import CreateCampaignModal from './CreateCampaignModal';
 import FilterModal from './FilterModal';
 import campaigns from '../data/campaigns';
+import CampaignCard from '../components/CampaignCard';
 
 const filters = ['Tæt på mig', 'Overraskelse', 'Kategori', 'Ny'];
-
-function CampaignCard({ campaign }) {
-  const navigate = useNavigate();
-  const pct = Math.min((campaign.raised / campaign.goal) * 100, 100);
-  return (
-    <div className="campaign-card" onClick={() => navigate(`/campaigns/${campaign.id}`, { state: campaign })}>
-      <img src={campaign.image} alt={campaign.title} className="campaign-image-placeholder" />
-      <div className="campaign-body">
-        <div className="campaign-progress-row">
-          <div className="progress-bar">
-            <div className="progress-fill" style={{ width: `${pct}%` }} />
-          </div>
-          <span className="campaign-raised">{campaign.goal}kr</span>
-        </div>
-        <p className="campaign-title">{campaign.title}</p>
-        <p className="campaign-meta">
-          {campaign.location} &bull; {campaign.time}
-        </p>
-      </div>
-    </div>
-  );
-}
 
 function Home() {
   const [activeFilter, setActiveFilter] = useState(filters[0]);
@@ -60,7 +39,7 @@ function Home() {
               {filterCount > 0 && <span className="filter-badge">{filterCount}</span>}
             </button>
           </div>
-          <button className="profile-btn" onClick={() => navigate('/campaigns')}>
+          <button className="profile-btn" onClick={() => navigate('/profile')}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
               <circle cx="12" cy="8" r="4" />
               <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
