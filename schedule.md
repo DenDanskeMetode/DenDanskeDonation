@@ -107,3 +107,7 @@
 ### Backend integration til frontend (frontend, bugfixing, kodning)
 * 11:00 -
 * Victor
+
+### CI/CD bugfixing and improvements (CI/CD, bugfixing, kodning)
+* 11:00 - 
+* Felix
