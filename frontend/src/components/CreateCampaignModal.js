@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './css/CreateCampaignModal.css';
 import ImageUploader from './ImageUploader';
+import useCampaignsStore from '../store/useCampaignsStore';
 
 function CreateCampaignModal({ onClose }) {
   const [title, setTitle] = useState('');
@@ -9,6 +10,10 @@ function CreateCampaignModal({ onClose }) {
   const [tags, setTags] = useState([]);
   const [images, setImages] = useState([]);
   const [closing, setClosing] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const addCampaign = useCampaignsStore((state) => state.addCampaign);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -33,6 +38,27 @@ function CreateCampaignModal({ onClose }) {
   function addTag() {
     const tag = prompt('Tilføj tag:');
     if (tag && tag.trim()) setTags(prev => [...prev, tag.trim()]);
+  }
+
+  async function handlePublish() {
+    if (!title.trim()) {
+      setError('Overskrift er påkrævet.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      await addCampaign({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        goal: goal ? Number(goal) : undefined,
+        tags: tags.length > 0 ? tags : undefined,
+      });
+      handleClose();
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
   }
 
   return (
@@ -97,12 +123,16 @@ function CreateCampaignModal({ onClose }) {
           <input className="form-input" placeholder="Tilføj samarbeidspartner" />
         </div>
 
+        {error && <p style={{ color: 'red', padding: '0 16px' }}>{error}</p>}
+
       </div>{/* end modal-body */}
 
       {/* Actions */}
       <div className="modal-actions">
-        <button className="draft-btn" onClick={handleClose}>Gem udkast</button>
-        <button className="publish-btn" onClick={handleClose}>Publicér</button>
+        <button className="draft-btn" onClick={handleClose} disabled={loading}>Gem udkast</button>
+        <button className="publish-btn" onClick={handlePublish} disabled={loading}>
+          {loading ? 'Gemmer…' : 'Publicér'}
+        </button>
       </div>
     </div>
   );

@@ -1,15 +1,45 @@
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import './css/CampaignDetail.css';
 import useCampaignsStore from '../store/useCampaignsStore';
 import CircularProgress from '../components/CircularProgress';
+import { campaignApi } from '../services/api';
+
+function normalizeCampaign(c) {
+  const raised = c.donations
+    ? c.donations.reduce((sum, d) => sum + Number(d.amount), 0)
+    : 0;
+  return {
+    id: c.id,
+    title: c.title,
+    description: c.description,
+    goal: c.goal,
+    raised,
+    location: c.city_name || '',
+    creator: c.created_by,
+    tags: c.tags || [],
+    image: null,
+  };
+}
 
 function CampaignDetail() {
-  const { state } = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
   const campaigns = useCampaignsStore((state) => state.campaigns);
 
-  const campaign = state ?? campaigns.find(c => c.id === Number(id));
+  const fromStore = campaigns.find(c => c.id === Number(id));
+  const [campaign, setCampaign] = useState(fromStore || null);
+  const [loading, setLoading] = useState(!fromStore);
+
+  useEffect(() => {
+    if (fromStore) return;
+    campaignApi.getById(id)
+      .then(data => setCampaign(normalizeCampaign(data)))
+      .catch(() => navigate('/'))
+      .finally(() => setLoading(false));
+  }, [id, fromStore, navigate]);
+
+  if (loading) return null;
 
   if (!campaign) {
     navigate('/');
