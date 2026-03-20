@@ -27,6 +27,14 @@ export interface Donation {
   user_email?: string;
 }
 
+export interface CampaignDonation {
+  id: number;
+  amount: number;
+  created_at: string;
+  sender_username: string;
+  sender_firstname: string;
+}
+
 export interface Campaign {
   id: number;
   title: string;
@@ -84,6 +92,7 @@ declare function getAllCampaigns(): Promise<Campaign[]>;
 declare function createUser(userData: UserCreationData): Promise<User>;
 declare function createCampaign(campaignData: CampaignCreationData): Promise<Campaign>;
 declare function createDonation(donationData: DonationCreationData): Promise<Donation>;
+declare function getDonationsByCampaign(campaignId: number): Promise<CampaignDonation[]>;
 
 export interface Image {
   id: number;
@@ -120,6 +129,7 @@ export {
   deleteCampaign,
   deleteUser,
   createDonation,
+  getDonationsByCampaign,
   addImageToCampaign,
   getCampaignImages,
   updateUser,
