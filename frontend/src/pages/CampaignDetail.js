@@ -17,6 +17,7 @@ function timeAgo(dateStr) {
 
 function CampaignDetail() {
   const { id } = useParams();
+  const { state } = useLocation();
   const navigate = useNavigate();
   const campaigns = useCampaignsStore((s) => s.campaigns);
 
