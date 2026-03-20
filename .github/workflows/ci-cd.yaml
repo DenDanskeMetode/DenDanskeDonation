@@ -68,6 +68,18 @@ jobs:
             --image ghcr.io/dendanskemetode/dendanskedonation/db:latest \
             --config tests/docker/database.structure-test.yaml
 
+      - name: Run backend Jest tests
+        run: |
+          cd tests
+          npm install
+          npm test
+
+      - name: Run frontend Jest tests
+        run: |
+          cd frontend
+          npm install
+          npm test -- --watchAll=false --passWithNoTests
+
       - name: Create .env file
         env:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
@@ -89,6 +101,34 @@ jobs:
           echo "Backend did not become healthy in time"
           docker compose logs
           exit 1
+
+      - name: Validate database schema
+        run: |
+          set -e
+          echo "=== Validating database schema ===" && \
+
+          echo "Checking required tables..." && \
+          docker compose exec -T db psql -U giraf -d mydatabase -c "\dt" | grep -E "(users|campaigns|images|donations|campaign_images)" && \
+          echo "✓ All required tables exist" && \
+
+          echo "Validating users table structure..." && \
+          docker compose exec -T db psql -U giraf -d mydatabase -c "\d users" | grep -q "id" && \
+          echo "✓ users table OK" && \
+
+          echo "Validating campaigns table structure..." && \
+          docker compose exec -T db psql -U giraf -d mydatabase -c "\d campaigns" | grep -q "id" && \
+          echo "✓ campaigns table OK" && \
+
+          echo "Validating donations table structure..." && \
+          docker compose exec -T db psql -U giraf -d mydatabase -c "\d donations" | grep -q "id" && \
+          echo "✓ donations table OK" && \
+
+          echo "Checking test data insertion..." && \
+          docker compose exec -T db psql -U giraf -d mydatabase -c "SELECT COUNT(*) as users FROM users WHERE id > 0;" && \
+          docker compose exec -T db psql -U giraf -d mydatabase -c "SELECT COUNT(*) as campaigns FROM campaigns WHERE id > 0;" && \
+          echo "✓ Test data verified" && \
+
+          echo "✓ Database validation completed successfully"
 
 #     - name: Run Jest tests
 #        run: |
@@ -169,11 +209,29 @@ jobs:
         run: |
           ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -T ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IPV4 }} \
             "set -e && \
+             echo '=== Logging in to GitHub Container Registry ===' && \
              echo '$GHCR_TOKEN' | docker login ghcr.io -u '$GHCR_USER' --password-stdin && \
+             echo '=== Navigating to deployment directory ===' && \
              cd /opt/DenDanskeDonation && \
+             echo '=== Pulling latest code from main ===' && \
              git pull origin main && \
+             echo '=== Creating .env file ===' && \
              echo 'STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY' > .env && \
              echo 'JWT_SECRET=$JWT_SECRET' >> .env && \
+             echo '=== Pulling latest Docker images ===' && \
              docker-compose pull && \
+             echo '=== Stopping old containers ===' && \
              docker-compose down && \
-             docker-compose up -d --no-build"
+             echo '=== Starting new containers ===' && \
+             docker-compose up -d --no-build && \
+             echo '=== Verifying containers are running ===' && \
+             sleep 3 && \
+             docker-compose ps || { echo 'ERROR: Containers failed to start'; docker-compose logs; exit 1; } && \
+             echo '=== Checking backend health ===' && \
+             for i in \$(seq 1 10); do \
+               curl -sf http://localhost:5000 && { echo 'Backend is healthy'; exit 0; } || echo \"Attempt \$i: backend not ready yet...\"; \
+               [ \$i -lt 10 ] && sleep 2; \
+             done && \
+             echo 'ERROR: Backend failed to become healthy after deployment' && \
+             docker-compose logs && \
+             exit 1"
