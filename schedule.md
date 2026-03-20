@@ -111,3 +111,7 @@
 ### CI/CD bugfixing and improvements & payment integration with UI (CI/CD, bugfixing, kodning)
 * 11:00 - 15:20
 * Felix
+
+### General VM and CI/CD fixes (vi er dumme)
+* 17:30 - 18:30
+* Victor og Nicholas
