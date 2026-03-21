@@ -4,15 +4,27 @@
   max-width: 480px;
   margin: 0 auto;
   position: relative;
+  padding-top: 330px;
   padding-bottom: 40px;
+}
+
+.profile-sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  z-index: 100;
+  background: #fff;
 }
 
 /* Back button floats over the green header */
 .profile-page-back {
-  position: absolute;
+  position: fixed;
   top: 14px;
   left: 14px;
-  z-index: 10;
+  z-index: 110;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -31,10 +43,10 @@
 
 /* ── Logout button ── */
 .profile-logout-btn {
-  position: absolute;
+  position: fixed;
   top: 14px;
   right: 14px;
-  z-index: 10;
+  z-index: 110;
   padding: 6px 12px;
   background: rgba(211, 47, 47, 0.82);
   border: none;

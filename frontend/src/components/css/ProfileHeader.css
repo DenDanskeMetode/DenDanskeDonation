@@ -4,6 +4,11 @@
   align-items: center;
   background: #fff;
   padding-bottom: 20px;
+  transition: padding-bottom 0.28s ease;
+}
+
+.profile-header.stats-hidden {
+  padding-bottom: 8px;
 }
 
 .profile-header-bg {
@@ -11,6 +16,11 @@
   height: 130px;
   background: linear-gradient(160deg, #4caf50 0%, #2e7d32 100%);
   flex-shrink: 0;
+  transition: height 0.28s ease;
+}
+
+.profile-header-bg.stats-hidden {
+  height: 60px;
 }
 
 .profile-avatar-wrapper {
@@ -63,6 +73,15 @@
   align-items: center;
   width: 100%;
   padding: 0 16px;
+  overflow: hidden;
+  max-height: 80px;
+  opacity: 1;
+  transition: max-height 0.28s ease, opacity 0.28s ease;
+}
+
+.profile-stats.stats-hidden {
+  max-height: 0;
+  opacity: 0;
 }
 
 .profile-stat {

@@ -44,6 +44,7 @@ function Profile() {
         Log ud
       </button>
 
+      <div className="profile-sticky">
       <ProfileHeader user={user} />
 
       <div className="profile-tabs">
@@ -59,6 +60,7 @@ function Profile() {
         >
           Mine Donationer
         </button>
+      </div>
       </div>
 
       <div className="profile-content">

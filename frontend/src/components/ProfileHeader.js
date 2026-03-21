@@ -1,9 +1,18 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import './css/ProfileHeader.css';
 
 function ProfileHeader({ user }) {
   const [avatarSrc, setAvatarSrc] = useState(user.avatar);
+  const [statsVisible, setStatsVisible] = useState(true);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    function onScroll() {
+      setStatsVisible(window.scrollY < 10);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   function handleAvatarChange(e) {
     const file = e.target.files[0];
@@ -13,8 +22,8 @@ function ProfileHeader({ user }) {
   }
 
   return (
-    <div className="profile-header">
-      <div className="profile-header-bg" />
+    <div className={`profile-header${statsVisible ? '' : ' stats-hidden'}`}>
+      <div className={`profile-header-bg${statsVisible ? '' : ' stats-hidden'}`} />
 
       <div className="profile-avatar-wrapper" onClick={() => fileInputRef.current.click()}>
         <img src={avatarSrc} alt="" className="profile-avatar" />
@@ -35,7 +44,7 @@ function ProfileHeader({ user }) {
       />
 
       <h2 className="profile-name">{user.name}</h2>
-      <div className="profile-stats">
+      <div className={`profile-stats${statsVisible ? '' : ' stats-hidden'}`}>
         <div className="profile-stat">
           <span className="stat-value">{user.totalDonated}</span>
           <span className="stat-label">Total Doneret</span>
