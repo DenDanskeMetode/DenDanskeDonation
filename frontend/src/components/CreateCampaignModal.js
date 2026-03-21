@@ -6,9 +6,15 @@ function CreateCampaignModal({ onClose }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [goal, setGoal] = useState('');
+  const [cityName, setCityName] = useState('');
   const [tags, setTags] = useState([]);
+  const [partners, setPartners] = useState([]);
   const [images, setImages] = useState([]);
   const [closing, setClosing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const canPublish = Boolean(title.trim() && description.trim() && Number(goal) > 0 && cityName.trim() && tags.length >= 1 && images.length >= 1);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -33,6 +39,39 @@ function CreateCampaignModal({ onClose }) {
   function addTag() {
     const tag = prompt('Tilføj tag:');
     if (tag && tag.trim()) setTags(prev => [...prev, tag.trim()]);
+  }
+
+  function addPartner() {
+    const partner = prompt('Tilføj samarbejdspartner:');
+    if (partner && partner.trim()) setPartners(prev => [...prev, partner.trim()]);
+  }
+
+  async function handlePublish() {
+    if (!canPublish) return;
+    setIsSubmitting(true);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, description, goal: Number(goal), tags, city_name: cityName.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Noget gik galt. Prøv igen.');
+      } else {
+        handleClose();
+      }
+    } catch (err) {
+      console.error('Error creating campaign:', err);
+      setError('Noget gik galt. Prøv igen.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -80,6 +119,17 @@ function CreateCampaignModal({ onClose }) {
           />
         </div>
 
+        {/* City */}
+        <div className="form-section">
+          <span className="form-label">By</span>
+          <input
+            className="form-input"
+            placeholder="Tilføj by"
+            value={cityName}
+            onChange={e => setCityName(e.target.value)}
+          />
+        </div>
+
         {/* Tags */}
         <div className="form-section">
           <span className="form-label">Tags</span>
@@ -94,15 +144,27 @@ function CreateCampaignModal({ onClose }) {
         {/* Partners */}
         <div className="form-section">
           <span className="form-label">Samarbeidspartnere</span>
-          <input className="form-input" placeholder="Tilføj samarbeidspartner" />
+          <div className="tags-row">
+            {partners.map((p, i) => (
+              <span key={i} className="tag-pill">{p}</span>
+            ))}
+            <button className="add-tag-btn" onClick={addPartner}>+ Tilføj samarbejdspartner</button>
+          </div>
         </div>
 
       </div>{/* end modal-body */}
 
       {/* Actions */}
       <div className="modal-actions">
+        {error && <p className="modal-error">{error}</p>}
         <button className="draft-btn" onClick={handleClose}>Gem udkast</button>
-        <button className="publish-btn" onClick={handleClose}>Publicér</button>
+        <button
+          className="publish-btn"
+          onClick={handlePublish}
+          disabled={!canPublish || isSubmitting}
+        >
+          {isSubmitting ? 'Publicerer...' : 'Publicér'}
+        </button>
       </div>
     </div>
   );
