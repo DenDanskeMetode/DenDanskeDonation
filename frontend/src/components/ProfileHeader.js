@@ -14,11 +14,26 @@ function ProfileHeader({ user }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  function handleAvatarChange(e) {
+  async function handleAvatarChange(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAvatarSrc(url);
+    setAvatarSrc(URL.createObjectURL(file));
+
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = localStorage.getItem('token');
+    if (!storedUser.id || !token) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+      await fetch(`/api/user/${storedUser.id}/profile-picture`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+    } catch (err) {
+      console.error('Error uploading profile picture:', err);
+    }
   }
 
   return (

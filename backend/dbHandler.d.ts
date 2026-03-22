@@ -112,6 +112,7 @@ declare function updateCampaign(campaignId: number, fields: Partial<Pick<Campaig
 declare function deleteCampaign(campaignId: number): Promise<boolean>;
 declare function deleteUser(userId: number): Promise<boolean>;
 declare function addImageToCampaign(campaignId: number, imageId: number): Promise<{ campaign_id: number; image_id: number; added_at: string }>;
+declare function removeImageFromCampaign(campaignId: number, imageId: number): Promise<void>;
 declare function getCampaignImages(campaignId: number): Promise<CampaignImageEntry[]>;
 declare function updateUser(userId: number, fields: Partial<Pick<User, 'username' | 'email' | 'firstname' | 'surname' | 'age' | 'gender'>>): Promise<User | null>;
 declare function setProfilePicture(userId: number, imageId: number): Promise<User | null>;
@@ -131,6 +132,7 @@ export {
   createDonation,
   getDonationsByCampaign,
   addImageToCampaign,
+  removeImageFromCampaign,
   getCampaignImages,
   updateUser,
   setProfilePicture,

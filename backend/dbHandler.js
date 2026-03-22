@@ -54,15 +54,18 @@ async function getCampaignById(campaignId) {
   try {
     const campaignQuery = 'SELECT * FROM campaigns WHERE id = $1';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
-    
+    const imagesQuery = 'SELECT image_id FROM campaign_images WHERE campaign_id = $1 ORDER BY added_at ASC';
+
     const campaignResult = await pool.query(campaignQuery, [campaignId]);
     if (campaignResult.rows.length === 0) return null;
-    
+
     const donationsResult = await pool.query(donationsQuery, [campaignId]);
-    
+    const imagesResult = await pool.query(imagesQuery, [campaignId]);
+
     const campaign = campaignResult.rows[0];
     campaign.donations = donationsResult.rows;
-    
+    campaign.image_ids = imagesResult.rows.map(r => r.image_id);
+
     return campaign;
   } catch (error) {
     console.error('Error getting campaign by ID:', error);
@@ -96,18 +99,21 @@ async function getAllCampaigns() {
   try {
     const campaignsQuery = 'SELECT * FROM campaigns';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
-    
+    const imagesQuery = 'SELECT image_id FROM campaign_images WHERE campaign_id = $1 ORDER BY added_at ASC';
+
     const campaignsResult = await pool.query(campaignsQuery);
-    
-    const campaignsWithDonations = await Promise.all(
+
+    const campaignsWithData = await Promise.all(
       campaignsResult.rows.map(async (campaign) => {
         const donationsResult = await pool.query(donationsQuery, [campaign.id]);
+        const imagesResult = await pool.query(imagesQuery, [campaign.id]);
         campaign.donations = donationsResult.rows;
+        campaign.image_ids = imagesResult.rows.map(r => r.image_id);
         return campaign;
       })
     );
-    
-    return campaignsWithDonations;
+
+    return campaignsWithData;
   } catch (error) {
     console.error('Error getting all campaigns:', error);
     throw error;
@@ -212,6 +218,15 @@ async function addImageToCampaign(campaignId, imageId) {
   }
 }
 
+async function removeImageFromCampaign(campaignId, imageId) {
+  try {
+    await executeQuery('DELETE FROM campaign_images WHERE campaign_id = $1 AND image_id = $2', [campaignId, imageId]);
+  } catch (error) {
+    console.error('Error removing image from campaign:', error);
+    throw error;
+  }
+}
+
 async function getCampaignImages(campaignId) {
   try {
     const query = `
@@ -289,6 +304,7 @@ export {
   createDonation,
   getDonationsByCampaign,
   addImageToCampaign,
+  removeImageFromCampaign,
   getCampaignImages,
   updateUser,
   setProfilePicture,
