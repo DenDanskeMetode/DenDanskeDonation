@@ -249,5 +249,6 @@
   cursor: pointer;
 }
 
-.publish-btn:hover { background: #43a047; }
+.publish-btn:hover:not(:disabled) { background: #43a047; }
+.publish-btn:disabled { background: #d6d6d6; color: #aaa; cursor: not-allowed; }
 .draft-btn:hover   { background: #ddd; }
