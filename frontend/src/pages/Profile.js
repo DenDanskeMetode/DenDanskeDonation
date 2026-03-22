@@ -62,7 +62,16 @@ function Profile() {
             image: c.image_ids && c.image_ids.length > 0 ? `/api/images/${c.image_ids[0]}` : undefined,
           }))
       );
-      setMyDonations(userInfo.donations || []);
+      const campaignById = Object.fromEntries(campaigns.map(c => [c.id, c]));
+      setMyDonations(
+        (userInfo.donations || []).map(d => ({
+          ...d,
+          image: campaignById[d.to_campaign]?.image_ids?.[0]
+            ? `/api/images/${campaignById[d.to_campaign].image_ids[0]}`
+            : undefined,
+          date: d.created_at ? timeAgo(d.created_at) : '',
+        }))
+      );
     }).catch(console.error);
   }, []);
 
@@ -114,7 +123,7 @@ function Profile() {
         ) : (
           <div className="donation-list">
             {myDonations.map(d => (
-              <DonationItem key={d.id} donation={{ campaign: d.campaign_title, amount: `${d.amount} kr.` }} onClick={() => {}} />
+              <DonationItem key={d.id} donation={{ campaign: d.campaign_title, amount: `${d.amount} kr.`, image: d.image, date: d.date }} onClick={() => {}} />
             ))}
           </div>
         )}
