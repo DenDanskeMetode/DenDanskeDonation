@@ -54,15 +54,18 @@ async function getCampaignById(campaignId) {
   try {
     const campaignQuery = 'SELECT * FROM campaigns WHERE id = $1';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
-    
+    const ownersQuery = 'SELECT u.id, u.username, u.email FROM campaign_owners co JOIN users u ON co.user_id = u.id WHERE co.campaign_id = $1';
+
     const campaignResult = await pool.query(campaignQuery, [campaignId]);
     if (campaignResult.rows.length === 0) return null;
-    
+
     const donationsResult = await pool.query(donationsQuery, [campaignId]);
-    
+    const ownersResult = await pool.query(ownersQuery, [campaignId]);
+
     const campaign = campaignResult.rows[0];
     campaign.donations = donationsResult.rows;
-    
+    campaign.owners = ownersResult.rows;
+
     return campaign;
   } catch (error) {
     console.error('Error getting campaign by ID:', error);
@@ -96,18 +99,21 @@ async function getAllCampaigns() {
   try {
     const campaignsQuery = 'SELECT * FROM campaigns';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
-    
+    const ownersQuery = 'SELECT u.id, u.username, u.email FROM campaign_owners co JOIN users u ON co.user_id = u.id WHERE co.campaign_id = $1';
+
     const campaignsResult = await pool.query(campaignsQuery);
-    
-    const campaignsWithDonations = await Promise.all(
+
+    const campaignsWithData = await Promise.all(
       campaignsResult.rows.map(async (campaign) => {
         const donationsResult = await pool.query(donationsQuery, [campaign.id]);
+        const ownersResult = await pool.query(ownersQuery, [campaign.id]);
         campaign.donations = donationsResult.rows;
+        campaign.owners = ownersResult.rows;
         return campaign;
       })
     );
-    
-    return campaignsWithDonations;
+
+    return campaignsWithData;
   } catch (error) {
     console.error('Error getting all campaigns:', error);
     throw error;
@@ -127,14 +133,27 @@ async function createUser(userData) {
 }
 
 async function createCampaign(campaignData) {
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
     const { title, description, tags, goal, milestones, city_name, created_by } = campaignData;
-    const query = 'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
-    const result = await executeQuery(query, [title, description, tags, goal, milestones, city_name, created_by]);
-    return result[0];
+    const campaignResult = await client.query(
+      'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      [title, description, tags, goal, milestones, city_name, created_by]
+    );
+    const campaign = campaignResult.rows[0];
+    if (created_by) {
+      await client.query('INSERT INTO campaign_owners (campaign_id, user_id) VALUES ($1, $2)', [campaign.id, created_by]);
+    }
+    await client.query('COMMIT');
+    campaign.owners = created_by ? [{ id: created_by }] : [];
+    return campaign;
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error creating campaign:', error);
     throw error;
+  } finally {
+    client.release();
   }
 }
 
@@ -276,6 +295,47 @@ async function createImage(imageData) {
   }
 }
 
+async function getCampaignOwners(campaignId) {
+  try {
+    const query = 'SELECT u.id, u.username, u.email FROM campaign_owners co JOIN users u ON co.user_id = u.id WHERE co.campaign_id = $1 ORDER BY co.added_at ASC';
+    return await executeQuery(query, [campaignId]);
+  } catch (error) {
+    console.error('Error getting campaign owners:', error);
+    throw error;
+  }
+}
+
+async function addCampaignOwner(campaignId, userId) {
+  try {
+    const query = 'INSERT INTO campaign_owners (campaign_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *';
+    const result = await executeQuery(query, [campaignId, userId]);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error adding campaign owner:', error);
+    throw error;
+  }
+}
+
+async function removeCampaignOwner(campaignId, userId) {
+  try {
+    const result = await executeQuery('DELETE FROM campaign_owners WHERE campaign_id = $1 AND user_id = $2 RETURNING *', [campaignId, userId]);
+    return result.length > 0;
+  } catch (error) {
+    console.error('Error removing campaign owner:', error);
+    throw error;
+  }
+}
+
+async function isCampaignOwner(campaignId, userId) {
+  try {
+    const result = await executeQuery('SELECT 1 FROM campaign_owners WHERE campaign_id = $1 AND user_id = $2', [campaignId, userId]);
+    return result.length > 0;
+  } catch (error) {
+    console.error('Error checking campaign ownership:', error);
+    throw error;
+  }
+}
+
 export {
   getUserById,
   getCampaignById,
@@ -294,4 +354,8 @@ export {
   setProfilePicture,
   getImageById,
   createImage,
+  getCampaignOwners,
+  addCampaignOwner,
+  removeCampaignOwner,
+  isCampaignOwner,
 };

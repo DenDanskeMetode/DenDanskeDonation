@@ -15,6 +15,13 @@ VALUES
   ('Education for All', 'Building schools and providing educational materials', ARRAY['education', 'children', 'schools'], 75000.00, FALSE, ARRAY['Fundraising', 'Construction', 'Hiring Teachers'], 'Accra', 2),
   ('Reforestation Project', 'Planting trees to combat deforestation', ARRAY['environment', 'trees', 'sustainability'], 30000.00, FALSE, ARRAY['Land Preparation', 'Planting', 'Maintenance'], 'Lagos', 3);
 
+-- Insert campaign owners (creator is always an owner)
+INSERT INTO campaign_owners (campaign_id, user_id)
+VALUES
+  (1, 1),  -- John owns Clean Water Initiative
+  (2, 2),  -- Jane owns Education for All
+  (3, 3);  -- Bob owns Reforestation Project
+
 -- Insert test donations linking users to campaigns
 INSERT INTO donations (from_user, to_campaign, amount)
 VALUES 

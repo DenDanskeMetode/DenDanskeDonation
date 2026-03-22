@@ -35,6 +35,12 @@ export interface CampaignDonation {
   sender_firstname: string;
 }
 
+export interface CampaignOwner {
+  id: number;
+  username: string;
+  email: string;
+}
+
 export interface Campaign {
   id: number;
   title: string;
@@ -48,6 +54,7 @@ export interface Campaign {
   created_at?: string;
   updated_at?: string;
   donations?: Donation[];
+  owners?: CampaignOwner[];
 }
 
 export interface CampaignImageEntry {
@@ -117,6 +124,10 @@ declare function updateUser(userId: number, fields: Partial<Pick<User, 'username
 declare function setProfilePicture(userId: number, imageId: number): Promise<User | null>;
 declare function getImageById(imageId: number): Promise<Image | null>;
 declare function createImage(imageData: ImageCreationData): Promise<Omit<Image, 'data'>>;
+declare function getCampaignOwners(campaignId: number): Promise<CampaignOwner[]>;
+declare function addCampaignOwner(campaignId: number, userId: number): Promise<{ campaign_id: number; user_id: number; added_at: string } | null>;
+declare function removeCampaignOwner(campaignId: number, userId: number): Promise<boolean>;
+declare function isCampaignOwner(campaignId: number, userId: number): Promise<boolean>;
 
 export {
   getUserById,
@@ -136,4 +147,8 @@ export {
   setProfilePicture,
   getImageById,
   createImage,
+  getCampaignOwners,
+  addCampaignOwner,
+  removeCampaignOwner,
+  isCampaignOwner,
 };

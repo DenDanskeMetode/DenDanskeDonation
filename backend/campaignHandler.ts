@@ -9,8 +9,12 @@ import {
   deleteCampaign,
   addImageToCampaign,
   getCampaignImages,
+  getCampaignOwners,
+  addCampaignOwner,
+  removeCampaignOwner,
+  isCampaignOwner,
 } from './dbHandler.js';
-import type { CampaignImageEntry } from './dbHandler.js';
+import type { CampaignImageEntry, CampaignOwner } from './dbHandler.js';
 
 interface Campaign {
   id: number;
@@ -25,6 +29,7 @@ interface Campaign {
   created_at?: string;
   updated_at?: string;
   donations?: Donation[];
+  owners?: CampaignOwner[];
 }
 
 interface Donation {
@@ -99,7 +104,8 @@ export class CampaignManager {
       throw Object.assign(new Error('Campaign not found'), { status: 404 });
     }
 
-    if (campaign.created_by !== requestingUserId) {
+    const isOwner = await isCampaignOwner(campaignId, requestingUserId);
+    if (!isOwner) {
       throw Object.assign(new Error('You can only update your own campaigns'), { status: 403 });
     }
 
@@ -118,7 +124,8 @@ export class CampaignManager {
       throw Object.assign(new Error('Campaign not found'), { status: 404 });
     }
 
-    if (campaign.created_by !== requestingUserId) {
+    const isOwner = await isCampaignOwner(campaignId, requestingUserId);
+    if (!isOwner) {
       throw Object.assign(new Error('You can only delete your own campaigns'), { status: 403 });
     }
 
@@ -137,7 +144,8 @@ export class CampaignManager {
       throw Object.assign(new Error('Campaign not found'), { status: 404 });
     }
 
-    if (campaign.created_by !== requestingUserId) {
+    const isOwner = await isCampaignOwner(campaignId, requestingUserId);
+    if (!isOwner) {
       throw Object.assign(new Error('You can only add images to your own campaigns'), { status: 403 });
     }
 
@@ -145,6 +153,66 @@ export class CampaignManager {
       await addImageToCampaign(campaignId, imageId);
     } catch (error) {
       console.error(`Error adding image ${imageId} to campaign ${campaignId}:`, error);
+      throw error;
+    }
+  }
+
+  static async getOwners(campaignId: number): Promise<CampaignOwner[]> {
+    const campaign = await getCampaignById(campaignId);
+    if (!campaign) {
+      throw Object.assign(new Error('Campaign not found'), { status: 404 });
+    }
+    try {
+      return await getCampaignOwners(campaignId);
+    } catch (error) {
+      console.error(`Error getting owners for campaign ${campaignId}:`, error);
+      throw error;
+    }
+  }
+
+  static async addOwner(campaignId: number, newUserId: number, requestingUserId: number): Promise<void> {
+    const campaign = await getCampaignById(campaignId);
+    if (!campaign) {
+      throw Object.assign(new Error('Campaign not found'), { status: 404 });
+    }
+
+    const isOwner = await isCampaignOwner(campaignId, requestingUserId);
+    if (!isOwner) {
+      throw Object.assign(new Error('You can only manage owners of your own campaigns'), { status: 403 });
+    }
+
+    try {
+      await addCampaignOwner(campaignId, newUserId);
+    } catch (error) {
+      console.error(`Error adding owner ${newUserId} to campaign ${campaignId}:`, error);
+      throw error;
+    }
+  }
+
+  static async removeOwner(campaignId: number, targetUserId: number, requestingUserId: number): Promise<void> {
+    const campaign = await getCampaignById(campaignId);
+    if (!campaign) {
+      throw Object.assign(new Error('Campaign not found'), { status: 404 });
+    }
+
+    const isOwner = await isCampaignOwner(campaignId, requestingUserId);
+    if (!isOwner) {
+      throw Object.assign(new Error('You can only manage owners of your own campaigns'), { status: 403 });
+    }
+
+    const owners = await getCampaignOwners(campaignId);
+    if (owners.length <= 1) {
+      throw Object.assign(new Error('Campaign must have at least one owner'), { status: 400 });
+    }
+
+    try {
+      const removed = await removeCampaignOwner(campaignId, targetUserId);
+      if (!removed) {
+        throw Object.assign(new Error('User is not an owner of this campaign'), { status: 404 });
+      }
+    } catch (error: any) {
+      if (error.status) throw error;
+      console.error(`Error removing owner ${targetUserId} from campaign ${campaignId}:`, error);
       throw error;
     }
   }

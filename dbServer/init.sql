@@ -47,6 +47,15 @@ CREATE TABLE campaign_images (
     FOREIGN KEY (image_id) REFERENCES images(id)
 );
 
+CREATE TABLE campaign_owners (
+    campaign_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (campaign_id, user_id),
+    FOREIGN KEY (campaign_id) REFERENCES campaigns(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 CREATE TABLE donations (
     id SERIAL PRIMARY KEY,
     from_user INTEGER NOT NULL,
