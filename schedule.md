@@ -127,3 +127,8 @@
 ### payment integration with ui
 * 11:10 - 
 * Felix
+
+### cpr integration and role managment
+* 6:40 - 7:00
+* 23:20 - 00:00
+* Christian
