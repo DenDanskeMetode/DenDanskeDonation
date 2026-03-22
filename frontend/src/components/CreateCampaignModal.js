@@ -10,6 +10,7 @@ function CreateCampaignModal({ onClose }) {
   const [tags, setTags] = useState([]);
   const [partners, setPartners] = useState([]);
   const [images, setImages] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
   const [closing, setClosing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -28,12 +29,16 @@ function CreateCampaignModal({ onClose }) {
 
   function handleImageUpload(e) {
     const files = Array.from(e.target.files);
-    const urls = files.map(f => URL.createObjectURL(f));
-    setImages(prev => [...prev, ...urls].slice(0, 6));
+    const remaining = 6 - images.length;
+    const newFiles = files.slice(0, remaining);
+    const urls = newFiles.map(f => URL.createObjectURL(f));
+    setImages(prev => [...prev, ...urls]);
+    setImageFiles(prev => [...prev, ...newFiles]);
   }
 
   function removeImage(index) {
     setImages(prev => prev.filter((_, i) => i !== index));
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
   }
 
   function addTag() {
@@ -64,6 +69,22 @@ function CreateCampaignModal({ onClose }) {
       if (!res.ok) {
         setError(data.error || 'Noget gik galt. Prøv igen.');
       } else {
+        const campaignId = data.id;
+        for (const file of imageFiles) {
+          const formData = new FormData();
+          formData.append('image', file);
+          const imgRes = await fetch('/api/images', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+          const imgData = await imgRes.json();
+          await fetch(`/api/campaigns/${campaignId}/images`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ imageId: imgData.id }),
+          });
+        }
         handleClose();
       }
     } catch (err) {

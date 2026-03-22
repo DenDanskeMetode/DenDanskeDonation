@@ -59,6 +59,7 @@ function Profile() {
             raised: (c.donations || []).reduce((sum, d) => sum + Number(d.amount), 0),
             location: c.city_name || '',
             time: c.created_at ? timeAgo(c.created_at) : '',
+            image: c.image_ids && c.image_ids.length > 0 ? `/api/images/${c.image_ids[0]}` : undefined,
           }))
       );
       setMyDonations(userInfo.donations || []);

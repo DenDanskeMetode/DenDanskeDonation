@@ -31,22 +31,30 @@ function CampaignSettings() {
   const [tags, setTags] = useState([]);
   const [partners, setPartners] = useState([]);
   const [images, setImages] = useState([]);
+  const [imageRefs, setImageRefs] = useState([]);
+  const [removedImageIds, setRemovedImageIds] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch(`/api/campaigns/${id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => {
+    const headers = { Authorization: `Bearer ${token}` };
+
+    Promise.all([
+      fetch(`/api/campaigns/${id}`, { headers }).then(r => {
         if (r.status === 404) { setNotFound(true); return null; }
         return r.json();
-      })
-      .then(data => {
+      }),
+      fetch(`/api/campaigns/${id}/images`, { headers }).then(r => r.json()),
+    ])
+      .then(([data, imgs]) => {
         if (!data) return;
         setTitle(data.title || '');
         setDescription(data.description || '');
         setGoal(data.goal || '');
         setTags(data.tags || []);
+        if (Array.isArray(imgs) && imgs.length > 0) {
+          setImages(imgs.map(img => `/api/images/${img.id}`));
+          setImageRefs(imgs.map(img => ({ type: 'existing', id: img.id })));
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -54,12 +62,20 @@ function CampaignSettings() {
 
   function handleImageUpload(e) {
     const files = Array.from(e.target.files);
-    const urls = files.map(f => URL.createObjectURL(f));
-    setImages(prev => [...prev, ...urls].slice(0, 6));
+    const remaining = 6 - images.length;
+    const newFiles = files.slice(0, remaining);
+    const urls = newFiles.map(f => URL.createObjectURL(f));
+    setImages(prev => [...prev, ...urls]);
+    setImageRefs(prev => [...prev, ...newFiles.map(f => ({ type: 'new', file: f }))]);
   }
 
   function removeImage(index) {
+    const ref = imageRefs[index];
+    if (ref && ref.type === 'existing') {
+      setRemovedImageIds(prev => [...prev, ref.id]);
+    }
     setImages(prev => prev.filter((_, i) => i !== index));
+    setImageRefs(prev => prev.filter((_, i) => i !== index));
   }
 
   function addTag() {
@@ -97,7 +113,34 @@ function CampaignSettings() {
         },
         body: JSON.stringify({ title, description, goal: Number(goal), tags }),
       });
-      if (res.ok) navigate(-1);
+      if (!res.ok) return;
+
+      for (const imageId of removedImageIds) {
+        await fetch(`/api/campaigns/${id}/images/${imageId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      for (const ref of imageRefs) {
+        if (ref.type === 'new') {
+          const formData = new FormData();
+          formData.append('image', ref.file);
+          const imgRes = await fetch('/api/images', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+          const imgData = await imgRes.json();
+          await fetch(`/api/campaigns/${id}/images`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ imageId: imgData.id }),
+          });
+        }
+      }
+
+      navigate(-1);
     } catch (err) {
       console.error('Error saving campaign:', err);
     } finally {

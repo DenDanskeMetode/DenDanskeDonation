@@ -8,6 +8,7 @@ import {
   updateCampaign,
   deleteCampaign,
   addImageToCampaign,
+  removeImageFromCampaign,
   getCampaignImages,
 } from './dbHandler.js';
 import type { CampaignImageEntry } from './dbHandler.js';
@@ -126,6 +127,25 @@ export class CampaignManager {
       await deleteCampaign(campaignId);
     } catch (error) {
       console.error(`Error deleting campaign ${campaignId}:`, error);
+      throw error;
+    }
+  }
+
+  static async removeImage(campaignId: number, imageId: number, requestingUserId: number): Promise<void> {
+    const campaign = await getCampaignById(campaignId);
+
+    if (!campaign) {
+      throw Object.assign(new Error('Campaign not found'), { status: 404 });
+    }
+
+    if (campaign.created_by !== requestingUserId) {
+      throw Object.assign(new Error('You can only remove images from your own campaigns'), { status: 403 });
+    }
+
+    try {
+      await removeImageFromCampaign(campaignId, imageId);
+    } catch (error) {
+      console.error(`Error removing image ${imageId} from campaign ${campaignId}:`, error);
       throw error;
     }
   }
