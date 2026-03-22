@@ -9,11 +9,24 @@ VALUES
 -- bob@example.com : hashedpassword789
 
 -- Insert test campaigns with the new schema
-INSERT INTO campaigns (title, description, tags, goal, is_complete, milestones, city_name, created_by)
+INSERT INTO campaigns (title, description, tags, goal, is_complete, milestones, city_name, created_by, owner_ids)
 VALUES
-  ('Clean Water Initiative', 'Providing clean water to rural communities', ARRAY['water', 'health', 'rural'], 50000.00, FALSE, ARRAY['Phase 1: Assessment', 'Phase 2: Implementation'], 'Nairobi', 1),
-  ('Education for All', 'Building schools and providing educational materials', ARRAY['education', 'children', 'schools'], 75000.00, FALSE, ARRAY['Fundraising', 'Construction', 'Hiring Teachers'], 'Accra', 2),
-  ('Reforestation Project', 'Planting trees to combat deforestation', ARRAY['environment', 'trees', 'sustainability'], 30000.00, FALSE, ARRAY['Land Preparation', 'Planting', 'Maintenance'], 'Lagos', 3);
+  ('Clean Water Initiative', 'Providing clean water to rural communities', ARRAY['water', 'health', 'rural'], 50000.00, FALSE, ARRAY['Phase 1: Assessment', 'Phase 2: Implementation'], 'Nairobi', 1, ARRAY[1]),
+  ('Education for All', 'Building schools and providing educational materials', ARRAY['education', 'children', 'schools'], 75000.00, FALSE, ARRAY['Fundraising', 'Construction', 'Hiring Teachers'], 'Accra', 2, ARRAY[2]),
+  ('Reforestation Project', 'Planting trees to combat deforestation', ARRAY['environment', 'trees', 'sustainability'], 30000.00, FALSE, ARRAY['Land Preparation', 'Planting', 'Maintenance'], 'Lagos', 3, ARRAY[3]);
+
+-- Insert test images and link them to campaigns
+INSERT INTO images (data, mime_type, uploaded_by)
+VALUES
+  (pg_read_binary_file('/docker-entrypoint-initdb.d/fisk.jpg'), 'image/jpeg', 1),
+  (pg_read_binary_file('/docker-entrypoint-initdb.d/party-dog.jpg'), 'image/jpeg', 2),
+  (pg_read_binary_file('/docker-entrypoint-initdb.d/dendanskemetode.png'), 'image/png', 3);
+
+INSERT INTO campaign_images (campaign_id, image_id)
+VALUES
+  (1, 1),
+  (2, 2),
+  (3, 3);
 
 -- Insert test donations linking users to campaigns
 INSERT INTO donations (from_user, to_campaign, amount)

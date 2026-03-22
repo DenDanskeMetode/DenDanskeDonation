@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import useCampaignsStore from '../store/useCampaignsStore';
 import '../components/css/CreateCampaignModal.css';
 import './css/CampaignSettings.css';
 import ImageUploader from '../components/ImageUploader';
@@ -8,25 +7,75 @@ import ImageUploader from '../components/ImageUploader';
 function CampaignSettings() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const campaigns = useCampaignsStore((state) => state.campaigns);
-  const updateCampaign = useCampaignsStore((state) => state.updateCampaign);
-  const campaign = campaigns.find(c => c.id === Number(id));
 
-  const [title, setTitle] = useState(campaign?.title || '');
-  const [description, setDescription] = useState(campaign?.description || '');
-  const [goal, setGoal] = useState(campaign?.goal || '');
-  const [tags, setTags] = useState(campaign?.tags || []);
-  const [partners, setPartners] = useState(campaign?.partners || []);
-  const [images, setImages] = useState(campaign?.image ? [campaign.image] : []);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const deleteBtnRef = useRef(null);
+
+  useEffect(() => {
+    if (!confirmDelete) return;
+    function handleOutsideClick(e) {
+      if (deleteBtnRef.current && !deleteBtnRef.current.contains(e.target)) {
+        setConfirmDelete(false);
+      }
+    }
+    document.addEventListener('pointerdown', handleOutsideClick);
+    return () => document.removeEventListener('pointerdown', handleOutsideClick);
+  }, [confirmDelete]);
+
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [goal, setGoal] = useState('');
+  const [tags, setTags] = useState([]);
+  const [partners, setPartners] = useState([]);
+  const [images, setImages] = useState([]);
+  const [imageRefs, setImageRefs] = useState([]);
+  const [removedImageIds, setRemovedImageIds] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    Promise.all([
+      fetch(`/api/campaigns/${id}`, { headers }).then(r => {
+        if (r.status === 404) { setNotFound(true); return null; }
+        return r.json();
+      }),
+      fetch(`/api/campaigns/${id}/images`, { headers }).then(r => r.json()),
+    ])
+      .then(([data, imgs]) => {
+        if (!data) return;
+        setTitle(data.title || '');
+        setDescription(data.description || '');
+        setGoal(data.goal || '');
+        setTags(data.tags || []);
+        if (Array.isArray(imgs) && imgs.length > 0) {
+          setImages(imgs.map(img => `/api/images/${img.id}`));
+          setImageRefs(imgs.map(img => ({ type: 'existing', id: img.id })));
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id]);
 
   function handleImageUpload(e) {
     const files = Array.from(e.target.files);
-    const urls = files.map(f => URL.createObjectURL(f));
-    setImages(prev => [...prev, ...urls].slice(0, 6));
+    const remaining = 6 - images.length;
+    const newFiles = files.slice(0, remaining);
+    const urls = newFiles.map(f => URL.createObjectURL(f));
+    setImages(prev => [...prev, ...urls]);
+    setImageRefs(prev => [...prev, ...newFiles.map(f => ({ type: 'new', file: f }))]);
   }
 
   function removeImage(index) {
+    const ref = imageRefs[index];
+    if (ref && ref.type === 'existing') {
+      setRemovedImageIds(prev => [...prev, ref.id]);
+    }
     setImages(prev => prev.filter((_, i) => i !== index));
+    setImageRefs(prev => prev.filter((_, i) => i !== index));
   }
 
   function addTag() {
@@ -39,13 +88,68 @@ function CampaignSettings() {
     if (partner && partner.trim()) setPartners(prev => [...prev, partner.trim()]);
   }
 
-  if (!campaign) {
-    return (
-      <div className="campaign-settings-page">
-        <p style={{ padding: 24 }}>Kampagne ikke fundet.</p>
-      </div>
-    );
+  async function handleDelete() {
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`/api/campaigns/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) navigate(-1);
+    } catch (err) {
+      console.error('Error deleting campaign:', err);
+    }
   }
+
+  async function handleSave() {
+    setIsSubmitting(true);
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`/api/campaigns/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, description, goal: Number(goal), tags }),
+      });
+      if (!res.ok) return;
+
+      for (const imageId of removedImageIds) {
+        await fetch(`/api/campaigns/${id}/images/${imageId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      for (const ref of imageRefs) {
+        if (ref.type === 'new') {
+          const formData = new FormData();
+          formData.append('image', ref.file);
+          const imgRes = await fetch('/api/images', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData,
+          });
+          const imgData = await imgRes.json();
+          await fetch(`/api/campaigns/${id}/images`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ imageId: imgData.id }),
+          });
+        }
+      }
+
+      navigate(-1);
+    } catch (err) {
+      console.error('Error saving campaign:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (loading) return <div className="campaign-settings-page"><p style={{ padding: 24 }}>Indlæser...</p></div>;
+  if (notFound) return <div className="campaign-settings-page"><p style={{ padding: 24 }}>Kampagne ikke fundet.</p></div>;
 
   return (
     <div className="campaign-settings-page">
@@ -57,6 +161,21 @@ function CampaignSettings() {
           </svg>
         </button>
         <h2 className="settings-title">Rediger kampagne</h2>
+        <button
+          ref={deleteBtnRef}
+          className={`settings-delete-btn${confirmDelete ? ' confirming' : ''}`}
+          onClick={() => confirmDelete ? handleDelete() : setConfirmDelete(true)}
+        >
+          <span className="delete-btn-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14H6L5 6" />
+              <path d="M10 11v6M14 11v6" />
+              <path d="M9 6V4h6v2" />
+            </svg>
+          </span>
+          <span className="delete-btn-label">Slet?</span>
+        </button>
       </div>
 
       {/* Scrollable body */}
@@ -122,15 +241,9 @@ function CampaignSettings() {
 
       {/* Actions */}
       <div className="modal-actions">
-        <button className="draft-btn">Gem udkast</button>
-        <button
-          className="publish-btn"
-          onClick={() => {
-            updateCampaign(campaign.id, { title, description, goal, tags, partners, images });
-            navigate(-1);
-          }}
-        >
-          Publicér
+        <button className="draft-btn" onClick={() => navigate(-1)}>Annuller</button>
+        <button className="publish-btn" onClick={handleSave} disabled={isSubmitting}>
+          {isSubmitting ? 'Gemmer...' : 'Gem'}
         </button>
       </div>
     </div>

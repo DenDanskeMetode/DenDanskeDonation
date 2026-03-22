@@ -45,6 +45,7 @@ function LoginOrRegister() {
       setIsChecking(true);
       try {
         const res = await fetch(`/api/user-exists?email=${encodeURIComponent(email)}`);
+        if (!res.ok) throw new Error(`Unexpected status: ${res.status}`);
         const exists = await res.json();
         if (exists) {
           setEmailVerified(true);

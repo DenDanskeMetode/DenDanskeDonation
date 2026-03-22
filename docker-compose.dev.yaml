@@ -11,15 +11,17 @@ services:
       - NODE_ENV=development
       - DB_HOST=db
       - DB_PORT=5432
-      - POSTGRES_USER=giraf
-      - POSTGRES_PASSWORD=bearattack
-      - POSTGRES_DB=mydatabase
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
     volumes:
       - ./backend:/app
       - /app/node_modules
     depends_on:
       - db
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/message', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
 
   client:
     build:
@@ -34,7 +36,8 @@ services:
       - ./frontend:/app
       - /app/node_modules
     depends_on:
-      - server
+      server:
+        condition: service_healthy
 
   db:
     build: ./dbServer
