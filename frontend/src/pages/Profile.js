@@ -40,6 +40,7 @@ function Profile() {
   const [myDonations, setMyDonations] = useState([]);
   const navigate = useNavigate();
   const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
 
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -62,6 +63,20 @@ function Profile() {
             image: c.image_ids && c.image_ids.length > 0 ? `/api/images/${c.image_ids[0]}` : undefined,
           }))
       );
+      const myCampaignList = campaigns.filter(c => c.created_by === storedUser.id);
+      const totalDonated = (userInfo.donations || []).reduce((sum, d) => sum + Number(d.amount), 0);
+      const allReceivedDonations = myCampaignList.flatMap(c => c.donations || []);
+      const totalRaised = allReceivedDonations.reduce((sum, d) => sum + Number(d.amount), 0);
+      const uniqueDonors = new Set(allReceivedDonations.map(d => d.from_user)).size;
+
+      setUser({
+        name: `${userInfo.firstname} ${userInfo.surname}`,
+        avatar: userInfo.profile_picture ? `/api/images/${userInfo.profile_picture}` : '/images/default-avatar.jpg',
+        totalDonated: `${totalDonated.toLocaleString('da-DK')} kr.`,
+        totalRaised: `${totalRaised.toLocaleString('da-DK')} kr.`,
+        donors: uniqueDonors,
+      });
+
       const campaignById = Object.fromEntries(campaigns.map(c => [c.id, c]));
       setMyDonations(
         (userInfo.donations || []).map(d => ({

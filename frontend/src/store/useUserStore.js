@@ -36,7 +36,7 @@ const useUserStore = create((set) => ({
     },
   ],
 
-  setUser: (user) => set({ user }),
+  setUser: (fields) => set((state) => ({ user: { ...state.user, ...fields } })),
 
   setAvatar: (avatar) =>
     set((state) => ({ user: { ...state.user, avatar } })),

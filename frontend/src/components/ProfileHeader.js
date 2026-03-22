@@ -7,6 +7,10 @@ function ProfileHeader({ user }) {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
+    setAvatarSrc(user.avatar);
+  }, [user.avatar]);
+
+  useEffect(() => {
     function onScroll() {
       setStatsVisible(window.scrollY < 10);
     }
