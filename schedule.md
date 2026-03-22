@@ -143,3 +143,7 @@
 * 15:00 - 19:00
 * 22:30 - 00:00
 * Victor
+
+### General project oversight and pushing to main
+* 23:30 - 
+* Nicholas
