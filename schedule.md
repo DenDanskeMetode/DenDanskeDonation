@@ -119,7 +119,7 @@
 # 21/3
 
 ### Opret kampagne integration med server (frontend, backend, kodning)
-* 13:30 -
+* 13:30 - 15:00
 * Victor
 
 # 22/3
