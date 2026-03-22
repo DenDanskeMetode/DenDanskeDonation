@@ -534,9 +534,10 @@ describe('Server endpoints', () => {
   });
 
   describe('GET /api/images/:imageId', () => {
-    it('returns 401 without token', async () => {
-      const res = await request(app).get('/api/images/1');
-      expect(res.status).toBe(401);
+    it('returns 404 when image not found (public endpoint, no auth required)', async () => {
+      mockImageHandler.getImage.mockResolvedValue(null);
+      const res = await request(app).get('/api/images/99');
+      expect(res.status).toBe(404);
     });
 
     it('returns 404 when image not found', async () => {
