@@ -96,6 +96,7 @@ const mockCampaign = {
   is_complete: false,
   milestones: [],
   city_name: 'Copenhagen',
+  owner_ids: [1],
   created_by: 1,
   donations: [],
 };
@@ -383,6 +384,18 @@ describe('Server endpoints', () => {
       const res = await request(app).patch('/api/campaigns/1').set(AUTH_HEADER).send({ title: 'New Title' });
       expect(res.status).toBe(200);
       expect(res.body.title).toBe('New Title');
+    });
+
+    it('returns 400 when owner_ids is an empty array', async () => {
+      const res = await request(app).patch('/api/campaigns/1').set(AUTH_HEADER).send({ owner_ids: [] });
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 200 when owner_ids is a valid non-empty array', async () => {
+      mockCampaignManager.updateCampaign.mockResolvedValue({ ...mockCampaign, owner_ids: [1, 2] });
+      const res = await request(app).patch('/api/campaigns/1').set(AUTH_HEADER).send({ owner_ids: [1, 2] });
+      expect(res.status).toBe(200);
+      expect(res.body.owner_ids).toEqual([1, 2]);
     });
   });
 

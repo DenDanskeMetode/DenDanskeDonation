@@ -19,6 +19,7 @@ const mockCampaign = {
   is_complete: false,
   milestones: ['Phase 1', 'Phase 2'],
   city_name: 'Copenhagen',
+  owner_ids: [1],
   donations: [
     { id: 1, from_user: 1, to_campaign: 1, amount: 200 },
     { id: 2, from_user: 2, to_campaign: 1, amount: 300 },

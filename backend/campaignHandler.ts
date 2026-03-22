@@ -10,8 +10,9 @@ import {
   addImageToCampaign,
   removeImageFromCampaign,
   getCampaignImages,
+  isCampaignOwner,
 } from './dbHandler.js';
-import type { CampaignImageEntry } from './dbHandler.js';
+import type { CampaignImageEntry, CampaignOwner } from './dbHandler.js';
 
 interface Campaign {
   id: number;
@@ -22,10 +23,12 @@ interface Campaign {
   is_complete: boolean;
   milestones: string[];
   city_name: string;
+  owner_ids: number[];
   created_by?: number;
   created_at?: string;
   updated_at?: string;
   donations?: Donation[];
+  owners?: CampaignOwner[];
 }
 
 interface Donation {
@@ -91,7 +94,7 @@ export class CampaignManager {
 
   static async updateCampaign(
     campaignId: number,
-    fields: Partial<Pick<Campaign, 'title' | 'description' | 'tags' | 'goal' | 'milestones' | 'city_name' | 'is_complete'>>,
+    fields: Partial<Pick<Campaign, 'title' | 'description' | 'tags' | 'goal' | 'milestones' | 'city_name' | 'is_complete' | 'owner_ids'>>,
     requestingUserId: number
   ): Promise<Campaign> {
     const campaign = await getCampaignById(campaignId);
@@ -100,7 +103,8 @@ export class CampaignManager {
       throw Object.assign(new Error('Campaign not found'), { status: 404 });
     }
 
-    if (campaign.created_by !== requestingUserId) {
+    const isOwner = await isCampaignOwner(campaignId, requestingUserId);
+    if (!isOwner) {
       throw Object.assign(new Error('You can only update your own campaigns'), { status: 403 });
     }
 
@@ -119,7 +123,8 @@ export class CampaignManager {
       throw Object.assign(new Error('Campaign not found'), { status: 404 });
     }
 
-    if (campaign.created_by !== requestingUserId) {
+    const isOwner = await isCampaignOwner(campaignId, requestingUserId);
+    if (!isOwner) {
       throw Object.assign(new Error('You can only delete your own campaigns'), { status: 403 });
     }
 
@@ -157,7 +162,8 @@ export class CampaignManager {
       throw Object.assign(new Error('Campaign not found'), { status: 404 });
     }
 
-    if (campaign.created_by !== requestingUserId) {
+    const isOwner = await isCampaignOwner(campaignId, requestingUserId);
+    if (!isOwner) {
       throw Object.assign(new Error('You can only add images to your own campaigns'), { status: 403 });
     }
 

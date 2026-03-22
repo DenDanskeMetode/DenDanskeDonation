@@ -105,7 +105,7 @@
 * Alle
 
 ### Backend integration til frontend (frontend, bugfixing, kodning)
-* 11:00 -
+* 11:00 - 15:00
 * Victor
 
 ### CI/CD bugfixing and improvements & payment integration with UI (CI/CD, bugfixing, kodning)
@@ -115,3 +115,15 @@
 ### General VM and CI/CD fixes (vi er dumme)
 * 17:30 - 18:30
 * Victor og Nicholas
+
+# 21/3
+
+### Opret kampagne integration med server (frontend, backend, kodning)
+* 13:30 -
+* Victor
+
+# 22/3
+
+### payment integration with ui
+* 11:10 - 
+* Felix

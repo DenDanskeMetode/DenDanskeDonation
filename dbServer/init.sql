@@ -21,6 +21,7 @@ CREATE TABLE campaigns (
     is_complete BOOLEAN DEFAULT FALSE,
     milestones TEXT[],
     city_name VARCHAR(100),
+    owner_ids INTEGER[] DEFAULT '{}',
     created_by INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -46,6 +47,7 @@ CREATE TABLE campaign_images (
     FOREIGN KEY (campaign_id) REFERENCES campaigns(id),
     FOREIGN KEY (image_id) REFERENCES images(id)
 );
+
 
 CREATE TABLE donations (
     id SERIAL PRIMARY KEY,

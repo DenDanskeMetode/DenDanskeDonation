@@ -54,17 +54,18 @@ async function getCampaignById(campaignId) {
   try {
     const campaignQuery = 'SELECT * FROM campaigns WHERE id = $1';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
-    const imagesQuery = 'SELECT image_id FROM campaign_images WHERE campaign_id = $1 ORDER BY added_at ASC';
-
     const campaignResult = await pool.query(campaignQuery, [campaignId]);
     if (campaignResult.rows.length === 0) return null;
 
     const donationsResult = await pool.query(donationsQuery, [campaignId]);
-    const imagesResult = await pool.query(imagesQuery, [campaignId]);
+    const ownersResult = await pool.query(
+      'SELECT u.id, u.username, u.email FROM users u WHERE u.id = ANY($1::integer[])',
+      [campaignResult.rows[0].owner_ids || []]
+    );
 
     const campaign = campaignResult.rows[0];
     campaign.donations = donationsResult.rows;
-    campaign.image_ids = imagesResult.rows.map(r => r.image_id);
+    campaign.owners = ownersResult.rows;
 
     return campaign;
   } catch (error) {
@@ -99,16 +100,18 @@ async function getAllCampaigns() {
   try {
     const campaignsQuery = 'SELECT * FROM campaigns';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
-    const imagesQuery = 'SELECT image_id FROM campaign_images WHERE campaign_id = $1 ORDER BY added_at ASC';
 
     const campaignsResult = await pool.query(campaignsQuery);
 
     const campaignsWithData = await Promise.all(
       campaignsResult.rows.map(async (campaign) => {
         const donationsResult = await pool.query(donationsQuery, [campaign.id]);
-        const imagesResult = await pool.query(imagesQuery, [campaign.id]);
+        const ownersResult = await pool.query(
+          'SELECT u.id, u.username, u.email FROM users u WHERE u.id = ANY($1::integer[])',
+          [campaign.owner_ids || []]
+        );
         campaign.donations = donationsResult.rows;
-        campaign.image_ids = imagesResult.rows.map(r => r.image_id);
+        campaign.owners = ownersResult.rows;
         return campaign;
       })
     );
@@ -135,9 +138,14 @@ async function createUser(userData) {
 async function createCampaign(campaignData) {
   try {
     const { title, description, tags, goal, milestones, city_name, created_by } = campaignData;
-    const query = 'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
-    const result = await executeQuery(query, [title, description, tags, goal, milestones, city_name, created_by]);
-    return result[0];
+    const ownerIds = created_by ? [created_by] : [];
+    const result = await executeQuery(
+      'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by, owner_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [title, description, tags, goal, milestones, city_name, created_by, ownerIds]
+    );
+    const campaign = result[0];
+    campaign.owners = created_by ? [{ id: created_by }] : [];
+    return campaign;
   } catch (error) {
     console.error('Error creating campaign:', error);
     throw error;
@@ -145,7 +153,7 @@ async function createCampaign(campaignData) {
 }
 
 async function updateCampaign(campaignId, fields) {
-  const allowed = ['title', 'description', 'tags', 'goal', 'milestones', 'city_name', 'is_complete'];
+  const allowed = ['title', 'description', 'tags', 'goal', 'milestones', 'city_name', 'is_complete', 'owner_ids'];
   const updates = Object.keys(fields).filter(k => allowed.includes(k));
 
   if (updates.length === 0) throw new Error('No valid fields to update');
@@ -291,6 +299,16 @@ async function createImage(imageData) {
   }
 }
 
+async function isCampaignOwner(campaignId, userId) {
+  try {
+    const result = await executeQuery('SELECT 1 FROM campaigns WHERE id = $1 AND $2 = ANY(owner_ids)', [campaignId, userId]);
+    return result.length > 0;
+  } catch (error) {
+    console.error('Error checking campaign ownership:', error);
+    throw error;
+  }
+}
+
 export {
   getUserById,
   getCampaignById,
@@ -310,4 +328,5 @@ export {
   setProfilePicture,
   getImageById,
   createImage,
+  isCampaignOwner,
 };

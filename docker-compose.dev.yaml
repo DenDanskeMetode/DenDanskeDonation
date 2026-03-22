@@ -11,10 +11,6 @@ services:
       - NODE_ENV=development
       - DB_HOST=db
       - DB_PORT=5432
-      - POSTGRES_USER=giraf
-      - POSTGRES_PASSWORD=bearattack
-      - POSTGRES_DB=mydatabase
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
     volumes:
       - ./backend:/app
       - /app/node_modules
