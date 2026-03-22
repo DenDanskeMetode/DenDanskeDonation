@@ -132,3 +132,14 @@
 ### payment integration with ui
 * 11:10 - 
 * Felix
+
+### cpr integration and role managment
+* 6:40 - 7:00
+* 17:00 - 17:40
+* 23:20 - 00:00
+* Christian
+
+### Backend integration til frontend (frontend, bugfixing, kodning)
+* 15:00 - 19:00
+* 22:30 - 00:00
+* Victor
