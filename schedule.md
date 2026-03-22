@@ -97,7 +97,12 @@
 
 
 ### Profile pages and navigation (general UI work)
-* 8:00 -
+* 8:00 - 9:30
+* 11:30 - 13:30
+* Nicholas
+
+### Kampagner bliver tilføjet til DB
+* 14:00 - 
 * Nicholas
 
 ### Møde og planlægnign (møde, planlægning)

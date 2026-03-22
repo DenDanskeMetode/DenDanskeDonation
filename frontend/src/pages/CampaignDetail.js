@@ -17,8 +17,8 @@ function timeAgo(dateStr) {
 }
 
 function CampaignDetail() {
-  const { state } = useLocation();
   const { id } = useParams();
+  const { state } = useLocation();
   const navigate = useNavigate();
   const campaigns = useCampaignsStore((state) => state.campaigns);
   const [showDonationModal, setShowDonationModal] = useState(false);

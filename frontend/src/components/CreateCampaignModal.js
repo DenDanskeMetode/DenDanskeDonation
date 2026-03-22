@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './css/CreateCampaignModal.css';
 import ImageUploader from './ImageUploader';
+import useCampaignsStore from '../store/useCampaignsStore';
 
 function CreateCampaignModal({ onClose }) {
   const [title, setTitle] = useState('');
@@ -172,6 +173,8 @@ function CreateCampaignModal({ onClose }) {
             <button className="add-tag-btn" onClick={addPartner}>+ Tilføj samarbejdspartner</button>
           </div>
         </div>
+
+        {error && <p style={{ color: 'red', padding: '0 16px' }}>{error}</p>}
 
       </div>{/* end modal-body */}
 
