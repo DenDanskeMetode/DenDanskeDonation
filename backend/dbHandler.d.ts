@@ -50,6 +50,7 @@ export interface Campaign {
   is_complete: boolean;
   milestones: string[];
   city_name: string;
+  owner_ids: number[];
   created_by?: number;
   created_at?: string;
   updated_at?: string;
@@ -115,7 +116,7 @@ export interface ImageCreationData {
   uploaded_by?: number;
 }
 
-declare function updateCampaign(campaignId: number, fields: Partial<Pick<Campaign, 'title' | 'description' | 'tags' | 'goal' | 'milestones' | 'city_name' | 'is_complete'>>): Promise<Campaign | null>;
+declare function updateCampaign(campaignId: number, fields: Partial<Pick<Campaign, 'title' | 'description' | 'tags' | 'goal' | 'milestones' | 'city_name' | 'is_complete' | 'owner_ids'>>): Promise<Campaign | null>;
 declare function deleteCampaign(campaignId: number): Promise<boolean>;
 declare function deleteUser(userId: number): Promise<boolean>;
 declare function addImageToCampaign(campaignId: number, imageId: number): Promise<{ campaign_id: number; image_id: number; added_at: string }>;
@@ -124,9 +125,6 @@ declare function updateUser(userId: number, fields: Partial<Pick<User, 'username
 declare function setProfilePicture(userId: number, imageId: number): Promise<User | null>;
 declare function getImageById(imageId: number): Promise<Image | null>;
 declare function createImage(imageData: ImageCreationData): Promise<Omit<Image, 'data'>>;
-declare function getCampaignOwners(campaignId: number): Promise<CampaignOwner[]>;
-declare function addCampaignOwner(campaignId: number, userId: number): Promise<{ campaign_id: number; user_id: number; added_at: string } | null>;
-declare function removeCampaignOwner(campaignId: number, userId: number): Promise<boolean>;
 declare function isCampaignOwner(campaignId: number, userId: number): Promise<boolean>;
 
 export {
@@ -147,8 +145,5 @@ export {
   setProfilePicture,
   getImageById,
   createImage,
-  getCampaignOwners,
-  addCampaignOwner,
-  removeCampaignOwner,
   isCampaignOwner,
 };

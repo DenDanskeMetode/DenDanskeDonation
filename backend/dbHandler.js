@@ -54,13 +54,14 @@ async function getCampaignById(campaignId) {
   try {
     const campaignQuery = 'SELECT * FROM campaigns WHERE id = $1';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
-    const ownersQuery = 'SELECT u.id, u.username, u.email FROM campaign_owners co JOIN users u ON co.user_id = u.id WHERE co.campaign_id = $1';
-
     const campaignResult = await pool.query(campaignQuery, [campaignId]);
     if (campaignResult.rows.length === 0) return null;
 
     const donationsResult = await pool.query(donationsQuery, [campaignId]);
-    const ownersResult = await pool.query(ownersQuery, [campaignId]);
+    const ownersResult = await pool.query(
+      'SELECT u.id, u.username, u.email FROM users u WHERE u.id = ANY($1::integer[])',
+      [campaignResult.rows[0].owner_ids || []]
+    );
 
     const campaign = campaignResult.rows[0];
     campaign.donations = donationsResult.rows;
@@ -99,14 +100,16 @@ async function getAllCampaigns() {
   try {
     const campaignsQuery = 'SELECT * FROM campaigns';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
-    const ownersQuery = 'SELECT u.id, u.username, u.email FROM campaign_owners co JOIN users u ON co.user_id = u.id WHERE co.campaign_id = $1';
 
     const campaignsResult = await pool.query(campaignsQuery);
 
     const campaignsWithData = await Promise.all(
       campaignsResult.rows.map(async (campaign) => {
         const donationsResult = await pool.query(donationsQuery, [campaign.id]);
-        const ownersResult = await pool.query(ownersQuery, [campaign.id]);
+        const ownersResult = await pool.query(
+          'SELECT u.id, u.username, u.email FROM users u WHERE u.id = ANY($1::integer[])',
+          [campaign.owner_ids || []]
+        );
         campaign.donations = donationsResult.rows;
         campaign.owners = ownersResult.rows;
         return campaign;
@@ -133,32 +136,24 @@ async function createUser(userData) {
 }
 
 async function createCampaign(campaignData) {
-  const client = await pool.connect();
   try {
-    await client.query('BEGIN');
     const { title, description, tags, goal, milestones, city_name, created_by } = campaignData;
-    const campaignResult = await client.query(
-      'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      [title, description, tags, goal, milestones, city_name, created_by]
+    const ownerIds = created_by ? [created_by] : [];
+    const result = await executeQuery(
+      'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by, owner_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [title, description, tags, goal, milestones, city_name, created_by, ownerIds]
     );
-    const campaign = campaignResult.rows[0];
-    if (created_by) {
-      await client.query('INSERT INTO campaign_owners (campaign_id, user_id) VALUES ($1, $2)', [campaign.id, created_by]);
-    }
-    await client.query('COMMIT');
+    const campaign = result[0];
     campaign.owners = created_by ? [{ id: created_by }] : [];
     return campaign;
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('Error creating campaign:', error);
     throw error;
-  } finally {
-    client.release();
   }
 }
 
 async function updateCampaign(campaignId, fields) {
-  const allowed = ['title', 'description', 'tags', 'goal', 'milestones', 'city_name', 'is_complete'];
+  const allowed = ['title', 'description', 'tags', 'goal', 'milestones', 'city_name', 'is_complete', 'owner_ids'];
   const updates = Object.keys(fields).filter(k => allowed.includes(k));
 
   if (updates.length === 0) throw new Error('No valid fields to update');
@@ -295,40 +290,9 @@ async function createImage(imageData) {
   }
 }
 
-async function getCampaignOwners(campaignId) {
-  try {
-    const query = 'SELECT u.id, u.username, u.email FROM campaign_owners co JOIN users u ON co.user_id = u.id WHERE co.campaign_id = $1 ORDER BY co.added_at ASC';
-    return await executeQuery(query, [campaignId]);
-  } catch (error) {
-    console.error('Error getting campaign owners:', error);
-    throw error;
-  }
-}
-
-async function addCampaignOwner(campaignId, userId) {
-  try {
-    const query = 'INSERT INTO campaign_owners (campaign_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING RETURNING *';
-    const result = await executeQuery(query, [campaignId, userId]);
-    return result[0] || null;
-  } catch (error) {
-    console.error('Error adding campaign owner:', error);
-    throw error;
-  }
-}
-
-async function removeCampaignOwner(campaignId, userId) {
-  try {
-    const result = await executeQuery('DELETE FROM campaign_owners WHERE campaign_id = $1 AND user_id = $2 RETURNING *', [campaignId, userId]);
-    return result.length > 0;
-  } catch (error) {
-    console.error('Error removing campaign owner:', error);
-    throw error;
-  }
-}
-
 async function isCampaignOwner(campaignId, userId) {
   try {
-    const result = await executeQuery('SELECT 1 FROM campaign_owners WHERE campaign_id = $1 AND user_id = $2', [campaignId, userId]);
+    const result = await executeQuery('SELECT 1 FROM campaigns WHERE id = $1 AND $2 = ANY(owner_ids)', [campaignId, userId]);
     return result.length > 0;
   } catch (error) {
     console.error('Error checking campaign ownership:', error);
@@ -354,8 +318,5 @@ export {
   setProfilePicture,
   getImageById,
   createImage,
-  getCampaignOwners,
-  addCampaignOwner,
-  removeCampaignOwner,
   isCampaignOwner,
 };

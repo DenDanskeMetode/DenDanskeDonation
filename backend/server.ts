@@ -242,9 +242,15 @@ app.post("/api/campaigns", authenticateJWT, async (req: Request, res: Response) 
 app.patch("/api/campaigns/:campaignId", authenticateJWT, async (req: Request, res: Response) => {
   try {
     const campaignId = parseInt(req.params.campaignId as string);
-    const { title, description, tags, goal, milestones, city_name, is_complete } = req.body;
-    const fields = { title, description, tags, goal, milestones, city_name, is_complete };
+    const { title, description, tags, goal, milestones, city_name, is_complete, owner_ids } = req.body;
+    const fields = { title, description, tags, goal, milestones, city_name, is_complete, owner_ids };
     const updates = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
+
+    if (updates.owner_ids !== undefined) {
+      if (!Array.isArray(updates.owner_ids) || updates.owner_ids.length === 0) {
+        return res.status(400).json({ error: "owner_ids must be a non-empty array of user IDs" });
+      }
+    }
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: "No valid fields provided" });
@@ -340,56 +346,6 @@ app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Req
     res.json({ clientSecret: paymentIntent.client_secret });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
-  }
-});
-
-// Protected endpoint to get owners of a campaign
-app.get("/api/campaigns/:campaignId/owners", authenticateJWT, async (req: Request, res: Response) => {
-  try {
-    const campaignId = parseInt(req.params.campaignId as string);
-    const owners = await CampaignManager.getOwners(campaignId);
-    res.json(owners);
-  } catch (error: any) {
-    if (error.status === 404) return res.status(404).json({ error: error.message });
-    console.error("Error fetching campaign owners:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Protected endpoint to add an owner to a campaign (existing owners only)
-app.post("/api/campaigns/:campaignId/owners", authenticateJWT, async (req: Request, res: Response) => {
-  try {
-    const campaignId = parseInt(req.params.campaignId as string);
-    const { userId } = req.body;
-
-    if (!userId || typeof userId !== 'number') {
-      return res.status(400).json({ error: "userId is required and must be a number" });
-    }
-
-    await CampaignManager.addOwner(campaignId, userId, req.user!.userId);
-    res.status(201).json({ message: "Owner added to campaign" });
-  } catch (error: any) {
-    if (error.status === 404) return res.status(404).json({ error: error.message });
-    if (error.status === 403) return res.status(403).json({ error: error.message });
-    console.error("Error adding campaign owner:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Protected endpoint to remove an owner from a campaign (existing owners only)
-app.delete("/api/campaigns/:campaignId/owners/:userId", authenticateJWT, async (req: Request, res: Response) => {
-  try {
-    const campaignId = parseInt(req.params.campaignId as string);
-    const targetUserId = parseInt(req.params.userId as string);
-
-    await CampaignManager.removeOwner(campaignId, targetUserId, req.user!.userId);
-    res.status(204).send();
-  } catch (error: any) {
-    if (error.status === 404) return res.status(404).json({ error: error.message });
-    if (error.status === 403) return res.status(403).json({ error: error.message });
-    if (error.status === 400) return res.status(400).json({ error: error.message });
-    console.error("Error removing campaign owner:", error);
-    res.status(500).json({ error: "Internal server error" });
   }
 });
 

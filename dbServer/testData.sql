@@ -9,18 +9,11 @@ VALUES
 -- bob@example.com : hashedpassword789
 
 -- Insert test campaigns with the new schema
-INSERT INTO campaigns (title, description, tags, goal, is_complete, milestones, city_name, created_by)
+INSERT INTO campaigns (title, description, tags, goal, is_complete, milestones, city_name, created_by, owner_ids)
 VALUES
-  ('Clean Water Initiative', 'Providing clean water to rural communities', ARRAY['water', 'health', 'rural'], 50000.00, FALSE, ARRAY['Phase 1: Assessment', 'Phase 2: Implementation'], 'Nairobi', 1),
-  ('Education for All', 'Building schools and providing educational materials', ARRAY['education', 'children', 'schools'], 75000.00, FALSE, ARRAY['Fundraising', 'Construction', 'Hiring Teachers'], 'Accra', 2),
-  ('Reforestation Project', 'Planting trees to combat deforestation', ARRAY['environment', 'trees', 'sustainability'], 30000.00, FALSE, ARRAY['Land Preparation', 'Planting', 'Maintenance'], 'Lagos', 3);
-
--- Insert campaign owners (creator is always an owner)
-INSERT INTO campaign_owners (campaign_id, user_id)
-VALUES
-  (1, 1),  -- John owns Clean Water Initiative
-  (2, 2),  -- Jane owns Education for All
-  (3, 3);  -- Bob owns Reforestation Project
+  ('Clean Water Initiative', 'Providing clean water to rural communities', ARRAY['water', 'health', 'rural'], 50000.00, FALSE, ARRAY['Phase 1: Assessment', 'Phase 2: Implementation'], 'Nairobi', 1, ARRAY[1]),
+  ('Education for All', 'Building schools and providing educational materials', ARRAY['education', 'children', 'schools'], 75000.00, FALSE, ARRAY['Fundraising', 'Construction', 'Hiring Teachers'], 'Accra', 2, ARRAY[2]),
+  ('Reforestation Project', 'Planting trees to combat deforestation', ARRAY['environment', 'trees', 'sustainability'], 30000.00, FALSE, ARRAY['Land Preparation', 'Planting', 'Maintenance'], 'Lagos', 3, ARRAY[3]);
 
 -- Insert test donations linking users to campaigns
 INSERT INTO donations (from_user, to_campaign, amount)
