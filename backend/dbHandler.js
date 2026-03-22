@@ -110,8 +110,13 @@ async function getAllCampaigns() {
           'SELECT u.id, u.username, u.email FROM users u WHERE u.id = ANY($1::integer[])',
           [campaign.owner_ids || []]
         );
+        const imagesResult = await pool.query(
+          'SELECT image_id FROM campaign_images WHERE campaign_id = $1 ORDER BY added_at ASC',
+          [campaign.id]
+        );
         campaign.donations = donationsResult.rows;
         campaign.owners = ownersResult.rows;
+        campaign.image_ids = imagesResult.rows.map(r => r.image_id);
         return campaign;
       })
     );
