@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
-function PaymentForm({ amount, from_user, to_campaign, onSuccess, onError }) {
+function PaymentForm({ amount, to_campaign, onSuccess, onError }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -14,20 +14,20 @@ function PaymentForm({ amount, from_user, to_campaign, onSuccess, onError }) {
     const token = localStorage.getItem("token");
 
     try {
-      // Create payment intent from backend
-      const res = await fetch("http://localhost:5000/api/donations", {
+      // 1. Opret payment intent
+      const res = await fetch("http://localhost:5000/api/payments/create-payment-intent", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ amount, from_user, to_campaign }),
+        body: JSON.stringify({ amount, to_campaign }),
       });
 
       if (!res.ok) throw new Error("Failed to create payment intent");
       const { clientSecret } = await res.json();
 
-      // Confirm card payment with Stripe
+      // 2. Bekræft betaling med Stripe
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement),
@@ -38,21 +38,21 @@ function PaymentForm({ amount, from_user, to_campaign, onSuccess, onError }) {
         setMessage(result.error.message);
         onError?.(result.error.message);
       } else {
-        // Save donation to database
-        const confirmRes = await fetch("http://localhost:5000/api/payments/confirm-donation", {
+        // 3. Gem donation i databasen
+        const donationRes = await fetch("http://localhost:5000/api/donations", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`
           },
-          body: JSON.stringify({ from_user, to_campaign, amount }),
+          body: JSON.stringify({ to_campaign, amount }),
         });
 
-        if (!confirmRes.ok) throw new Error("Failed to save donation");
+        if (!donationRes.ok) throw new Error("Failed to save donation");
+        const donationData = await donationRes.json();
 
-        const confirmData = await confirmRes.json();
         setMessage("Betaling gennemført! Tak for din donation 🎉");
-        onSuccess?.(confirmData);
+        onSuccess?.(donationData);
       }
     } catch (error) {
       setMessage(error.message || "En fejl opstod");

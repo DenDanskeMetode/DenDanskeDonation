@@ -303,7 +303,7 @@ app.get("/api/campaigns/:campaignId/donations", authenticateJWT, async (req: Req
 // Protected endpoint to make a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
   const { to_campaign, amount } = req.body;
-  const from_user = req.user!.userId;  //<-- fra JWT
+  const from_user = req.user!.userId;
 
   if (!amount || amount <= 0) {
     return res.status(400).json({ error: "Amount must be greater than 0" });
@@ -314,35 +314,31 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
   }
 
   try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100,
-      currency: 'dkk',
-    });
-
-    res.status(201).json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post("/api/payments/confirm-donation", authenticateJWT, async (req: Request, res: Response) => {
-  const { from_user, to_campaign, amount } = req.body;
-
-  if (!from_user || !to_campaign || !amount) {
-    return res.status(400).json({ error: "Missing required fields" });
-  }
-
-  try {
     const donation = await DonationManager.donate({
       from_user,
       to_campaign,
       amount,
     });
-    res.json({ success: true, donation });
+    res.status(201).json(donation);
   } catch (error: any) {
-    if (error.message?.includes('Amount must be') || error.message?.includes('required')) {
-      return res.status(400).json({ error: error.message });
-    }
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Request, res: Response) => {
+  const { to_campaign, amount } = req.body;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Amount must be greater than 0" });
+  }
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount * 100,
+      currency: 'dkk',
+    });
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
