@@ -130,5 +130,6 @@
 
 ### cpr integration and role managment
 * 6:40 - 7:00
+* 17:00 - 17:40
 * 23:20 - 00:00
 * Christian
