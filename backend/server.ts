@@ -302,23 +302,24 @@ app.get("/api/campaigns/:campaignId/donations", authenticateJWT, async (req: Req
 
 // Protected endpoint to make a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
-  const { from_user, to_campaign, amount } = req.body;
+  const { to_campaign, amount } = req.body;
+  const from_user = req.user!.userId;  //<-- fra JWT
 
   if (!amount || amount <= 0) {
-    return res.status(400).json({ error: "Invalid amount" });
+    return res.status(400).json({ error: "Amount must be greater than 0" });
   }
 
   if (!to_campaign) {
     return res.status(400).json({ error: "Campaign ID required" });
   }
-  
+
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount * 100,
       currency: 'dkk',
     });
 
-    res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
+    res.status(201).json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
