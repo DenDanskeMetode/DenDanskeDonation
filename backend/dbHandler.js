@@ -226,6 +226,15 @@ async function addImageToCampaign(campaignId, imageId) {
   }
 }
 
+async function removeImageFromCampaign(campaignId, imageId) {
+  try {
+    await executeQuery('DELETE FROM campaign_images WHERE campaign_id = $1 AND image_id = $2', [campaignId, imageId]);
+  } catch (error) {
+    console.error('Error removing image from campaign:', error);
+    throw error;
+  }
+}
+
 async function getCampaignImages(campaignId) {
   try {
     const query = `
@@ -313,6 +322,7 @@ export {
   createDonation,
   getDonationsByCampaign,
   addImageToCampaign,
+  removeImageFromCampaign,
   getCampaignImages,
   updateUser,
   setProfilePicture,

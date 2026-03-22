@@ -46,7 +46,7 @@ const pool = new Pool({
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (allowed.includes(file.mimetype)) {
@@ -383,6 +383,21 @@ app.post("/api/campaigns/:campaignId/images", authenticateJWT, async (req: Reque
   }
 });
 
+// Protected endpoint to remove an image from a campaign (own campaigns only)
+app.delete("/api/campaigns/:campaignId/images/:imageId", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const campaignId = parseInt(req.params.campaignId as string);
+    const imageId = parseInt(req.params.imageId as string);
+    await CampaignManager.removeImage(campaignId, imageId, req.user!.userId);
+    res.status(204).send();
+  } catch (error: any) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
+    if (error.status === 403) return res.status(403).json({ error: error.message });
+    console.error("Error removing image from campaign:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Protected endpoint to get all images for a campaign
 app.get("/api/campaigns/:campaignId/images", authenticateJWT, async (req: Request, res: Response) => {
   try {
@@ -494,8 +509,8 @@ app.post("/api/images", authenticateJWT, upload.any(), async (req: Request, res:
   }
 });
 
-// Protected endpoint to get an image by ID
-app.get("/api/images/:imageId", authenticateJWT, async (req: Request, res: Response) => {
+// Public endpoint to get an image by ID (no auth needed for <img src> tags)
+app.get("/api/images/:imageId", async (req: Request, res: Response) => {
   const imageId = parseInt(req.params.imageId as string);
   try {
     const image = await ImageHandler.getImage(imageId);
