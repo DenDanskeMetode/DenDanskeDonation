@@ -15,7 +15,7 @@ function PaymentForm({ amount, from_user, to_campaign, onSuccess, onError }) {
 
     try {
       // Create payment intent from backend
-      const res = await fetch("http://localhost:5000/api/payments/create-payment-intent", {
+      const res = await fetch("http://localhost:5000/api/donations", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
