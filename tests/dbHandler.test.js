@@ -130,22 +130,26 @@ describe('Database Handler Tests', () => {
         { id: 1, from_user: 1, to_campaign: 1, amount: 100, user_name: 'user1', user_email: 'user1@example.com' }
       ];
 
-      // 1 call for all campaigns, then for each campaign: 1 donations + 1 owners = 5 total
+      // 1 call for all campaigns, then for each campaign: 1 donations + 1 owners + 1 images = 7 total
       pool.query
         .mockImplementationOnce(() => Promise.resolve({ rows: mockCampaigns })) // getAllCampaigns
         .mockImplementationOnce(() => Promise.resolve({ rows: mockDonations })) // donations campaign 1
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // donations campaign 2
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // owners campaign 1
-        .mockImplementationOnce(() => Promise.resolve({ rows: [] }));           // owners campaign 2
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // owners campaign 2
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // images campaign 1
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }));           // images campaign 2
 
       const result = await getAllCampaigns();
 
       expect(result).toHaveLength(2);
       expect(result[0]).toHaveProperty('donations');
       expect(result[0]).toHaveProperty('owners');
+      expect(result[0]).toHaveProperty('image_ids');
       expect(result[1]).toHaveProperty('donations');
       expect(result[1]).toHaveProperty('owners');
-      expect(pool.query).toHaveBeenCalledTimes(5);
+      expect(result[1]).toHaveProperty('image_ids');
+      expect(pool.query).toHaveBeenCalledTimes(7);
     });
   });
 
