@@ -92,6 +92,7 @@ function Profile() {
 
   return (
     <div className="profile-page">
+      <div className="profile-sticky">
       <button className="profile-page-back" onClick={() => navigate('/')}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M15 18l-6-6 6-6" />
@@ -109,7 +110,6 @@ function Profile() {
         Log ud
       </button>
 
-      <div className="profile-sticky">
       <ProfileHeader user={user} />
 
       <div className="profile-tabs">

@@ -17,11 +17,13 @@
   margin: 0 auto;
   z-index: 100;
   background: #fff;
+  /* needed so absolute-positioned children (back/logout buttons) are scoped here */
+  isolation: isolate;
 }
 
 /* Back button floats over the green header */
 .profile-page-back {
-  position: fixed;
+  position: absolute;
   top: 14px;
   left: 14px;
   z-index: 110;
@@ -43,7 +45,7 @@
 
 /* ── Logout button ── */
 .profile-logout-btn {
-  position: fixed;
+  position: absolute;
   top: 14px;
   right: 14px;
   z-index: 110;
