@@ -2,6 +2,14 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { Pool } from "pg";
 import dotenv from "dotenv";
+import Stripe from 'stripe';
+import { UserManager } from './userHandler.js';
+import CampaignManager from './campaignHandler.js';
+import ImageHandler from './imageHandler.js';
+import DonationManager from './donationHandler.js';
+import { issueToken, validateToken } from './JWTHandler.js';
+import bcrypt from 'bcrypt';
+import multer from 'multer';
 
 // Extend Express Request type to include user property
 declare global {
@@ -20,6 +28,9 @@ dotenv.config();
 
 const app = express();
 const PORT = 5000;
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY) 
+  : null as any;
 
 app.use(cors());
 app.use(express.json());
@@ -32,15 +43,6 @@ const pool = new Pool({
   password: process.env.POSTGRES_PASSWORD,
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
 });
-
-// Import handlers
-import { UserManager } from './userHandler.js';
-import CampaignManager from './campaignHandler.js';
-import ImageHandler from './imageHandler.js';
-import DonationManager from './donationHandler.js';
-import { issueToken, validateToken } from './JWTHandler.js';
-import bcrypt from 'bcrypt';
-import multer from 'multer';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -300,26 +302,44 @@ app.get("/api/campaigns/:campaignId/donations", authenticateJWT, async (req: Req
 
 // Protected endpoint to make a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
+  const { to_campaign, amount } = req.body;
+  const from_user = req.user!.userId;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Amount must be greater than 0" });
+  }
+
+  if (!to_campaign) {
+    return res.status(400).json({ error: "Campaign ID required" });
+  }
+
   try {
-    const { to_campaign, amount } = req.body;
-
-    if (!to_campaign || amount === undefined) {
-      return res.status(400).json({ error: "to_campaign and amount are required" });
-    }
-
     const donation = await DonationManager.donate({
-      from_user: req.user!.userId,
+      from_user,
       to_campaign,
       amount,
     });
-
     res.status(201).json(donation);
   } catch (error: any) {
-    if (error.message?.includes('Amount must be') || error.message?.includes('required')) {
-      return res.status(400).json({ error: error.message });
-    }
-    console.error("Error processing donation:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Request, res: Response) => {
+  const { to_campaign, amount } = req.body;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Amount must be greater than 0" });
+  }
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount * 100,
+      currency: 'dkk',
+    });
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 

@@ -121,3 +121,9 @@
 ### Opret kampagne integration med server (frontend, backend, kodning)
 * 13:30 -
 * Victor
+
+# 22/3
+
+### payment integration with ui
+* 11:10 - 
+* Felix
