@@ -96,6 +96,7 @@ const mockCampaign = {
   is_complete: false,
   milestones: [],
   city_name: 'Copenhagen',
+  owner_ids: [1],
   created_by: 1,
   donations: [],
 };
