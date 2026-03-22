@@ -145,5 +145,5 @@
 * Victor
 
 ### General project oversight and updating some stuff on home page
-* 23:30 - 
+* 23:30 - 01:00
 * Nicholas
