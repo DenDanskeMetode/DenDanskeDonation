@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useState } from 'react';
 import './css/CampaignDetail.css';
 import useCampaignsStore from '../store/useCampaignsStore';
 import CircularProgress from '../components/CircularProgress';
@@ -21,12 +20,8 @@ function CampaignDetail() {
   const { state } = useLocation();
   const { id } = useParams();
   const navigate = useNavigate();
-<<<<<<< HEAD
   const campaigns = useCampaignsStore((state) => state.campaigns);
   const [showDonationModal, setShowDonationModal] = useState(false);
-=======
-  const campaigns = useCampaignsStore((s) => s.campaigns);
->>>>>>> main
 
   const campaign = state ?? campaigns.find(c => c.id === Number(id));
 
@@ -48,7 +43,8 @@ function CampaignDetail() {
     return null;
   }
 
-  const userId = localStorage.getItem('userId');
+  const userObj = JSON.parse(localStorage.getItem('user') || '{}');
+  const userId = userObj.id;
 
   return (
     <div className="cd-page">
