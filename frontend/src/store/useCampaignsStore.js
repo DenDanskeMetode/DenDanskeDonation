@@ -16,7 +16,7 @@ function normalizeCampaign(c) {
     time: c.created_at ? new Date(c.created_at).toLocaleDateString('da-DK') : '',
     creator: c.created_by,
     tags: c.tags || [],
-    image: null,
+    image: c.image_ids && c.image_ids.length > 0 ? `/api/images/${c.image_ids[0]}` : null,
   };
 }
 

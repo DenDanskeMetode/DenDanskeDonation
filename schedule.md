@@ -144,6 +144,6 @@
 * 22:30 - 00:00
 * Victor
 
-### General project oversight and pushing to main
+### General project oversight and updating some stuff on home page
 * 23:30 - 
 * Nicholas
