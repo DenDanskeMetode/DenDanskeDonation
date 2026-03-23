@@ -1,6 +1,23 @@
 import { create } from 'zustand';
 import { campaignApi } from '../services/api';
 
+function timeAgo(dateStr) {
+  const seconds = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (seconds < 60) return `for ${seconds} sekund${seconds !== 1 ? 'er' : ''} siden`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `for ${minutes} minut${minutes !== 1 ? 'ter' : ''} siden`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `for ${hours} time${hours !== 1 ? 'r' : ''} siden`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `for ${days} dag${days !== 1 ? 'e' : ''} siden`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `for ${weeks} uge${weeks !== 1 ? 'r' : ''} siden`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `for ${months} måned${months !== 1 ? 'er' : ''} siden`;
+  const years = Math.floor(days / 365);
+  return `for ${years} år siden`;
+}
+
 function parsePgArray(val) {
   if (Array.isArray(val)) return val;
   if (!val || val === '{}') return [];
@@ -21,7 +38,7 @@ function normalizeCampaign(c) {
     raised,
     location: c.city_name || '',
     created_at: c.created_at || null,
-    time: c.created_at ? new Date(c.created_at).toLocaleDateString('da-DK') : '',
+    time: c.created_at ? timeAgo(c.created_at) : '',
     creator: c.created_by,
     tags: parsePgArray(c.tags),
     image: c.image_ids && c.image_ids.length > 0 ? `/api/images/${c.image_ids[0]}` : null,

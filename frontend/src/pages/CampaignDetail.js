@@ -26,6 +26,7 @@ function CampaignDetail() {
   const campaign = state ?? campaigns.find(c => c.id === Number(id));
 
   const [donations, setDonations] = useState([]);
+  const [creator, setCreator] = useState(null);
 
   useEffect(() => {
     if (!campaign) return;
@@ -36,6 +37,13 @@ function CampaignDetail() {
       .then(r => r.ok ? r.json() : [])
       .then(data => setDonations(Array.isArray(data) ? data : []))
       .catch(() => setDonations([]));
+
+    if (campaign.creator) {
+      fetch(`/api/users/${campaign.creator}/public`)
+        .then(r => r.ok ? r.json() : null)
+        .then(setCreator)
+        .catch(() => {});
+    }
   }, [campaign]);
 
   if (!campaign) {
@@ -92,8 +100,10 @@ function CampaignDetail() {
         <div className="cd-content">
           {/* Creator */}
           <div className="cd-creator">
-            <div className="cd-avatar" />
-            <span className="cd-creator-name">{campaign.creator ?? 'Ukendt'}</span>
+            {creator?.avatar
+              ? <img className="cd-avatar" src={creator.avatar} alt="" />
+              : <div className="cd-avatar" />}
+            <span className="cd-creator-name">{creator?.name ?? 'Ukendt'}</span>
           </div>
 
           <h1 className="cd-title">{campaign.title}</h1>

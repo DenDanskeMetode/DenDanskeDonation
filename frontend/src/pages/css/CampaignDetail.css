@@ -165,11 +165,12 @@
 }
 
 .cd-avatar {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: #c8e6c9;
   flex-shrink: 0;
+  object-fit: cover;
 }
 
 .cd-creator-name {
