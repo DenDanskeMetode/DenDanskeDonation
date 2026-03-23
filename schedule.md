@@ -160,7 +160,11 @@
 * 10:50 - 17:00
 * Victor
 
-
 ### Dynamic donations + Facebook login
 * 11:00 - 
 * Nicholas
+
+### Subscriptions (kodning, bugfixing, frontend, backend)
+* 18:40 - 20:10
+* 22:00 - 00:00
+* Felix

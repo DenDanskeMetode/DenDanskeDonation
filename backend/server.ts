@@ -42,8 +42,10 @@ function broadcastDonation(campaignId: number, donation: object) {
     client.write(payload);
   }
 }
-const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY) 
+
+// Force old stripe api version which uses payment_intent on invoices
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' as any })
   : null as any;
 
 app.use(cors());
@@ -393,7 +395,7 @@ app.get("/api/campaigns/:campaignId/stream", (req: Request, res: Response) => {
   });
 });
 
-// Protected endpoint to make a donation
+// Protected endpoint to confirm a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
   try {
     const { to_campaign, amount, cpr_number } = req.body;
@@ -433,6 +435,7 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
   }
 });
 
+// Protected endpoint to start a donation
 app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Request, res: Response) => {
   const { to_campaign, amount } = req.body;
 
@@ -449,6 +452,74 @@ app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Req
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
+});
+
+// Protected endpoint to subscribe to monthly donations (Stripe subscription)
+app.post("/api/payments/create-subscription", authenticateJWT, async (req: Request, res: Response) => {
+  const { to_campaign, amount } = req.body;
+  const from_user = req.user!.userId;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Amount must be greater than 0" });
+  }
+
+  if (!to_campaign) {
+    return res.status(400).json({ error: "Campaign ID required" });
+  }
+
+  try {
+    // Opret eller hent Stripe customer
+    const customer = await stripe.customers.create({
+      metadata: { userId: String(from_user) }
+    });
+
+    // Opret et dynamisk price objekt
+    const price = await stripe.prices.create({
+      unit_amount: amount * 100,
+      currency: 'dkk',
+      recurring: { interval: 'month' },
+      product_data: { name: `Månedlig donation til kampagne ${to_campaign}` },
+    });
+
+    // Opret subscription
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items: [{ price: price.id }],
+      payment_behavior: 'default_incomplete',
+    });
+
+    const invoiceId = typeof subscription.latest_invoice === 'string'
+      ? subscription.latest_invoice
+      : subscription.latest_invoice?.id;
+
+    if (!invoiceId) {
+      return res.status(500).json({ error: "No invoice on subscription" });
+    }
+
+    const invoice = await stripe.invoices.retrieve(invoiceId, {
+      expand: ['payment_intent'],
+    });
+
+
+    const paymentIntentId = typeof invoice.payment_intent === 'string'
+      ? invoice.payment_intent
+      : invoice.payment_intent?.id;
+
+    if (!paymentIntentId) {
+      return res.status(500).json({ error: "No payment intent on invoice" });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const clientSecret = paymentIntent.client_secret;
+
+    if (!clientSecret) {
+      return res.status(500).json({ error: "No client secret on payment intent" });
+    }
+
+    res.json({ clientSecret });
+} catch (error: any) {
+  res.status(500).json({ error: error.message });
+}
 });
 
 // Protected endpoint to delete a campaign (own campaigns only)

@@ -6,6 +6,7 @@ function DonationModal({ campaign, userId, onClose, onSuccess }) {
   const [amount, setAmount] = useState('');
   const [customAmount, setCustomAmount] = useState(false);
   const [closing, setClosing] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -35,6 +36,20 @@ function DonationModal({ campaign, userId, onClose, onSuccess }) {
       </div>
 
       <div className="modal-body donation-body">
+        <div className="donation-type-toggle">
+          <button
+            className={`type-btn ${!isRecurring ? 'active' : ''}`}
+            onClick={() => setIsRecurring(false)}
+          >
+            Engangsbetaling
+          </button>
+          <button
+            className={`type-btn ${isRecurring ? 'active' : ''}`}
+            onClick={() => setIsRecurring(true)}
+          >
+            Månedlig donation
+          </button>
+        </div>
         <div className="donation-section">
           <p className="donation-label">Vælg beløb:</p>
           <div className="quick-amounts">
@@ -80,6 +95,7 @@ function DonationModal({ campaign, userId, onClose, onSuccess }) {
               amount={parseInt(amount)}
               from_user={userId}
               to_campaign={campaign.id}
+              isRecurring={isRecurring}
               onSuccess={handleSuccess}
               onError={() => {}}
             />
