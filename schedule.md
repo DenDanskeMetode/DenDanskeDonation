@@ -161,6 +161,7 @@
 * Victor
 
 
-### Dynamic donations + Facebook login
-* 11:00 - 
+### Dynamic donations + Facebook, Google login
+* 11:00 - 14:00
+* 19:00 - 
 * Nicholas
