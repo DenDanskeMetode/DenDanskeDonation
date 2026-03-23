@@ -118,7 +118,7 @@ export class UserManager {
         throw new Error('Invalid email format');
       }
 
-      return await createUser(userData);
+      return await createUser({ ...userData, email: userData.email.toLowerCase() });
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
@@ -185,7 +185,7 @@ export class UserManager {
   private static async findUserByEmail(email: string): Promise<User | null> {
     try {
       const allUsers = await getAllUsers();
-      return allUsers.find((user: User) => user.email === email) || null;
+      return allUsers.find((user: User) => user.email.toLowerCase() === email.toLowerCase()) || null;
     } catch (error) {
       console.error(`Error finding user by email ${email}:`, error);
       throw error;

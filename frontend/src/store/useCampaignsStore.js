@@ -32,6 +32,7 @@ const useCampaignsStore = create((set) => ({
       set({ campaigns: data.map(normalizeCampaign), loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
+      throw err;
     }
   },
 
