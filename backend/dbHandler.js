@@ -140,6 +140,37 @@ async function createUser(userData) {
   }
 }
 
+async function findOrCreateOAuthUser({ provider, providerId, email, firstname, surname, username }) {
+  try {
+    // 1. Find by provider + provider_id
+    let result = await executeQuery(
+      'SELECT * FROM users WHERE provider = $1 AND provider_id = $2',
+      [provider, providerId]
+    );
+    if (result.length > 0) return result[0];
+
+    // 2. Find local account with same email — link it
+    result = await executeQuery('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.length > 0) {
+      const linked = await executeQuery(
+        'UPDATE users SET provider = $1, provider_id = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *',
+        [provider, providerId, result[0].id]
+      );
+      return linked[0];
+    }
+
+    // 3. Create new OAuth user (no password_hash)
+    const created = await executeQuery(
+      'INSERT INTO users (username, email, firstname, surname, provider, provider_id, role) VALUES ($1, $2, $3, $4, $5, $6, \'user\') RETURNING *',
+      [username, email, firstname, surname, provider, providerId]
+    );
+    return created[0];
+  } catch (error) {
+    console.error('Error in findOrCreateOAuthUser:', error);
+    throw error;
+  }
+}
+
 async function createCampaign(campaignData) {
   try {
     const { title, description, tags, goal, milestones, city_name, created_by } = campaignData;
@@ -368,6 +399,7 @@ export {
   getAllUsers,
   getAllCampaigns,
   createUser,
+  findOrCreateOAuthUser,
   createCampaign,
   updateCampaign,
   deleteCampaign,

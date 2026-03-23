@@ -3,6 +3,9 @@ import cors from "cors";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import Stripe from 'stripe';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as FacebookStrategy } from 'passport-facebook';
 import { UserManager } from './userHandler.js';
 import { getUserWithCpr, getAllUsersWithCpr } from './dbHandler.js';
 import CampaignManager from './campaignHandler.js';
@@ -28,6 +31,47 @@ declare global {
 
 dotenv.config();
 
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID!,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+  callbackURL: '/auth/google/callback',
+}, async (_accessToken, _refreshToken, profile, done) => {
+  try {
+    const user = await UserManager.findOrCreateOAuthUser({
+      provider: 'google',
+      providerId: profile.id,
+      email: profile.emails?.[0]?.value ?? '',
+      firstname: profile.name?.givenName ?? profile.displayName,
+      surname: profile.name?.familyName ?? '',
+      username: profile.displayName,
+    });
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+}));
+
+passport.use(new FacebookStrategy({
+  clientID: process.env.FACEBOOK_APP_ID!,
+  clientSecret: process.env.FACEBOOK_APP_SECRET!,
+  callbackURL: '/auth/facebook/callback',
+  profileFields: ['id', 'emails', 'name', 'displayName'],
+}, async (_accessToken, _refreshToken, profile, done) => {
+  try {
+    const user = await UserManager.findOrCreateOAuthUser({
+      provider: 'facebook',
+      providerId: profile.id,
+      email: profile.emails?.[0]?.value ?? '',
+      firstname: profile.name?.givenName ?? profile.displayName,
+      surname: profile.name?.familyName ?? '',
+      username: profile.displayName,
+    });
+    done(null, user);
+  } catch (err) {
+    done(err);
+  }
+}));
+
 const app = express();
 const PORT = 5000;
 
@@ -48,6 +92,7 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 app.use(cors());
 app.use(express.json());
+app.use(passport.initialize());
 
 // Database connection
 const pool = new Pool({
@@ -123,6 +168,28 @@ app.get("/api/user-exists", async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
+// OAuth routes — Google
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }));
+app.get('/auth/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth` }),
+  (req: Request, res: Response) => {
+    const user = req.user as any;
+    const token = issueToken({ userId: user.id, email: user.email, username: user.username, role: user.role });
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
+  }
+);
+
+// OAuth routes — Facebook
+app.get('/auth/facebook', passport.authenticate('facebook', { scope: ['email'], session: false }));
+app.get('/auth/facebook/callback',
+  passport.authenticate('facebook', { session: false, failureRedirect: `${process.env.FRONTEND_URL}/login?error=oauth` }),
+  (req: Request, res: Response) => {
+    const user = req.user as any;
+    const token = issueToken({ userId: user.id, email: user.email, username: user.username, role: user.role });
+    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
+  }
+);
 
 // Login endpoint
 app.post("/api/login", async (req: Request, res: Response) => {
