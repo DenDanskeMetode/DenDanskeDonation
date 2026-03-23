@@ -156,8 +156,8 @@
 * 10:00 - 10:50
 * Alle
 
-### Filter, bugfixing (kodning, bugfixing, frontend, backend)
-* 10:50 - 13:30
+### Filter feature, bugfixing (kodning, bugfixing, frontend, backend)
+* 10:50 - 17:00
 * Victor
 
 
