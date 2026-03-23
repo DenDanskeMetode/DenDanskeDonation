@@ -1,4 +1,5 @@
 import request from 'supertest';
+import http from 'http';
 
 // Mock pg to prevent real DB connections
 jest.mock('pg', () => {
@@ -617,6 +618,79 @@ describe('Server endpoints', () => {
       expect(res.body).toHaveLength(2);
       expect(res.body[0].cpr_number).toBe('1234567890');
     });
+  });
+
+  describe('GET /api/campaigns/:campaignId/stream (SSE)', () => {
+    it('returns 401 when no token is provided', async () => {
+      const res = await request(app).get('/api/campaigns/1/stream');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 403 when token is invalid', async () => {
+      mockValidateToken.mockReturnValueOnce(null);
+      const res = await request(app).get('/api/campaigns/1/stream?token=badtoken');
+      expect(res.status).toBe(403);
+    });
+
+    it('opens an SSE stream with correct headers for a valid token', (done) => {
+      const server = app.listen(0);
+      const { port } = server.address() as { port: number };
+
+      const req = http.get(
+        `http://localhost:${port}/api/campaigns/1/stream?token=mock-jwt-token`,
+        (res) => {
+          expect(res.statusCode).toBe(200);
+          expect(res.headers['content-type']).toContain('text/event-stream');
+          expect(res.headers['cache-control']).toBe('no-cache');
+          req.destroy();
+          server.close(done);
+        }
+      );
+      req.on('error', done);
+    });
+
+    it('broadcasts a donation event to connected SSE clients', (done) => {
+      const donation = { id: 5, from_user: 1, to_campaign: 1, amount: 100, created_at: '2026-01-01T00:00:00Z' };
+      mockDonationManager.donate.mockResolvedValue(donation);
+
+      const server = app.listen(0);
+      const { port } = server.address() as { port: number };
+
+      let receivedData = '';
+      const sseReq = http.get(
+        `http://localhost:${port}/api/campaigns/1/stream?token=mock-jwt-token`,
+        (res) => {
+          res.on('data', (chunk: Buffer) => {
+            receivedData += chunk.toString();
+            if (receivedData.includes('data:')) {
+              expect(receivedData).toContain('"amount":100');
+              sseReq.destroy();
+              server.close(done);
+            }
+          });
+
+          // Make a donation to the same server instance after SSE is connected
+          setTimeout(() => {
+            const body = JSON.stringify({ to_campaign: 1, amount: 100 });
+            const postReq = http.request({
+              hostname: 'localhost',
+              port,
+              path: '/api/donations',
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer mock-jwt-token',
+                'Content-Length': Buffer.byteLength(body),
+              },
+            });
+            postReq.write(body);
+            postReq.end();
+            postReq.on('error', done);
+          }, 100);
+        }
+      );
+      sseReq.on('error', done);
+    }, 5000);
   });
 
   describe('GET /admin/users/:userId', () => {
