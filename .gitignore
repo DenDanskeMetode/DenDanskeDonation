@@ -24,6 +24,7 @@ yarn-error.log*
 restartDocker.sh
 runBackendOnly.sh
 forevertoken
+hashScript.js
 
 # env
 .env

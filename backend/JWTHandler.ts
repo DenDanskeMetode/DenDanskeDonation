@@ -15,6 +15,7 @@ export interface JWTPayload {
   userId: number;
   email: string;
   username: string;
+  role: 'user' | 'admin';
 }
 
 export function issueToken(payload: JWTPayload, expiresIn: SignOptions['expiresIn'] = '2h'): string {
