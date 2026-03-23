@@ -154,6 +154,12 @@
 
 ### Morgenmøde (dagsorden for dagen)
 * 10:00 - 10:50
+* Alle
+
+### Filter, bugfixing (kodning, bugfixing, frontend, backend)
+* 10:50 - 13:30
+* Victor
+
 
 ### Dynamic donations + Facebook login
 * 11:00 - 
