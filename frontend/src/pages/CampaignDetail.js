@@ -46,6 +46,18 @@ function CampaignDetail() {
     }
   }, [campaign]);
 
+  useEffect(() => {
+    if (!campaign?.id) return;
+    const token = localStorage.getItem('token');
+    const es = new EventSource(`/api/campaigns/${campaign.id}/stream?token=${token}`);
+    es.onmessage = (e) => {
+      const donation = JSON.parse(e.data);
+      setDonations(prev => [donation, ...prev]);
+      setLocalRaised(prev => prev + Number(donation.amount));
+    };
+    return () => es.close();
+  }, [campaign?.id]);
+
   if (!campaign) {
     navigate('/');
     return null;
@@ -67,14 +79,14 @@ function CampaignDetail() {
         <div className="cd-hero">
           <div className="cd-hero-left">
             <CircularProgress
-              raised={campaign.raised}
+              raised={localRaised}
               goal={campaign.goal}
               image={campaign.image}
               title={campaign.title}
               size={150}
             />
             <p className="cd-raised-text">
-              <strong>{campaign.raised}kr</strong>
+              <strong>{localRaised}kr</strong>
               <br />
               <span>af {campaign.goal}kr</span>
             </p>
