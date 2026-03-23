@@ -189,7 +189,7 @@ describe('Database Handler Tests', () => {
 
       expect(result).toMatchObject({ id: 1, title: 'New Campaign', owners: [{ id: 1 }] });
       expect(pool.query).toHaveBeenCalledWith(
-        'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by, owner_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+        'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by, owner_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, title, description, tags::text[] as tags, goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at',
         [mockCampaignData.title, mockCampaignData.description, mockCampaignData.tags, mockCampaignData.goal, mockCampaignData.milestones, mockCampaignData.city_name, mockCampaignData.created_by, [mockCampaignData.created_by]]
       );
     });
