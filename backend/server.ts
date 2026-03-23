@@ -4,6 +4,7 @@ import { Pool } from "pg";
 import dotenv from "dotenv";
 import Stripe from 'stripe';
 import { UserManager } from './userHandler.js';
+import { getUserWithCpr, getAllUsersWithCpr } from './dbHandler.js';
 import CampaignManager from './campaignHandler.js';
 import ImageHandler from './imageHandler.js';
 import DonationManager from './donationHandler.js';
@@ -45,15 +46,6 @@ const pool = new Pool({
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
 });
 
-// Import handlers
-import { UserManager } from './userHandler.js';
-import { getUserWithCpr, getAllUsersWithCpr } from './dbHandler.js';
-import CampaignManager from './campaignHandler.js';
-import ImageHandler from './imageHandler.js';
-import DonationManager from './donationHandler.js';
-import { issueToken, validateToken } from './JWTHandler.js';
-import bcrypt from 'bcrypt';
-import multer from 'multer';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -334,17 +326,16 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
   try {
     const { to_campaign, amount, cpr_number } = req.body;
 
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ error: "Amount must be greater than 0" });
-  }
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: "Amount must be greater than 0" });
+    }
 
-  if (!to_campaign) {
-    return res.status(400).json({ error: "Campaign ID required" });
-  }
+    if (!to_campaign) {
+      return res.status(400).json({ error: "Campaign ID required" });
+    }
 
-  try {
     const donation = await DonationManager.donate({
-      from_user,
+      from_user: req.user!.userId,
       to_campaign,
       amount,
     });
@@ -358,7 +349,11 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
 
     res.status(201).json(donation);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (error.message?.includes('Amount must be') || error.message?.includes('required')) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error("Error processing donation:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
