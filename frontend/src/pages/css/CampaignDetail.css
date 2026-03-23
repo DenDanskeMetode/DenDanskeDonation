@@ -156,6 +156,14 @@
   flex: 1;
 }
 
+/* ── Tags row ── */
+.cd-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
 /* ── Creator ── */
 .cd-creator {
   display: flex;

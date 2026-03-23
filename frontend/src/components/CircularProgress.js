@@ -1,4 +1,4 @@
-function CircularProgress({ raised, goal, image, title, size = 220, strokeWidth = 7 }) {
+function CircularProgress({ raised, goal, image, title, size = 220, strokeWidth = 7, onClick }) {
   const pct = Math.min((raised / goal) * 100, 100);
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -20,7 +20,11 @@ function CircularProgress({ raised, goal, image, title, size = 220, strokeWidth 
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </svg>
-      <img src={image} alt={title} className="cd-ring-img" />
+      <img
+        src={image} alt={title} className="cd-ring-img"
+        onClick={onClick}
+        style={onClick ? { cursor: 'pointer' } : undefined}
+      />
     </div>
   );
 }
