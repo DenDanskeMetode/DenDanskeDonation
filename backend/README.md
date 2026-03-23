@@ -24,7 +24,7 @@ Base URL: `http://localhost:5000`
 | POST 🔒 | `/api/campaigns` | `title` (required), `description, tags, goal, milestones, city_name` |
 | GET 🔒 | `/api/campaigns` | All campaigns |
 | GET 🔒 | `/api/campaigns/:campaignId` | Single campaign |
-| PATCH 🔒 | `/api/campaigns/:campaignId` | `title, description, tags, goal, milestones, city_name, is_complete` (all optional) — own campaigns only |
+| PATCH 🔒 | `/api/campaigns/:campaignId` | `title, description, tags, goal, milestones, city_name, is_complete, owner_ids` (all optional) — own campaigns only; `owner_ids` must be a non-empty array of user IDs |
 | DELETE 🔒 | `/api/campaigns/:campaignId` | Own campaigns only — returns 204 |
 | POST 🔒 | `/api/campaigns/:campaignId/images` | `{ imageId }` — own campaigns only |
 | GET 🔒 | `/api/campaigns/:campaignId/images` | List image metadata |

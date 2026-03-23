@@ -2,6 +2,14 @@ import express, { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { Pool } from "pg";
 import dotenv from "dotenv";
+import Stripe from 'stripe';
+import { UserManager } from './userHandler.js';
+import CampaignManager from './campaignHandler.js';
+import ImageHandler from './imageHandler.js';
+import DonationManager from './donationHandler.js';
+import { issueToken, validateToken } from './JWTHandler.js';
+import bcrypt from 'bcrypt';
+import multer from 'multer';
 
 // Extend Express Request type to include user property
 declare global {
@@ -21,6 +29,9 @@ dotenv.config();
 
 const app = express();
 const PORT = 5000;
+const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY) 
+  : null as any;
 
 app.use(cors());
 app.use(express.json());
@@ -46,7 +57,7 @@ import multer from 'multer';
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (allowed.includes(file.mimetype)) {
@@ -254,9 +265,15 @@ app.post("/api/campaigns", authenticateJWT, async (req: Request, res: Response) 
 app.patch("/api/campaigns/:campaignId", authenticateJWT, async (req: Request, res: Response) => {
   try {
     const campaignId = parseInt(req.params.campaignId as string);
-    const { title, description, tags, goal, milestones, city_name, is_complete } = req.body;
-    const fields = { title, description, tags, goal, milestones, city_name, is_complete };
+    const { title, description, tags, goal, milestones, city_name, is_complete, owner_ids } = req.body;
+    const fields = { title, description, tags, goal, milestones, city_name, is_complete, owner_ids };
     const updates = Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined));
+
+    if (updates.owner_ids !== undefined) {
+      if (!Array.isArray(updates.owner_ids) || updates.owner_ids.length === 0) {
+        return res.status(400).json({ error: "owner_ids must be a non-empty array of user IDs" });
+      }
+    }
 
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({ error: "No valid fields provided" });
@@ -300,17 +317,34 @@ app.get("/api/campaigns/:campaignId", authenticateJWT, async (req: Request, res:
   }
 });
 
+// Protected endpoint to get all donations for a campaign
+app.get("/api/campaigns/:campaignId/donations", authenticateJWT, async (req: Request, res: Response) => {
+  const campaignId = parseInt(req.params.campaignId as string);
+  try {
+    const donations = await DonationManager.getDonationsByCampaign(campaignId);
+    res.json(donations);
+  } catch (error) {
+    console.error(`Error fetching donations for campaign ${campaignId}:`, error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Protected endpoint to make a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
   try {
     const { to_campaign, amount, cpr_number } = req.body;
 
-    if (!to_campaign || amount === undefined) {
-      return res.status(400).json({ error: "to_campaign and amount are required" });
-    }
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Amount must be greater than 0" });
+  }
 
+  if (!to_campaign) {
+    return res.status(400).json({ error: "Campaign ID required" });
+  }
+
+  try {
     const donation = await DonationManager.donate({
-      from_user: req.user!.userId,
+      from_user,
       to_campaign,
       amount,
     });
@@ -324,11 +358,25 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
 
     res.status(201).json(donation);
   } catch (error: any) {
-    if (error.message?.includes('Amount must be') || error.message?.includes('required')) {
-      return res.status(400).json({ error: error.message });
-    }
-    console.error("Error processing donation:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Request, res: Response) => {
+  const { to_campaign, amount } = req.body;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Amount must be greater than 0" });
+  }
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount * 100,
+      currency: 'dkk',
+    });
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -362,6 +410,21 @@ app.post("/api/campaigns/:campaignId/images", authenticateJWT, async (req: Reque
     if (error.status === 404) return res.status(404).json({ error: error.message });
     if (error.status === 403) return res.status(403).json({ error: error.message });
     console.error("Error adding image to campaign:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Protected endpoint to remove an image from a campaign (own campaigns only)
+app.delete("/api/campaigns/:campaignId/images/:imageId", authenticateJWT, async (req: Request, res: Response) => {
+  try {
+    const campaignId = parseInt(req.params.campaignId as string);
+    const imageId = parseInt(req.params.imageId as string);
+    await CampaignManager.removeImage(campaignId, imageId, req.user!.userId);
+    res.status(204).send();
+  } catch (error: any) {
+    if (error.status === 404) return res.status(404).json({ error: error.message });
+    if (error.status === 403) return res.status(403).json({ error: error.message });
+    console.error("Error removing image from campaign:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -477,8 +540,8 @@ app.post("/api/images", authenticateJWT, upload.any(), async (req: Request, res:
   }
 });
 
-// Protected endpoint to get an image by ID
-app.get("/api/images/:imageId", authenticateJWT, async (req: Request, res: Response) => {
+// Public endpoint to get an image by ID (no auth needed for <img src> tags)
+app.get("/api/images/:imageId", async (req: Request, res: Response) => {
   const imageId = parseInt(req.params.imageId as string);
   try {
     const image = await ImageHandler.getImage(imageId);

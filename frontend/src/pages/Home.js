@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './css/Home.css';
 import CreateCampaignModal from '../components/CreateCampaignModal';
@@ -10,6 +10,11 @@ const filters = ['Tæt på mig', 'Overraskelse', 'Kategori', 'Ny'];
 
 function Home() {
   const campaigns = useCampaignsStore((state) => state.campaigns);
+  const fetchCampaigns = useCampaignsStore((state) => state.fetchCampaigns);
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, [fetchCampaigns]);
   const [activeFilter, setActiveFilter] = useState(filters[0]);
   const [showModal, setShowModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);

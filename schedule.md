@@ -97,7 +97,12 @@
 
 
 ### Profile pages and navigation (general UI work)
-* 8:00 -
+* 8:00 - 9:30
+* 11:30 - 13:30
+* Nicholas
+
+### Kampagner bliver tilføjet til DB
+* 14:00 - 
 * Nicholas
 
 ### Møde og planlægnign (møde, planlægning)
@@ -105,5 +110,47 @@
 * Alle
 
 ### Backend integration til frontend (frontend, bugfixing, kodning)
-* 11:00 -
+* 11:00 - 15:00
 * Victor
+
+### CI/CD bugfixing and improvements & payment integration with UI (CI/CD, bugfixing, kodning)
+* 11:00 - 15:20
+* Felix
+
+### General VM and CI/CD fixes (vi er dumme)
+* 17:30 - 18:30
+* Victor og Nicholas
+
+# 21/3
+
+### Opret kampagne integration med server (frontend, backend, kodning)
+* 13:30 - 15:00
+* Victor
+
+# 22/3
+
+### payment integration with ui (kodning, bugfixing, frontend)
+* 11:10 - 14:30
+* Felix
+
+### cpr integration and role managment
+* 6:40 - 7:00
+* 17:00 - 17:40
+* 23:20 - 00:00
+* Christian
+
+### Backend integration til frontend (frontend, bugfixing, kodning)
+* 15:00 - 19:00
+* 22:30 - 00:00
+* Victor
+
+### General project oversight and updating some stuff on home page
+* 23:30 - 01:00
+* Nicholas
+
+
+
+# 23/3
+
+### Morgenmøde (dagsorden for dagen)
+* 10:00 - 10:50

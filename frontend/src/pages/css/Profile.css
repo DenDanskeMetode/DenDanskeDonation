@@ -4,7 +4,21 @@
   max-width: 480px;
   margin: 0 auto;
   position: relative;
+  padding-top: 330px;
   padding-bottom: 40px;
+}
+
+.profile-sticky {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  max-width: 480px;
+  margin: 0 auto;
+  z-index: 100;
+  background: #fff;
+  /* needed so absolute-positioned children (back/logout buttons) are scoped here */
+  isolation: isolate;
 }
 
 /* Back button floats over the green header */
@@ -12,7 +26,7 @@
   position: absolute;
   top: 14px;
   left: 14px;
-  z-index: 10;
+  z-index: 110;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -27,6 +41,27 @@
 
 .profile-page-back:hover {
   background: rgba(255, 255, 255, 0.4);
+}
+
+/* ── Logout button ── */
+.profile-logout-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 110;
+  padding: 6px 12px;
+  background: rgba(211, 47, 47, 0.82);
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.profile-logout-btn:hover {
+  background: rgba(211, 47, 47, 1);
 }
 
 /* ── Tab bar ── */

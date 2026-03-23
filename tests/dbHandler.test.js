@@ -66,20 +66,22 @@ describe('Database Handler Tests', () => {
   });
 
   describe('getCampaignById', () => {
-    it('should return campaign with donations when campaign exists', async () => {
-      const mockCampaign = { id: 1, title: 'Test Campaign', description: 'desc', goal: 1000 };
+    it('should return campaign with donations and owners when campaign exists', async () => {
+      const mockCampaign = { id: 1, title: 'Test Campaign', description: 'desc', goal: 1000, owner_ids: [1] };
       const mockDonations = [
         { id: 1, from_user: 1, to_campaign: 1, amount: 100, user_name: 'johndoe', user_email: 'test@example.com' }
       ];
+      const mockOwners = [{ id: 1, username: 'johndoe', email: 'test@example.com' }];
 
       pool.query
         .mockImplementationOnce(() => Promise.resolve({ rows: [mockCampaign] }))
-        .mockImplementationOnce(() => Promise.resolve({ rows: mockDonations }));
+        .mockImplementationOnce(() => Promise.resolve({ rows: mockDonations }))
+        .mockImplementationOnce(() => Promise.resolve({ rows: mockOwners }));
 
       const result = await getCampaignById(1);
 
-      expect(result).toEqual({ ...mockCampaign, donations: mockDonations });
-      expect(pool.query).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({ ...mockCampaign, donations: mockDonations, owners: mockOwners });
+      expect(pool.query).toHaveBeenCalledTimes(3);
     });
 
     it('should return null when campaign does not exist', async () => {
@@ -118,27 +120,36 @@ describe('Database Handler Tests', () => {
   });
 
   describe('getAllCampaigns', () => {
-    it('should return all campaigns with their donations', async () => {
+    it('should return all campaigns with their donations and owners', async () => {
       const mockCampaigns = [
-        { id: 1, title: 'Campaign 1', goal: 1000 },
-        { id: 2, title: 'Campaign 2', goal: 2000 }
+        { id: 1, title: 'Campaign 1', goal: 1000, owner_ids: [1] },
+        { id: 2, title: 'Campaign 2', goal: 2000, owner_ids: [2] }
       ];
 
       const mockDonations = [
         { id: 1, from_user: 1, to_campaign: 1, amount: 100, user_name: 'user1', user_email: 'user1@example.com' }
       ];
 
+      // 1 call for all campaigns, then for each campaign: 1 donations + 1 owners + 1 images = 7 total
       pool.query
-        .mockImplementationOnce(() => Promise.resolve({ rows: mockCampaigns }))
-        .mockImplementationOnce(() => Promise.resolve({ rows: mockDonations }))
-        .mockImplementationOnce(() => Promise.resolve({ rows: [] }));
+        .mockImplementationOnce(() => Promise.resolve({ rows: mockCampaigns })) // getAllCampaigns
+        .mockImplementationOnce(() => Promise.resolve({ rows: mockDonations })) // donations campaign 1
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // donations campaign 2
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // owners campaign 1
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // owners campaign 2
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // images campaign 1
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }));           // images campaign 2
 
       const result = await getAllCampaigns();
 
       expect(result).toHaveLength(2);
       expect(result[0]).toHaveProperty('donations');
+      expect(result[0]).toHaveProperty('owners');
+      expect(result[0]).toHaveProperty('image_ids');
       expect(result[1]).toHaveProperty('donations');
-      expect(pool.query).toHaveBeenCalledTimes(3);
+      expect(result[1]).toHaveProperty('owners');
+      expect(result[1]).toHaveProperty('image_ids');
+      expect(pool.query).toHaveBeenCalledTimes(7);
     });
   });
 
@@ -168,7 +179,7 @@ describe('Database Handler Tests', () => {
   });
 
   describe('createCampaign', () => {
-    it('should create a new campaign and return the created campaign', async () => {
+    it('should create a new campaign and return the created campaign with owners', async () => {
       const mockCampaignData = { title: 'New Campaign', description: 'desc', tags: [], goal: 5000, milestones: [], city_name: 'Copenhagen', created_by: 1 };
       const mockCreatedCampaign = { id: 1, ...mockCampaignData };
 
@@ -176,10 +187,10 @@ describe('Database Handler Tests', () => {
 
       const result = await createCampaign(mockCampaignData);
 
-      expect(result).toEqual(mockCreatedCampaign);
+      expect(result).toMatchObject({ id: 1, title: 'New Campaign', owners: [{ id: 1 }] });
       expect(pool.query).toHaveBeenCalledWith(
-        'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-        [mockCampaignData.title, mockCampaignData.description, mockCampaignData.tags, mockCampaignData.goal, mockCampaignData.milestones, mockCampaignData.city_name, mockCampaignData.created_by]
+        'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by, owner_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+        [mockCampaignData.title, mockCampaignData.description, mockCampaignData.tags, mockCampaignData.goal, mockCampaignData.milestones, mockCampaignData.city_name, mockCampaignData.created_by, [mockCampaignData.created_by]]
       );
     });
 

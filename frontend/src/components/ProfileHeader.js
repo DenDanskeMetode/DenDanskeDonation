@@ -1,20 +1,48 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import './css/ProfileHeader.css';
 
 function ProfileHeader({ user }) {
   const [avatarSrc, setAvatarSrc] = useState(user.avatar);
+  const [statsVisible, setStatsVisible] = useState(true);
   const fileInputRef = useRef(null);
 
-  function handleAvatarChange(e) {
+  useEffect(() => {
+    setAvatarSrc(user.avatar);
+  }, [user.avatar]);
+
+  useEffect(() => {
+    function onScroll() {
+      setStatsVisible(window.scrollY < 10);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  async function handleAvatarChange(e) {
     const file = e.target.files[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setAvatarSrc(url);
+    setAvatarSrc(URL.createObjectURL(file));
+
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = localStorage.getItem('token');
+    if (!storedUser.id || !token) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+      await fetch(`/api/user/${storedUser.id}/profile-picture`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+    } catch (err) {
+      console.error('Error uploading profile picture:', err);
+    }
   }
 
   return (
-    <div className="profile-header">
-      <div className="profile-header-bg" />
+    <div className={`profile-header${statsVisible ? '' : ' stats-hidden'}`}>
+      <div className={`profile-header-bg${statsVisible ? '' : ' stats-hidden'}`} />
 
       <div className="profile-avatar-wrapper" onClick={() => fileInputRef.current.click()}>
         <img src={avatarSrc} alt="" className="profile-avatar" />
@@ -35,7 +63,7 @@ function ProfileHeader({ user }) {
       />
 
       <h2 className="profile-name">{user.name}</h2>
-      <div className="profile-stats">
+      <div className={`profile-stats${statsVisible ? '' : ' stats-hidden'}`}>
         <div className="profile-stat">
           <span className="stat-value">{user.totalDonated}</span>
           <span className="stat-label">Total Doneret</span>

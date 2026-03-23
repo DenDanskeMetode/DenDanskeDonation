@@ -1,4 +1,4 @@
-import { createDonation } from './dbHandler.js';
+import { createDonation, getDonationsByCampaign } from './dbHandler.js';
 
 interface DonationInput {
   from_user: number;
@@ -19,6 +19,10 @@ export class DonationManager {
    * Process a donation.
    * Steps run in order — add payment processing or other side-effects between validation and persistence.
    */
+  static async getDonationsByCampaign(campaignId: number) {
+    return await getDonationsByCampaign(campaignId);
+  }
+
   static async donate(input: DonationInput): Promise<DonationResult> {
     DonationManager.validateInput(input);
 

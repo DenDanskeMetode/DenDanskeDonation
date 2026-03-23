@@ -28,6 +28,20 @@ export interface Donation {
   user_email?: string;
 }
 
+export interface CampaignDonation {
+  id: number;
+  amount: number;
+  created_at: string;
+  sender_username: string;
+  sender_firstname: string;
+}
+
+export interface CampaignOwner {
+  id: number;
+  username: string;
+  email: string;
+}
+
 export interface Campaign {
   id: number;
   title: string;
@@ -37,10 +51,12 @@ export interface Campaign {
   is_complete: boolean;
   milestones: string[];
   city_name: string;
+  owner_ids: number[];
   created_by?: number;
   created_at?: string;
   updated_at?: string;
   donations?: Donation[];
+  owners?: CampaignOwner[];
 }
 
 export interface CampaignImageEntry {
@@ -92,6 +108,7 @@ declare function getAllCampaigns(): Promise<Campaign[]>;
 declare function createUser(userData: UserCreationData): Promise<User>;
 declare function createCampaign(campaignData: CampaignCreationData): Promise<Campaign>;
 declare function createDonation(donationData: DonationCreationData): Promise<Donation>;
+declare function getDonationsByCampaign(campaignId: number): Promise<CampaignDonation[]>;
 
 export interface Image {
   id: number;
@@ -107,15 +124,17 @@ export interface ImageCreationData {
   uploaded_by?: number;
 }
 
-declare function updateCampaign(campaignId: number, fields: Partial<Pick<Campaign, 'title' | 'description' | 'tags' | 'goal' | 'milestones' | 'city_name' | 'is_complete'>>): Promise<Campaign | null>;
+declare function updateCampaign(campaignId: number, fields: Partial<Pick<Campaign, 'title' | 'description' | 'tags' | 'goal' | 'milestones' | 'city_name' | 'is_complete' | 'owner_ids'>>): Promise<Campaign | null>;
 declare function deleteCampaign(campaignId: number): Promise<boolean>;
 declare function deleteUser(userId: number): Promise<boolean>;
 declare function addImageToCampaign(campaignId: number, imageId: number): Promise<{ campaign_id: number; image_id: number; added_at: string }>;
+declare function removeImageFromCampaign(campaignId: number, imageId: number): Promise<void>;
 declare function getCampaignImages(campaignId: number): Promise<CampaignImageEntry[]>;
 declare function updateUser(userId: number, fields: Partial<Pick<User, 'username' | 'email' | 'firstname' | 'surname' | 'age' | 'gender'>>): Promise<User | null>;
 declare function setProfilePicture(userId: number, imageId: number): Promise<User | null>;
 declare function getImageById(imageId: number): Promise<Image | null>;
 declare function createImage(imageData: ImageCreationData): Promise<Omit<Image, 'data'>>;
+declare function isCampaignOwner(campaignId: number, userId: number): Promise<boolean>;
 declare function upsertUserCpr(userId: number, cprNumber: string): Promise<UserCpr>;
 declare function getUserWithCpr(userId: number): Promise<(User & { cpr_number: string | null }) | null>;
 declare function getAllUsersWithCpr(): Promise<(User & { cpr_number: string | null })[]>;
@@ -131,12 +150,15 @@ export {
   deleteCampaign,
   deleteUser,
   createDonation,
+  getDonationsByCampaign,
   addImageToCampaign,
+  removeImageFromCampaign,
   getCampaignImages,
   updateUser,
   setProfilePicture,
   getImageById,
   createImage,
+  isCampaignOwner,
   upsertUserCpr,
   getUserWithCpr,
   getAllUsersWithCpr,
