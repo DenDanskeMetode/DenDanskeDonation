@@ -179,6 +179,7 @@ jobs:
           tags: ghcr.io/dendanskemetode/dendanskedonation/client:latest
           build-args: |
             REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_51TCd9b4HA5votMsYw5mKy2hgwPvkgIwXgTVHv2HP4sLsRqotExeTNKBQeN4jAxNnxEaIghAFiZy5Xa7YuY2kr6Vm004XE27mIW
+            REACT_APP_BACKEND_URL=http://dendanskedonation.norwayeast.cloudapp.azure.com
           cache-from: type=gha,scope=client
           cache-to: type=gha,mode=max,scope=client
 
