@@ -16,6 +16,8 @@ function CreateCampaignModal({ onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const fetchCampaigns = useCampaignsStore((state) => state.fetchCampaigns);
+
   const canPublish = Boolean(title.trim() && description.trim() && Number(goal) > 0 && cityName.trim() && tags.length >= 1 && images.length >= 1);
 
   useEffect(() => {
@@ -86,6 +88,7 @@ function CreateCampaignModal({ onClose }) {
             body: JSON.stringify({ imageId: imgData.id }),
           });
         }
+        await fetchCampaigns();
         handleClose();
       }
     } catch (err) {
