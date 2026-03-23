@@ -147,3 +147,10 @@
 ### General project oversight and updating some stuff on home page
 * 23:30 - 01:00
 * Nicholas
+
+
+
+# 23/3
+
+### Morgenmøde (dagsorden for dagen)
+* 10:00 - 10:50
