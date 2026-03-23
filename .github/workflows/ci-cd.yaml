@@ -209,8 +209,6 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -T ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IPV4 }} \
             "set -e && \
@@ -220,9 +218,6 @@ jobs:
              cd /opt/DenDanskeDonation && \
              echo '=== Pulling latest code from main ===' && \
              git pull origin main && \
-             echo '=== Creating .env file ===' && \
-             echo 'STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY' > .env && \
-             echo 'JWT_SECRET=$JWT_SECRET' >> .env && \
              echo '=== Pulling latest Docker images ===' && \
              docker-compose pull && \
              echo '=== Stopping old containers ===' && \
