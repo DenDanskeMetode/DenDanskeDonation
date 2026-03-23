@@ -13,6 +13,11 @@ async function request(method, path, body) {
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
+    if (res.status === 401 || res.status === 403) {
+      const authError = new Error('Unauthorized');
+      authError.status = res.status;
+      throw authError;
+    }
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error || res.statusText);
   }

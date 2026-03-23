@@ -11,16 +11,21 @@ const filters = ['Tæt på mig', 'Overraskelse', 'Kategori', 'Ny'];
 function Home() {
   const campaigns = useCampaignsStore((state) => state.campaigns);
   const fetchCampaigns = useCampaignsStore((state) => state.fetchCampaigns);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchCampaigns();
-  }, [fetchCampaigns]);
   const [activeFilter, setActiveFilter] = useState(filters[0]);
   const [showModal, setShowModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [activeFilters, setActiveFilters] = useState({});
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    fetchCampaigns().catch((err) => {
+      if (err.status === 401 || err.status === 403) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    });
+  }, [fetchCampaigns, navigate]);
 
   const filterCount = Object.values(activeFilters).reduce(
     (sum, set) => sum + (set?.size || 0), 0
