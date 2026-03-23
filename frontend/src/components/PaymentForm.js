@@ -15,7 +15,7 @@ function PaymentForm({ amount, to_campaign, onSuccess, onError }) {
 
     try {
       // 1. Opret payment intent
-      const res = await fetch("http://localhost:5000/api/payments/create-payment-intent", {
+      const res = await fetch("/api/payments/create-payment-intent", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -39,7 +39,7 @@ function PaymentForm({ amount, to_campaign, onSuccess, onError }) {
         onError?.(result.error.message);
       } else {
         // 3. Gem donation i databasen
-        const donationRes = await fetch("http://localhost:5000/api/donations", {
+        const donationRes = await fetch("/api/donations", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
