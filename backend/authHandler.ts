@@ -76,15 +76,15 @@ passport.serializeUser((user, done) => done(null, user.userId));
 passport.deserializeUser((userId: unknown, done) => done(null, { userId } as Express.User));
 
 function redirectWithToken(req: Request, res: Response) {
-  const user = req.user as any;
+  const user = req.user!;
   const token = issueToken({
-    userId: user.id,
+    userId: user.userId,
     email: user.email,
     username: user.username,
     role: user.role,
   });
   const userParam = encodeURIComponent(JSON.stringify({
-    id: user.id,
+    id: user.userId,
     username: user.username,
     email: user.email,
     role: user.role,

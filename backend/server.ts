@@ -14,8 +14,6 @@ import { authRouter, passport } from './authHandler.js';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 
-dotenv.config();
-
 const app = express();
 const PORT = 5000;
 
@@ -40,7 +38,7 @@ app.use(session({
   secret: process.env.JWT_SECRET!,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, maxAge: 5 * 60 * 1000 }, // 5 min — only needed for OAuth handshake
+  cookie: { secure: false, maxAge: 5 * 60 * 1000 },
 }));
 app.use(passport.initialize());
 app.use(passport.session());

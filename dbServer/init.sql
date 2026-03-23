@@ -9,12 +9,13 @@ CREATE TABLE users (
     gender VARCHAR(50),
     profile_picture INTEGER,
     role VARCHAR(20) NOT NULL DEFAULT 'user',
-    oauth_provider VARCHAR(20),
-    oauth_id VARCHAR(255),
+    provider VARCHAR(20) NOT NULL DEFAULT 'local',
+    provider_id TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT users_role_check CHECK (role IN ('user', 'admin')),
-    CONSTRAINT unique_oauth UNIQUE (oauth_provider, oauth_id)
+    CONSTRAINT users_provider_check CHECK (provider IN ('local', 'google', 'facebook')),
+    CONSTRAINT users_provider_id_unique UNIQUE (provider, provider_id)
 );
 
 CREATE TYPE campaign_tag AS ENUM (
