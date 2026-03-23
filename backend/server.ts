@@ -11,6 +11,7 @@ declare global {
         userId: number;
         email: string;
         username: string;
+        role: 'user' | 'admin';
       };
     }
   }
@@ -35,6 +36,7 @@ const pool = new Pool({
 
 // Import handlers
 import { UserManager } from './userHandler.js';
+import { getUserWithCpr, getAllUsersWithCpr } from './dbHandler.js';
 import CampaignManager from './campaignHandler.js';
 import ImageHandler from './imageHandler.js';
 import DonationManager from './donationHandler.js';
@@ -95,18 +97,20 @@ app.post("/api/login", async (req: Request, res: Response) => {
     }
     
     // Issue JWT token
-    const token = issueToken({ 
-      userId: user.id, 
+    const token = issueToken({
+      userId: user.id,
       email: user.email,
-      username: user.username 
+      username: user.username,
+      role: user.role,
     });
-    
-    res.json({ 
+
+    res.json({
       token,
       user: {
         id: user.id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        role: user.role,
       }
     });
   } catch (error) {
@@ -136,6 +140,14 @@ function authenticateJWT(req: Request, res: Response, next: NextFunction) {
     console.error("JWT validation error:", error);
     return res.status(403).json({ error: "Invalid or expired token" });
   }
+}
+
+// Middleware to require admin role (use after authenticateJWT)
+function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
 }
 
 // Register endpoint
@@ -170,20 +182,22 @@ app.post("/api/register", async (req: Request, res: Response) => {
     });
     
     // Issue JWT token
-    const token = issueToken({ 
-      userId: newUser.id, 
+    const token = issueToken({
+      userId: newUser.id,
       email: newUser.email,
-      username: newUser.username 
+      username: newUser.username,
+      role: newUser.role,
     });
-    
-    res.status(201).json({ 
+
+    res.status(201).json({
       token,
       user: {
         id: newUser.id,
         username: newUser.username,
         email: newUser.email,
         firstname: newUser.firstname,
-        surname: newUser.surname
+        surname: newUser.surname,
+        role: newUser.role,
       }
     });
   } catch (error) {
@@ -289,7 +303,7 @@ app.get("/api/campaigns/:campaignId", authenticateJWT, async (req: Request, res:
 // Protected endpoint to make a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
   try {
-    const { to_campaign, amount } = req.body;
+    const { to_campaign, amount, cpr_number } = req.body;
 
     if (!to_campaign || amount === undefined) {
       return res.status(400).json({ error: "to_campaign and amount are required" });
@@ -300,6 +314,13 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
       to_campaign,
       amount,
     });
+
+    if (cpr_number) {
+      if (!/^\d{6}-\d{4}$/.test(cpr_number)) {
+        return res.status(400).json({ error: "cpr_number must be in the format DDMMYY-XXXX (e.g. 128497-4628)" });
+      }
+      await UserManager.upsertCpr(req.user!.userId, cpr_number);
+    }
 
     res.status(201).json(donation);
   } catch (error: any) {
@@ -470,6 +491,34 @@ app.get("/api/images/:imageId", authenticateJWT, async (req: Request, res: Respo
     res.send(image.data);
   } catch (error) {
     console.error(`Error fetching image ${imageId}:`, error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin endpoint to list all users with full data including CPR
+app.get("/admin/users", authenticateJWT, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const users = await getAllUsersWithCpr();
+    res.json(users);
+  } catch (error) {
+    console.error("Error fetching users (admin):", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin endpoint to get a specific user with full data including CPR
+app.get("/admin/users/:userId", authenticateJWT, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId as string);
+    const user = await getUserWithCpr(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error("Error fetching user (admin):", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -8,8 +8,10 @@ CREATE TABLE users (
     age INTEGER,
     gender VARCHAR(50),
     profile_picture INTEGER,
+    role VARCHAR(20) NOT NULL DEFAULT 'user',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT users_role_check CHECK (role IN ('user', 'admin'))
 );
 
 CREATE TABLE campaigns (
@@ -55,4 +57,24 @@ CREATE TABLE donations (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (from_user) REFERENCES users(id),
     FOREIGN KEY (to_campaign) REFERENCES campaigns(id)
-)
+);
+
+CREATE TABLE user_cpr (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL UNIQUE,
+    cpr_number VARCHAR(11) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- pg_cron: delete CPR records older than 6 months, runs daily at midnight
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+SELECT cron.schedule(
+    'delete-expired-cpr',
+    '0 0 * * *',
+    $$DELETE FROM user_cpr WHERE created_at < NOW() - INTERVAL '6 months'$$
+);
+
+-- Seed admin user (password: Admin1234 — change before production)
+INSERT INTO users (username, email, firstname, surname, password_hash, role)
+VALUES ('admin', 'admin@example.com', 'Admin', 'User', '$2b$10$7PdXeMEyecQMai65cEq54.j2oW7b5nQal/FGvVH5TDv/BdpFR6MUy', 'admin');

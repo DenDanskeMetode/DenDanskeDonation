@@ -8,7 +8,8 @@ import {
   createUser,
   updateUser,
   deleteUser,
-  setProfilePicture
+  setProfilePicture,
+  upsertUserCpr
 } from './dbHandler.js';
 
 interface User {
@@ -21,6 +22,7 @@ interface User {
   age?: number | null;
   gender?: string | null;
   profile_picture?: number | null;
+  role: 'user' | 'admin';
   created_at?: string;
   updated_at?: string;
   donations?: any[];
@@ -152,6 +154,15 @@ export class UserManager {
       return await setProfilePicture(userId, imageId);
     } catch (error) {
       console.error(`Error setting profile picture for user ${userId}:`, error);
+      throw error;
+    }
+  }
+
+  static async upsertCpr(userId: number, cprNumber: string): Promise<void> {
+    try {
+      await upsertUserCpr(userId, cprNumber);
+    } catch (error) {
+      console.error(`Error upserting CPR for user ${userId}:`, error);
       throw error;
     }
   }

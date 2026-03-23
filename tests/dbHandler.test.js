@@ -153,7 +153,7 @@ describe('Database Handler Tests', () => {
 
       expect(result).toEqual(mockCreatedUser);
       expect(pool.query).toHaveBeenCalledWith(
-        'INSERT INTO users (username, email, firstname, surname, password_hash, age, gender) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+        "INSERT INTO users (username, email, firstname, surname, password_hash, age, gender, role) VALUES ($1, $2, $3, $4, $5, $6, $7, 'user') RETURNING *",
         [mockUserData.username, mockUserData.email, mockUserData.firstname, mockUserData.surname, mockUserData.password_hash, mockUserData.age, mockUserData.gender]
       );
     });

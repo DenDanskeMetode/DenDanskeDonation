@@ -11,6 +11,7 @@ export interface User {
   age?: number | null;
   gender?: string | null;
   profile_picture?: number | null;
+  role: 'user' | 'admin';
   created_at?: string;
   updated_at?: string;
   donations?: Donation[];
@@ -76,6 +77,13 @@ export interface DonationCreationData {
   amount: number;
 }
 
+export interface UserCpr {
+  id: number;
+  user_id: number;
+  cpr_number: string;
+  created_at?: string;
+}
+
 // Declare the actual functions from the JavaScript module
 declare function getUserById(userId: number): Promise<User | null>;
 declare function getCampaignById(campaignId: number): Promise<Campaign | null>;
@@ -108,6 +116,9 @@ declare function updateUser(userId: number, fields: Partial<Pick<User, 'username
 declare function setProfilePicture(userId: number, imageId: number): Promise<User | null>;
 declare function getImageById(imageId: number): Promise<Image | null>;
 declare function createImage(imageData: ImageCreationData): Promise<Omit<Image, 'data'>>;
+declare function upsertUserCpr(userId: number, cprNumber: string): Promise<UserCpr>;
+declare function getUserWithCpr(userId: number): Promise<(User & { cpr_number: string | null }) | null>;
+declare function getAllUsersWithCpr(): Promise<(User & { cpr_number: string | null })[]>;
 
 export {
   getUserById,
@@ -126,4 +137,7 @@ export {
   setProfilePicture,
   getImageById,
   createImage,
+  upsertUserCpr,
+  getUserWithCpr,
+  getAllUsersWithCpr,
 };
