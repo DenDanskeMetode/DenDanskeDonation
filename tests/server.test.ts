@@ -28,6 +28,7 @@ jest.mock('../backend/userHandler', () => ({
     updateUser: jest.fn(),
     deleteUser: jest.fn(),
     setProfilePicture: jest.fn(),
+    upsertCpr: jest.fn(),
   },
 }));
 
@@ -62,18 +63,27 @@ jest.mock('../backend/imageHandler', () => ({
   },
 }));
 
+// Mock dbHandler (for admin routes using getUserWithCpr / getAllUsersWithCpr)
+jest.mock('../backend/dbHandler', () => ({
+  getUserWithCpr: jest.fn(),
+  getAllUsersWithCpr: jest.fn(),
+}));
+
 import { app } from '../backend/server.js';
 import { UserManager } from '../backend/userHandler.js';
 import CampaignManager from '../backend/campaignHandler.js';
 import DonationManager from '../backend/donationHandler.js';
 import ImageHandler from '../backend/imageHandler.js';
 import { validateToken } from '../backend/JWTHandler.js';
+import * as dbHandler from '../backend/dbHandler.js';
 
 const mockUserManager = UserManager as jest.Mocked<typeof UserManager>;
 const mockCampaignManager = CampaignManager as jest.Mocked<typeof CampaignManager>;
 const mockDonationManager = DonationManager as jest.Mocked<typeof DonationManager>;
 const mockImageHandler = ImageHandler as jest.Mocked<typeof ImageHandler>;
 const mockValidateToken = validateToken as jest.Mock;
+const mockGetUserWithCpr = dbHandler.getUserWithCpr as jest.Mock;
+const mockGetAllUsersWithCpr = dbHandler.getAllUsersWithCpr as jest.Mock;
 
 const AUTH_HEADER = { Authorization: 'Bearer mock-jwt-token' };
 
@@ -84,6 +94,7 @@ const mockUser = {
   firstname: 'John',
   surname: 'Doe',
   password_hash: 'hashed',
+  role: 'user' as const,
   donations: [],
 };
 
@@ -104,7 +115,7 @@ const mockCampaign = {
 describe('Server endpoints', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockValidateToken.mockReturnValue({ userId: 1, email: 'john@example.com', username: 'johndoe' });
+    mockValidateToken.mockReturnValue({ userId: 1, email: 'john@example.com', username: 'johndoe', role: 'user' });
   });
 
   describe('GET /', () => {
@@ -508,6 +519,33 @@ describe('Server endpoints', () => {
         expect.objectContaining({ from_user: 1 })
       );
     });
+
+    it('returns 400 when cpr_number has invalid format', async () => {
+      mockDonationManager.donate.mockResolvedValue({ id: 1, from_user: 1, to_campaign: 2, amount: 100 });
+      const res = await request(app)
+        .post('/api/donations')
+        .set(AUTH_HEADER)
+        .send({ to_campaign: 2, amount: 100, cpr_number: '1234567890' });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch('DDMMYY-XXXX');
+    });
+
+    it('stores cpr_number when provided', async () => {
+      mockDonationManager.donate.mockResolvedValue({ id: 1, from_user: 1, to_campaign: 2, amount: 100 });
+      mockUserManager.upsertCpr.mockResolvedValue(undefined);
+      const res = await request(app)
+        .post('/api/donations')
+        .set(AUTH_HEADER)
+        .send({ to_campaign: 2, amount: 100, cpr_number: '128497-4628' });
+      expect(res.status).toBe(201);
+      expect(mockUserManager.upsertCpr).toHaveBeenCalledWith(1, '128497-4628');
+    });
+
+    it('does not call upsertCpr when cpr_number is omitted', async () => {
+      mockDonationManager.donate.mockResolvedValue({ id: 1, from_user: 1, to_campaign: 2, amount: 100 });
+      await request(app).post('/api/donations').set(AUTH_HEADER).send({ to_campaign: 2, amount: 100 });
+      expect(mockUserManager.upsertCpr).not.toHaveBeenCalled();
+    });
   });
 
   describe('POST /api/images', () => {
@@ -552,6 +590,62 @@ describe('Server endpoints', () => {
       const res = await request(app).get('/api/images/1').set(AUTH_HEADER);
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toMatch('image/jpeg');
+    });
+  });
+
+  describe('GET /admin/users', () => {
+    it('returns 401 without token', async () => {
+      const res = await request(app).get('/admin/users');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 403 for non-admin users', async () => {
+      mockValidateToken.mockReturnValue({ userId: 1, email: 'john@example.com', username: 'johndoe', role: 'user' });
+      const res = await request(app).get('/admin/users').set(AUTH_HEADER);
+      expect(res.status).toBe(403);
+    });
+
+    it('returns all users with CPR for admin', async () => {
+      mockValidateToken.mockReturnValue({ userId: 1, email: 'admin@example.com', username: 'admin', role: 'admin' });
+      const usersWithCpr = [
+        { ...mockUser, cpr_number: '1234567890' },
+        { ...mockUser, id: 2, username: 'jane', cpr_number: null },
+      ];
+      mockGetAllUsersWithCpr.mockResolvedValue(usersWithCpr);
+      const res = await request(app).get('/admin/users').set(AUTH_HEADER);
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveLength(2);
+      expect(res.body[0].cpr_number).toBe('1234567890');
+    });
+  });
+
+  describe('GET /admin/users/:userId', () => {
+    it('returns 401 without token', async () => {
+      const res = await request(app).get('/admin/users/1');
+      expect(res.status).toBe(401);
+    });
+
+    it('returns 403 for non-admin users', async () => {
+      mockValidateToken.mockReturnValue({ userId: 1, email: 'john@example.com', username: 'johndoe', role: 'user' });
+      const res = await request(app).get('/admin/users/1').set(AUTH_HEADER);
+      expect(res.status).toBe(403);
+    });
+
+    it('returns 404 when user not found', async () => {
+      mockValidateToken.mockReturnValue({ userId: 1, email: 'admin@example.com', username: 'admin', role: 'admin' });
+      mockGetUserWithCpr.mockResolvedValue(null);
+      const res = await request(app).get('/admin/users/99').set(AUTH_HEADER);
+      expect(res.status).toBe(404);
+    });
+
+    it('returns full user data including CPR for admin', async () => {
+      mockValidateToken.mockReturnValue({ userId: 1, email: 'admin@example.com', username: 'admin', role: 'admin' });
+      const userWithCpr = { ...mockUser, cpr_number: '1234567890' };
+      mockGetUserWithCpr.mockResolvedValue(userWithCpr);
+      const res = await request(app).get('/admin/users/1').set(AUTH_HEADER);
+      expect(res.status).toBe(200);
+      expect(res.body.cpr_number).toBe('1234567890');
+      expect(res.body.password_hash).toBe('hashed');
     });
   });
 });

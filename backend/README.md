@@ -32,10 +32,23 @@ Base URL: `http://localhost:5000`
 ## Donations
 | Method | Endpoint | Body |
 |--------|----------|------|
-| POST 🔒 | `/api/donations` | `to_campaign, amount` |
+| POST 🔒 | `/api/donations` | `to_campaign, amount` — `cpr_number` optional, format `DDMMYY-XXXX` e.g. `128497-4628` (stored/updated in `user_cpr`) |
 
 ## Images
 | Method | Endpoint | Notes |
 |--------|----------|-------|
 | POST 🔒 | `/api/images` | Multipart file upload — returns image metadata |
 | GET 🔒 | `/api/images/:imageId` | Returns raw image bytes |
+
+## Admin
+👑 = requires admin role (`role: 'admin'` in JWT)
+
+| Method | Endpoint | Notes |
+|--------|----------|-------|
+| GET 🔒👑 | `/admin/users` | All users — full data including `cpr_number` and `password_hash` |
+| GET 🔒👑 | `/admin/users/:userId` | Single user — full data including `cpr_number` and `password_hash` |
+
+### Roles
+- All newly registered users get `role: 'user'` automatically.
+- There is no API path to create an admin. The seed admin is added directly in `init.sql`.
+- `cpr_number` is stored per user and automatically deleted after 6 months via pg_cron.

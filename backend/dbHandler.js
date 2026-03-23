@@ -131,7 +131,7 @@ async function getAllCampaigns() {
 async function createUser(userData) {
   try {
     const { username, email, firstname, surname, password_hash, age, gender } = userData;
-    const query = 'INSERT INTO users (username, email, firstname, surname, password_hash, age, gender) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *';
+    const query = 'INSERT INTO users (username, email, firstname, surname, password_hash, age, gender, role) VALUES ($1, $2, $3, $4, $5, $6, $7, \'user\') RETURNING *';
     const result = await executeQuery(query, [username, email, firstname, surname, password_hash, age ?? null, gender ?? null]);
     return result[0];
   } catch (error) {
@@ -292,6 +292,54 @@ async function getImageById(imageId) {
   }
 }
 
+async function getUserWithCpr(userId) {
+  try {
+    const query = `
+      SELECT u.*, uc.cpr_number
+      FROM users u
+      LEFT JOIN user_cpr uc ON uc.user_id = u.id
+      WHERE u.id = $1
+    `;
+    const result = await executeQuery(query, [userId]);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error getting user with CPR:', error);
+    throw error;
+  }
+}
+
+async function getAllUsersWithCpr() {
+  try {
+    const query = `
+      SELECT u.*, uc.cpr_number
+      FROM users u
+      LEFT JOIN user_cpr uc ON uc.user_id = u.id
+      ORDER BY u.id ASC
+    `;
+    return await executeQuery(query, []);
+  } catch (error) {
+    console.error('Error getting all users with CPR:', error);
+    throw error;
+  }
+}
+
+async function upsertUserCpr(userId, cprNumber) {
+  try {
+    const query = `
+      INSERT INTO user_cpr (user_id, cpr_number)
+      VALUES ($1, $2)
+      ON CONFLICT (user_id) DO UPDATE
+        SET cpr_number = EXCLUDED.cpr_number, created_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `;
+    const result = await executeQuery(query, [userId, cprNumber]);
+    return result[0];
+  } catch (error) {
+    console.error('Error upserting user CPR:', error);
+    throw error;
+  }
+}
+
 async function createImage(imageData) {
   try {
     const { data, mime_type, uploaded_by } = imageData;
@@ -334,4 +382,7 @@ export {
   getImageById,
   createImage,
   isCampaignOwner,
+  upsertUserCpr,
+  getUserWithCpr,
+  getAllUsersWithCpr,
 };
