@@ -20,6 +20,7 @@ services:
       - FACEBOOK_APP_ID=${FACEBOOK_APP_ID}
       - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
+      - BACKEND_URL=${BACKEND_URL}
     depends_on:
       - db
     command: npm start
