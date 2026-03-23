@@ -58,6 +58,7 @@ const pool = new Pool({
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
 });
 
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
@@ -79,7 +80,36 @@ app.get("/api/message", (req: Request, res: Response) => {
   res.json({ message: "Hello from backend 🚀" });
 });
 
+app.get("/api/tags", async (_req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT unnest(enum_range(NULL::campaign_tag))::text AS tag`
+    );
+    res.json(result.rows.map((r: { tag: string }) => r.tag));
+  } catch (error) {
+    console.error("Error fetching tags:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Check if a user exists by email
+app.get("/api/users/:userId/public", async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId as string);
+    const userInfo = await UserManager.getUserInfo(userId);
+    if (!userInfo) return res.status(404).json({ error: "User not found" });
+    res.json({
+      id: userInfo.id,
+      username: userInfo.username,
+      name: `${userInfo.firstname} ${userInfo.surname}`,
+      avatar: userInfo.profile_picture ? `/api/images/${userInfo.profile_picture}` : null,
+    });
+  } catch (error) {
+    console.error("Error fetching public user info:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.get("/api/user-exists", async (req: Request, res: Response) => {
   const { email } = req.query;
   if (!email || typeof email !== 'string') {
