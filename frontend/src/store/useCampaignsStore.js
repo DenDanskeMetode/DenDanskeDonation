@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { campaignApi } from '../services/api';
 
+function parsePgArray(val) {
+  if (Array.isArray(val)) return val;
+  if (!val || val === '{}') return [];
+  // PostgreSQL array literal: {val1,val2} or {"val1","val2"}
+  return val.slice(1, -1).split(',').map(s => s.replace(/^"|"$/g, '').trim()).filter(Boolean);
+}
+
 // Map backend campaign shape to what the frontend components expect
 function normalizeCampaign(c) {
   const raised = c.donations
@@ -13,9 +20,10 @@ function normalizeCampaign(c) {
     goal: c.goal,
     raised,
     location: c.city_name || '',
+    created_at: c.created_at || null,
     time: c.created_at ? new Date(c.created_at).toLocaleDateString('da-DK') : '',
     creator: c.created_by,
-    tags: c.tags || [],
+    tags: parsePgArray(c.tags),
     image: c.image_ids && c.image_ids.length > 0 ? `/api/images/${c.image_ids[0]}` : null,
   };
 }

@@ -207,6 +207,17 @@
   display: none;
 }
 
+.filter-options--scroll {
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.city-count {
+  color: #999;
+  font-size: 0.85rem;
+}
+
 /* ── Footer ── */
 .filter-footer {
   padding: 16px 20px 36px;

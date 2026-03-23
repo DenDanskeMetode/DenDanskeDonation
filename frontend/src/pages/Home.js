@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './css/Home.css';
 import CreateCampaignModal from '../components/CreateCampaignModal';
@@ -32,17 +32,60 @@ function Home() {
     (sum, set) => sum + (set?.size || 0), 0
   );
 
-  const visibleCampaigns = searchQuery.trim()
-    ? campaigns.filter(c => {
-        const q = searchQuery.toLowerCase();
-        return (
-          c.title?.toLowerCase().includes(q) ||
-          c.description?.toLowerCase().includes(q) ||
-          c.location?.toLowerCase().includes(q) ||
-          c.tags?.some(t => t.toLowerCase().includes(q))
-        );
-      })
-    : campaigns;
+  const visibleCampaigns = useMemo(() => {
+    let result = campaigns;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(c =>
+        c.title?.toLowerCase().includes(q) ||
+        c.description?.toLowerCase().includes(q) ||
+        c.location?.toLowerCase().includes(q) ||
+        c.tags?.some(t => t.toLowerCase().includes(q))
+      );
+    }
+
+    const kategorier = activeFilters.kategorier;
+    if (kategorier?.size > 0) {
+      result = result.filter(c => c.tags?.some(t => kategorier.has(t)));
+    }
+
+    const milepæle = activeFilters.milepæle;
+    if (milepæle?.size > 0) {
+      result = result.filter(c => {
+        const pct = c.goal > 0 ? (c.raised / c.goal) * 100 : 0;
+        return [...milepæle].some(opt => {
+          if (opt === 'Under 50%')  return pct < 50;
+          if (opt === '50–80%')     return pct >= 50 && pct <= 80;
+          if (opt === 'Over 80%')   return pct > 80 && pct < 100;
+          if (opt === 'Nået mål')   return pct >= 100;
+          return false;
+        });
+      });
+    }
+
+    const dato = activeFilters.dato;
+    if (dato?.size > 0) {
+      const now = Date.now();
+      result = result.filter(c => {
+        if (!c.created_at) return false;
+        const ms = now - new Date(c.created_at).getTime();
+        return [...dato].some(opt => {
+          if (opt === 'Seneste 24 timer') return ms <= 24 * 3600 * 1000;
+          if (opt === 'Seneste uge')      return ms <= 7 * 24 * 3600 * 1000;
+          if (opt === 'Seneste måned')    return ms <= 30 * 24 * 3600 * 1000;
+          return false;
+        });
+      });
+    }
+
+    const lokation = activeFilters.lokation;
+    if (lokation?.size > 0) {
+      result = result.filter(c => lokation.has(c.location));
+    }
+
+    return result;
+  }, [campaigns, searchQuery, activeFilters]);
 
   return (
     <div className="home">
