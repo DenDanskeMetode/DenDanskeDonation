@@ -27,6 +27,7 @@ function CampaignDetail() {
 
   const [donations, setDonations] = useState([]);
   const [creator, setCreator] = useState(null);
+  const [localRaised, setLocalRaised] = useState(campaign?.raised ?? 0);
 
   useEffect(() => {
     if (!campaign) return;

@@ -98,7 +98,7 @@ function Profile() {
         }))
       );
     }).catch(console.error);
-  }, []);
+  }, [navigate, setUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="profile-page">
