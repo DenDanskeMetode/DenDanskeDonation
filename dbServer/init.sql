@@ -4,14 +4,17 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     firstname VARCHAR(100) NOT NULL,
     surname VARCHAR(100) NOT NULL,
-    password_hash TEXT NOT NULL,
+    password_hash TEXT,
     age INTEGER,
     gender VARCHAR(50),
     profile_picture INTEGER,
     role VARCHAR(20) NOT NULL DEFAULT 'user',
+    oauth_provider VARCHAR(20),
+    oauth_id VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT users_role_check CHECK (role IN ('user', 'admin'))
+    CONSTRAINT users_role_check CHECK (role IN ('user', 'admin')),
+    CONSTRAINT unique_oauth UNIQUE (oauth_provider, oauth_id)
 );
 
 CREATE TYPE campaign_tag AS ENUM (

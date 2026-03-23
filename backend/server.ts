@@ -3,28 +3,16 @@ import cors from "cors";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import Stripe from 'stripe';
+import session from 'express-session';
 import { UserManager } from './userHandler.js';
 import { getUserWithCpr, getAllUsersWithCpr } from './dbHandler.js';
 import CampaignManager from './campaignHandler.js';
 import ImageHandler from './imageHandler.js';
 import DonationManager from './donationHandler.js';
 import { issueToken, validateToken } from './JWTHandler.js';
+import { authRouter, passport } from './authHandler.js';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
-
-// Extend Express Request type to include user property
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: number;
-        email: string;
-        username: string;
-        role: 'user' | 'admin';
-      };
-    }
-  }
-}
 
 dotenv.config();
 
@@ -48,6 +36,15 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 app.use(cors());
 app.use(express.json());
+app.use(session({
+  secret: process.env.JWT_SECRET!,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 5 * 60 * 1000 }, // 5 min — only needed for OAuth handshake
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(authRouter);
 
 // Database connection
 const pool = new Pool({
