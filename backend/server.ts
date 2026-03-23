@@ -67,6 +67,18 @@ app.get("/api/message", (req: Request, res: Response) => {
   res.json({ message: "Hello from backend 🚀" });
 });
 
+app.get("/api/tags", async (_req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT unnest(enum_range(NULL::campaign_tag))::text AS tag`
+    );
+    res.json(result.rows.map((r: { tag: string }) => r.tag));
+  } catch (error) {
+    console.error("Error fetching tags:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Check if a user exists by email
 app.get("/api/user-exists", async (req: Request, res: Response) => {
   const { email } = req.query;

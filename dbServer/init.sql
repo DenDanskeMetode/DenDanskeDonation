@@ -14,11 +14,20 @@ CREATE TABLE users (
     CONSTRAINT users_role_check CHECK (role IN ('user', 'admin'))
 );
 
+CREATE TYPE campaign_tag AS ENUM (
+    'Humanitær',
+    'Sundhed',
+    'Natur og miljø',
+    'Uddannelse',
+    'Fritid',
+    'Personlig'
+);
+
 CREATE TABLE campaigns (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    tags TEXT[],
+    tags campaign_tag[],
     goal DECIMAL(15, 2),
     is_complete BOOLEAN DEFAULT FALSE,
     milestones TEXT[],
