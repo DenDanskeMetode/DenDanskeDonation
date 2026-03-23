@@ -154,3 +154,7 @@
 
 ### Morgenmøde (dagsorden for dagen)
 * 10:00 - 10:50
+
+### Dynamic donations + Facebook login
+* 11:00 - 
+* Nicholas
