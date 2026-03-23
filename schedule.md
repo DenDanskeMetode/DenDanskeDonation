@@ -163,5 +163,5 @@
 
 ### Dynamic donations + Facebook, Google login
 * 11:00 - 14:00
-* 19:00 -
+* 19:00 - 23:00
 * Nicholas
