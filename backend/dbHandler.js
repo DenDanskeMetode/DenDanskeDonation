@@ -383,41 +383,6 @@ async function createImage(imageData) {
   }
 }
 
-async function findOrCreateOAuthUser({ provider, providerId, email, firstname, surname, username }) {
-  try {
-    // 1. Look up by oauth_provider + oauth_id
-    let result = await executeQuery(
-      'SELECT * FROM users WHERE oauth_provider = $1 AND oauth_id = $2',
-      [provider, providerId]
-    );
-    if (result.length > 0) return result[0];
-
-    // 2. If email matches an existing account, link the OAuth provider to it
-    if (email) {
-      result = await executeQuery('SELECT * FROM users WHERE email = $1', [email]);
-      if (result.length > 0) {
-        const updated = await executeQuery(
-          'UPDATE users SET oauth_provider = $1, oauth_id = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING *',
-          [provider, providerId, result[0].id]
-        );
-        return updated[0];
-      }
-    }
-
-    // 3. Create a new OAuth user (no password)
-    const resolvedEmail = email || `${provider}_${providerId}@oauth.local`;
-    const newUser = await executeQuery(
-      `INSERT INTO users (username, email, firstname, surname, password_hash, oauth_provider, oauth_id, role)
-       VALUES ($1, $2, $3, $4, NULL, $5, $6, 'user') RETURNING *`,
-      [username, resolvedEmail, firstname, surname, provider, providerId]
-    );
-    return newUser[0];
-  } catch (error) {
-    console.error('Error in findOrCreateOAuthUser:', error);
-    throw error;
-  }
-}
-
 async function isCampaignOwner(campaignId, userId) {
   try {
     const result = await executeQuery('SELECT 1 FROM campaigns WHERE id = $1 AND $2 = ANY(owner_ids)', [campaignId, userId]);
@@ -452,5 +417,4 @@ export {
   upsertUserCpr,
   getUserWithCpr,
   getAllUsersWithCpr,
-  findOrCreateOAuthUser,
 };
