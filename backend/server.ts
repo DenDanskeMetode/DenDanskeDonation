@@ -28,6 +28,18 @@ dotenv.config();
 
 const app = express();
 const PORT = 5000;
+
+// SSE: track connected clients per campaign
+const sseClients = new Map<number, Set<Response>>();
+
+function broadcastDonation(campaignId: number, donation: object) {
+  const clients = sseClients.get(campaignId);
+  if (!clients || clients.size === 0) return;
+  const payload = `data: ${JSON.stringify(donation)}\n\n`;
+  for (const client of clients) {
+    client.write(payload);
+  }
+}
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY) 
   : null as any;
@@ -306,6 +318,37 @@ app.get("/api/campaigns/:campaignId/donations", authenticateJWT, async (req: Req
   }
 });
 
+// SSE endpoint — clients subscribe to live donation updates for a campaign
+// Auth via query param because EventSource doesn't support custom headers
+app.get("/api/campaigns/:campaignId/stream", (req: Request, res: Response) => {
+  const token = typeof req.query.token === 'string' ? req.query.token : null;
+  if (!token) {
+    res.status(401).end();
+    return;
+  }
+  const decoded = validateToken(token);
+  if (!decoded) {
+    res.status(403).end();
+    return;
+  }
+
+  const campaignId = parseInt(req.params.campaignId as string);
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  if (!sseClients.has(campaignId)) {
+    sseClients.set(campaignId, new Set());
+  }
+  sseClients.get(campaignId)!.add(res);
+
+  req.on('close', () => {
+    sseClients.get(campaignId)?.delete(res);
+  });
+});
+
 // Protected endpoint to make a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
   const { to_campaign, amount } = req.body;
@@ -325,6 +368,15 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
       to_campaign,
       amount,
     });
+
+    broadcastDonation(to_campaign, {
+      id: donation.id,
+      amount: donation.amount,
+      created_at: donation.created_at,
+      sender_username: req.user!.username,
+      sender_firstname: null,
+    });
+
     res.status(201).json(donation);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
