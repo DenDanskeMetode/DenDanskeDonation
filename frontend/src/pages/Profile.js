@@ -48,9 +48,19 @@ function Profile() {
     if (!storedUser.id || !token) return;
     const headers = { Authorization: `Bearer ${token}` };
 
+    function checkAuth(r) {
+      if (r.status === 401 || r.status === 403) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+        throw new Error('Unauthorized');
+      }
+      return r.json();
+    }
+
     Promise.all([
-      fetch('/api/campaigns', { headers }).then(r => r.json()),
-      fetch(`/api/user/${storedUser.id}`, { headers }).then(r => r.json()),
+      fetch('/api/campaigns', { headers }).then(checkAuth),
+      fetch(`/api/user/${storedUser.id}`, { headers }).then(checkAuth),
     ]).then(([campaigns, userInfo]) => {
       setMyCampaigns(
         campaigns
