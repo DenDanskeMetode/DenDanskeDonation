@@ -129,8 +129,8 @@
 
 # 22/3
 
-### payment integration with ui
-* 11:10 - 
+### payment integration with ui (kodning, bugfixing, frontend)
+* 11:10 - 14:30
 * Felix
 
 ### cpr integration and role managment
