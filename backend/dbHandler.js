@@ -183,7 +183,20 @@ async function findOrCreateOAuthUser({ provider, providerId, email, firstname, s
       'SELECT * FROM users WHERE provider = $1 AND provider_id = $2',
       [provider, providerId]
     );
-    if (result.length > 0) return result[0];
+    if (result.length > 0) {
+      const user = result[0];
+      if (!user.profile_picture && photoUrl) {
+        const imageId = await fetchOAuthPhoto(photoUrl, user.id);
+        if (imageId) {
+          const updated = await executeQuery(
+            'UPDATE users SET profile_picture = $1 WHERE id = $2 RETURNING *',
+            [imageId, user.id]
+          );
+          return updated[0];
+        }
+      }
+      return user;
+    }
 
     // 2. Find local account with same email — link it
     result = await executeQuery('SELECT * FROM users WHERE email = $1', [email]);
