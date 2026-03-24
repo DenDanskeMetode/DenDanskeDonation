@@ -212,8 +212,8 @@ describe('Database Handler Tests', () => {
 
       expect(result).toEqual(mockCreatedDonation);
       expect(pool.query).toHaveBeenCalledWith(
-        'INSERT INTO donations (from_user, to_campaign, amount) VALUES ($1, $2, $3) RETURNING *',
-        [mockDonationData.from_user, mockDonationData.to_campaign, mockDonationData.amount]
+        'INSERT INTO donations (from_user, to_campaign, amount, is_anonymous) VALUES ($1, $2, $3, $4) RETURNING *',
+        [mockDonationData.from_user, mockDonationData.to_campaign, mockDonationData.amount, false]
       );
     });
 
