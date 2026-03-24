@@ -250,3 +250,16 @@
 .cd-donate-btn:hover {
   background: #43a047;
 }
+
+/* ── Desktop responsive ── */
+@media (min-width: 768px) {
+  .cd-page {
+    max-width: 900px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .cd-page {
+    max-width: 1100px;
+  }
+}

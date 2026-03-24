@@ -83,3 +83,10 @@
 
 .settings-delete-btn.confirming .delete-btn-icon  { opacity: 0; transform: scale(0.75); }
 .settings-delete-btn.confirming .delete-btn-label { opacity: 1; transform: scale(1); }
+
+/* ── Desktop responsive ── */
+@media (min-width: 768px) {
+  .campaign-settings-page {
+    max-width: 800px;
+  }
+}
