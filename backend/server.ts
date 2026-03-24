@@ -14,6 +14,22 @@ import { authRouter, passport } from './authHandler.js';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 
+// Extend Express Request type to include user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: number;
+        email: string;
+        username: string;
+        role: 'user' | 'admin';
+      };
+    }
+  }
+}
+
+dotenv.config();
+
 const app = express();
 const PORT = 5000;
 
@@ -28,8 +44,10 @@ function broadcastDonation(campaignId: number, donation: object) {
     client.write(payload);
   }
 }
-const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY) 
+
+// Force old stripe api version which uses payment_intent on invoices
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' as any })
   : null as any;
 
 app.use(cors());
@@ -53,6 +71,26 @@ const pool = new Pool({
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 5432,
 });
 
+
+// Create subscriptions table if it doesn't exist yet
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id SERIAL PRIMARY KEY,
+        from_user INTEGER NOT NULL,
+        to_campaign INTEGER NOT NULL,
+        amount DECIMAL(10, 2) NOT NULL,
+        stripe_subscription_id TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (from_user) REFERENCES users(id),
+        FOREIGN KEY (to_campaign) REFERENCES campaigns(id)
+      )
+    `);
+  } catch (e) {
+    console.error(e);
+  }
+})();
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -388,7 +426,7 @@ app.get("/api/campaigns/:campaignId/stream", (req: Request, res: Response) => {
   });
 });
 
-// Protected endpoint to make a donation
+// Protected endpoint to confirm a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
   try {
     const { to_campaign, amount, cpr_number } = req.body;
@@ -432,6 +470,7 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
   }
 });
 
+// Protected endpoint to start a donation
 app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Request, res: Response) => {
   const { to_campaign, amount } = req.body;
 
@@ -445,6 +484,159 @@ app.post("/api/payments/create-payment-intent", authenticateJWT, async (req: Req
       currency: 'dkk',
     });
     res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Protected endpoint to subscribe to monthly donations (Stripe subscription)
+app.post("/api/payments/create-subscription", authenticateJWT, async (req: Request, res: Response) => {
+  const { to_campaign, amount } = req.body;
+  const from_user = req.user!.userId;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({ error: "Amount must be greater than 0" });
+  }
+
+  if (!to_campaign) {
+    return res.status(400).json({ error: "Campaign ID required" });
+  }
+
+  try {
+    // Opret eller hent Stripe customer
+    const customer = await stripe.customers.create({
+      metadata: { userId: String(from_user) }
+    });
+
+    // Opret et dynamisk price objekt
+    const price = await stripe.prices.create({
+      unit_amount: amount * 100,
+      currency: 'dkk',
+      recurring: { interval: 'month' },
+      product_data: { name: `Månedlig donation til kampagne ${to_campaign}` },
+    });
+
+    // Opret subscription
+    const subscription = await stripe.subscriptions.create({
+      customer: customer.id,
+      items: [{ price: price.id }],
+      payment_behavior: 'default_incomplete',
+    });
+
+    const invoiceId = typeof subscription.latest_invoice === 'string'
+      ? subscription.latest_invoice
+      : subscription.latest_invoice?.id;
+
+    if (!invoiceId) {
+      return res.status(500).json({ error: "No invoice on subscription" });
+    }
+
+    const invoice = await stripe.invoices.retrieve(invoiceId, {
+      expand: ['payment_intent'],
+    });
+
+
+    const paymentIntentId = typeof invoice.payment_intent === 'string'
+      ? invoice.payment_intent
+      : invoice.payment_intent?.id;
+
+    if (!paymentIntentId) {
+      return res.status(500).json({ error: "No payment intent on invoice" });
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    const clientSecret = paymentIntent.client_secret;
+
+    if (!clientSecret) {
+      return res.status(500).json({ error: "No client secret on payment intent" });
+    }
+
+    res.json({ clientSecret, stripeSubscriptionId: subscription.id });
+} catch (error: any) {
+  res.status(500).json({ error: error.message });
+}
+});
+
+// Record a confirmed subscription after frontend payment confirmation + broadcast to SSE
+app.post("/api/subscriptions/record", authenticateJWT, async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const { stripe_subscription_id, to_campaign, amount } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO subscriptions (from_user, to_campaign, amount, stripe_subscription_id) VALUES ($1, $2, $3, $4) RETURNING *',
+      [userId, to_campaign, amount, stripe_subscription_id]
+    );
+    const sub = result.rows[0];
+    broadcastDonation(Number(to_campaign), {
+      id: sub.id,
+      amount: sub.amount,
+      created_at: sub.created_at,
+      sender_username: req.user!.username,
+      sender_firstname: null,
+    });
+    res.status(201).json(sub);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get current user's subscriptions
+app.get("/api/subscriptions", authenticateJWT, async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  try {
+    const result = await pool.query(`
+      SELECT s.id, s.amount, s.created_at, c.title AS campaign_title, c.id AS campaign_id,
+             ARRAY_AGG(ci.image_id ORDER BY ci.added_at) FILTER (WHERE ci.image_id IS NOT NULL) AS image_ids
+      FROM subscriptions s
+      JOIN campaigns c ON s.to_campaign = c.id
+      LEFT JOIN campaign_images ci ON c.id = ci.campaign_id
+      WHERE s.from_user = $1
+      GROUP BY s.id, s.amount, s.created_at, c.title, c.id
+      ORDER BY s.created_at DESC
+    `, [userId]);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get a single subscription with Stripe details (next payment, payment count, total paid)
+app.get("/api/subscriptions/:id", authenticateJWT, async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const subscriptionId = parseInt(req.params.id as string);
+  try {
+    const result = await pool.query(`
+      SELECT s.id, s.amount, s.created_at, s.stripe_subscription_id,
+             c.title AS campaign_title, c.id AS campaign_id,
+             ARRAY_AGG(ci.image_id ORDER BY ci.added_at) FILTER (WHERE ci.image_id IS NOT NULL) AS image_ids
+      FROM subscriptions s
+      JOIN campaigns c ON s.to_campaign = c.id
+      LEFT JOIN campaign_images ci ON c.id = ci.campaign_id
+      WHERE s.id = $1 AND s.from_user = $2
+      GROUP BY s.id, s.amount, s.created_at, s.stripe_subscription_id, c.title, c.id
+    `, [subscriptionId, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    const sub = result.rows[0];
+    const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
+    const invoices = await stripe.invoices.list({
+      subscription: sub.stripe_subscription_id,
+      status: 'paid',
+      limit: 100,
+    });
+
+    const paymentCount = invoices.data.length;
+    const totalPaid = paymentCount * Number(sub.amount);
+
+    res.json({
+      ...sub,
+      next_payment_date: new Date(stripeSub.current_period_end * 1000).toISOString(),
+      payment_count: paymentCount,
+      total_paid: totalPaid,
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

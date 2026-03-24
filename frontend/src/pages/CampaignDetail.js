@@ -172,9 +172,6 @@ function CampaignDetail() {
           campaign={campaign}
           userId={parseInt(userId)}
           onClose={() => setShowDonationModal(false)}
-          onSuccess={() => {
-            setShowDonationModal(false);
-          }}
         />
       )}
     </div>

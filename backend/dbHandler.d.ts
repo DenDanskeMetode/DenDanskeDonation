@@ -146,6 +146,7 @@ export interface OAuthUserData {
   firstname: string;
   surname: string;
   username: string;
+  photoUrl?: string;
 }
 
 declare function findOrCreateOAuthUser(data: OAuthUserData): Promise<User>;
