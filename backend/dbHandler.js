@@ -517,6 +517,26 @@ async function isCampaignOwner(campaignId, userId) {
   }
 }
 
+async function getUserForEmail(userId) {
+  try {
+    const result = await executeQuery('SELECT email, firstname, surname FROM users WHERE id = $1', [userId]);
+    return result[0] || null;
+  } catch (error) {
+    console.error('Error getting user for email:', error);
+    throw error;
+  }
+}
+
+async function getCampaignTitle(campaignId) {
+  try {
+    const result = await executeQuery('SELECT title FROM campaigns WHERE id = $1', [campaignId]);
+    return result[0]?.title || null;
+  } catch (error) {
+    console.error('Error getting campaign title:', error);
+    throw error;
+  }
+}
+
 export {
   getUserById,
   getCampaignById,
@@ -541,4 +561,6 @@ export {
   upsertUserCpr,
   getUserWithCpr,
   getAllUsersWithCpr,
+  getUserForEmail,
+  getCampaignTitle,
 };

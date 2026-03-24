@@ -5,7 +5,8 @@ import dotenv from "dotenv";
 import Stripe from 'stripe';
 import session from 'express-session';
 import { UserManager } from './userHandler.js';
-import { getUserWithCpr, getAllUsersWithCpr } from './dbHandler.js';
+import { getUserWithCpr, getAllUsersWithCpr, getCampaignTitle } from './dbHandler.js';
+import { sendThankYouEmail } from './emailHandler.js';
 import CampaignManager from './campaignHandler.js';
 import ImageHandler from './imageHandler.js';
 import DonationManager from './donationHandler.js';
@@ -452,6 +453,12 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
       sender_username: is_anonymous ? null : req.user!.username,
       sender_firstname: is_anonymous ? null : req.user!.firstname,
     });
+
+    getCampaignTitle(Number(to_campaign))
+      .then((title: string | null) =>
+        sendThankYouEmail(req.user!.userId, Number(amount), title ?? "kampagnen")
+      )
+      .catch((err: unknown) => console.error("Error sending thank-you email:", err));
 
     res.status(201).json(donation);
   } catch (error: any) {
