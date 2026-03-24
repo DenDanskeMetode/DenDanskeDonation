@@ -64,6 +64,11 @@ jest.mock('../backend/imageHandler', () => ({
   },
 }));
 
+// Mock emailHandler to avoid import.meta.url (ESM-only) breaking ts-jest in CommonJS mode
+jest.mock('../backend/emailHandler', () => ({
+  sendThankYouEmail: jest.fn().mockResolvedValue(undefined),
+}));
+
 // Mock dbHandler (for admin routes using getUserWithCpr / getAllUsersWithCpr)
 jest.mock('../backend/dbHandler', () => ({
   getUserWithCpr: jest.fn(),
