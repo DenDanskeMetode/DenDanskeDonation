@@ -39,6 +39,9 @@ interface Donation {
   created_at?: string;
   user_name?: string;
   user_email?: string;
+  type?: 'donation' | 'subscription';
+  is_anonymous?: boolean;
+  stripe_subscription_id?: string;
 }
 
 export class CampaignManager {
@@ -195,11 +198,10 @@ export class CampaignManager {
    * @returns number - Total donation amount
    */
   static calculateTotalDonations(campaign: Campaign): number {
-    if (!campaign.donations || campaign.donations.length === 0) {
-      return 0;
-    }
-    
-    return campaign.donations.reduce((total, donation) => total + donation.amount, 0);
+    if (!campaign.donations || campaign.donations.length === 0) return 0;
+
+    // campaign.donations now may include both one-time donations and subscription entries
+    return campaign.donations.reduce((total, item) => total + (item.amount || 0), 0);
   }
 
   /**
@@ -230,7 +232,8 @@ export class CampaignManager {
     goal: number;
     remaining: number;
   } {
-    const totalDonations = this.calculateTotalDonations(campaign);
+    // Prefer backend-provided aggregated total if available
+    const totalDonations = typeof (campaign as any).total_donated === 'number' ? (campaign as any).total_donated : this.calculateTotalDonations(campaign);
     const progressPercentage = this.calculateProgressPercentage(campaign);
     const donorsCount = campaign.donations ? new Set(campaign.donations.map(d => d.from_user)).size : 0;
     const remaining = campaign.goal - totalDonations;

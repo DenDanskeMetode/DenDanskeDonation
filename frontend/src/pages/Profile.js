@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProfileHeader from '../components/ProfileHeader';
 import CampaignCard from '../components/CampaignCard';
+import DonationReceiptModal from '../components/DonationReceiptModal';
 import useUserStore from '../store/useUserStore';
 import './css/Profile.css';
 
@@ -34,10 +35,35 @@ function DonationItem({ donation, onClick }) {
   );
 }
 
+const DANISH_MONTHS = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
+function nextPaymentDate(createdAtStr) {
+  const day = new Date(createdAtStr).getDate();
+  const now = new Date();
+  let next = new Date(now.getFullYear(), now.getMonth(), day);
+  if (next <= now) next = new Date(now.getFullYear(), now.getMonth() + 1, day);
+  return `${next.getDate()}. ${DANISH_MONTHS[next.getMonth()]}`;
+}
+
+function SubscriptionItem({ subscription, onClick }) {
+  return (
+    <div className="donation-item" onClick={onClick} style={{ cursor: 'pointer' }}>
+      <img src={subscription.image} alt="" className="donation-thumb" />
+      <div className="donation-info">
+        <p className="donation-campaign">{subscription.campaign}</p>
+        <p className="donation-meta">{subscription.amount} kr. / måned &bull; næste betaling {nextPaymentDate(subscription.created_at)}</p>
+        <span className="subscription-badge">Aktiv</span>
+      </div>
+    </div>
+  );
+}
+
 function Profile() {
   const [activeTab, setActiveTab] = useState('campaigns');
   const [myCampaigns, setMyCampaigns] = useState([]);
   const [myDonations, setMyDonations] = useState([]);
+  const [mySubscriptions, setMySubscriptions] = useState([]);
+  const [receiptDonation, setReceiptDonation] = useState(null);
   const navigate = useNavigate();
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
@@ -61,7 +87,11 @@ function Profile() {
     Promise.all([
       fetch('/api/campaigns', { headers }).then(checkAuth),
       fetch(`/api/user/${storedUser.id}`, { headers }).then(checkAuth),
-    ]).then(([campaigns, userInfo]) => {
+      fetch('/api/subscriptions', { headers }).then(r => {
+        if (r.status === 401 || r.status === 403) return checkAuth(r);
+        return r.ok ? r.json() : [];
+      }),
+    ]).then(([campaigns, userInfo, subscriptions]) => {
       setMyCampaigns(
         campaigns
           .filter(c => c.created_by === storedUser.id)
@@ -75,6 +105,12 @@ function Profile() {
       );
       const myCampaignList = campaigns.filter(c => c.created_by === storedUser.id);
       const totalDonated = (userInfo.donations || []).reduce((sum, d) => sum + Number(d.amount), 0);
+      const totalSubscribed = (subscriptions || []).reduce((sum, s) => {
+        const created = new Date(s.created_at);
+        const now = new Date();
+        const months = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth()) + 1;
+        return sum + Number(s.amount) * months;
+      }, 0);
       const allReceivedDonations = myCampaignList.flatMap(c => c.donations || []);
       const totalRaised = allReceivedDonations.reduce((sum, d) => sum + Number(d.amount), 0);
       const uniqueDonors = new Set(allReceivedDonations.map(d => d.from_user)).size;
@@ -82,7 +118,7 @@ function Profile() {
       setUser({
         name: `${userInfo.firstname} ${userInfo.surname}`,
         avatar: userInfo.profile_picture ? `/api/images/${userInfo.profile_picture}` : '/images/default-avatar.jpg',
-        totalDonated: `${totalDonated.toLocaleString('da-DK')} kr.`,
+        totalDonated: `${(totalDonated + totalSubscribed).toLocaleString('da-DK')} kr.`,
         totalRaised: `${totalRaised.toLocaleString('da-DK')} kr.`,
         donors: uniqueDonors,
       });
@@ -95,6 +131,15 @@ function Profile() {
             ? `/api/images/${campaignById[d.to_campaign].image_ids[0]}`
             : undefined,
           date: d.created_at ? timeAgo(d.created_at) : '',
+        }))
+      );
+
+      setMySubscriptions(
+        (subscriptions || []).map(s => ({
+          ...s,
+          campaign: s.campaign_title,
+          image: s.image_ids?.[0] ? `/api/images/${s.image_ids[0]}` : undefined,
+          date: s.created_at ? timeAgo(s.created_at) : '',
         }))
       );
     }).catch(console.error);
@@ -127,32 +172,66 @@ function Profile() {
           className={`profile-tab${activeTab === 'campaigns' ? ' active' : ''}`}
           onClick={() => setActiveTab('campaigns')}
         >
-          Mine Kampagner
+          Kampagner
         </button>
         <button
           className={`profile-tab${activeTab === 'donations' ? ' active' : ''}`}
           onClick={() => setActiveTab('donations')}
         >
-          Mine Donationer
+          Donationer
+        </button>
+        <button
+          className={`profile-tab${activeTab === 'subscriptions' ? ' active' : ''}`}
+          onClick={() => setActiveTab('subscriptions')}
+        >
+          Abonnementer
         </button>
       </div>
       </div>
 
       <div className="profile-content">
-        {activeTab === 'campaigns' ? (
+        {activeTab === 'campaigns' && (
           <div className="campaign-list">
-            {myCampaigns.map(c => (
-              <CampaignCard key={c.id} campaign={c} onClick={() => navigate(`/campaigns/${c.id}/edit`)} />
-            ))}
+            {myCampaigns.length === 0 ? (
+              <p className="profile-empty">Ingen kampagner oprettet endnu.</p>
+            ) : (
+              myCampaigns.map(c => (
+                <CampaignCard key={c.id} campaign={c} onClick={() => navigate(`/campaigns/${c.id}/edit`)} />
+              ))
+            )}
           </div>
-        ) : (
+        )}
+        {activeTab === 'donations' && (
           <div className="donation-list">
-            {myDonations.map(d => (
-              <DonationItem key={d.id} donation={{ campaign: d.campaign_title, amount: `${Number(d.amount).toLocaleString('da-DK')} kr.`, image: d.image, date: d.date }} onClick={() => {}} />
-            ))}
+            {myDonations.length === 0 ? (
+              <p className="profile-empty">Ingen donationer endnu.</p>
+            ) : (
+              myDonations.map(d => (
+                <DonationItem key={d.id} donation={{ campaign: d.campaign_title, amount: `${Number(d.amount).toLocaleString('da-DK')} kr.`, image: d.image, date: d.date }} onClick={() => setReceiptDonation(d)} />
+              ))
+            )}
+          </div>
+        )}
+        {activeTab === 'subscriptions' && (
+          <div className="donation-list">
+            {mySubscriptions.length === 0 ? (
+              <p className="profile-empty">Ingen aktive abonnementer endnu.</p>
+            ) : (
+              mySubscriptions.map(s => (
+                <SubscriptionItem key={s.id} subscription={s} onClick={() => navigate(`/subscriptions/${s.id}`, { state: { image: s.image } })} />
+              ))
+            )}
           </div>
         )}
       </div>
+
+      {receiptDonation && (
+        <DonationReceiptModal
+          donation={receiptDonation}
+          donorName={user?.name || ''}
+          onClose={() => setReceiptDonation(null)}
+        />
+      )}
     </div>
   );
 }

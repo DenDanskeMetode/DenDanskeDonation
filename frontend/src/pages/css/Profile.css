@@ -135,3 +135,39 @@
   font-size: 0.8rem;
   color: #999;
 }
+
+.subscription-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 8px;
+  background: #e8f5e9;
+  color: #4caf50;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.profile-empty {
+  text-align: center;
+  color: #aaa;
+  font-size: 0.9rem;
+  padding: 40px 16px;
+}
+
+/* ── Desktop responsive ── */
+@media (min-width: 768px) {
+  .profile-page {
+    max-width: 900px;
+  }
+
+  .profile-sticky {
+    max-width: 900px;
+  }
+
+  .donation-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 0 24px;
+  }
+}

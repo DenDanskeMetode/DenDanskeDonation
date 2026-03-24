@@ -1,7 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
 import './css/ProfileHeader.css';
+import useUserStore from '../store/useUserStore';
 
 function ProfileHeader({ user }) {
+  const setAvatar = useUserStore((state) => state.setAvatar);
   const [avatarSrc, setAvatarSrc] = useState(user.avatar);
   const [statsVisible, setStatsVisible] = useState(true);
   const fileInputRef = useRef(null);
@@ -30,11 +32,24 @@ function ProfileHeader({ user }) {
     const formData = new FormData();
     formData.append('image', file);
     try {
-      await fetch(`/api/user/${storedUser.id}/profile-picture`, {
+      const res = await fetch(`/api/user/${storedUser.id}/profile-picture`, {
         method: 'PUT',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
+      if (res.ok) {
+        const updated = await fetch(`/api/user/${storedUser.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (updated.ok) {
+          const data = await updated.json();
+          if (data.profile_picture) {
+            const newUrl = `/api/images/${data.profile_picture}`;
+            setAvatarSrc(newUrl);
+            setAvatar(newUrl);
+          }
+        }
+      }
     } catch (err) {
       console.error('Error uploading profile picture:', err);
     }

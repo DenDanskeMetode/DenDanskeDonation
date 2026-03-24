@@ -53,19 +53,49 @@ async function getUserById(userId) {
 async function getCampaignById(campaignId) {
   try {
     const campaignQuery = 'SELECT id, title, description, tags::text[] as tags, goal::integer as goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at FROM campaigns WHERE id = $1';
-    const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
+    const donationsQuery = 'SELECT d.id, d.from_user, d.to_campaign, d.amount::integer as amount, d.created_at, d.is_anonymous, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
+    const subscriptionsQuery = 'SELECT s.id, s.from_user, s.to_campaign, s.amount::numeric as amount, s.created_at, s.stripe_subscription_id FROM subscriptions s WHERE s.to_campaign = $1';
     const campaignResult = await pool.query(campaignQuery, [campaignId]);
     if (campaignResult.rows.length === 0) return null;
-
     const donationsResult = await pool.query(donationsQuery, [campaignId]);
+    const subscriptionsResult = await pool.query(subscriptionsQuery, [campaignId]);
     const ownersResult = await pool.query(
       'SELECT u.id, u.username, u.email FROM users u WHERE u.id = ANY($1::integer[])',
       [campaignResult.rows[0].owner_ids || []]
     );
 
     const campaign = campaignResult.rows[0];
-    campaign.donations = donationsResult.rows;
+    // Map donations and subscriptions into a unified history list
+    const mappedDonations = donationsResult.rows.map(d => ({
+      id: d.id,
+      type: 'donation',
+      from_user: d.from_user,
+      amount: Number(d.amount),
+      created_at: d.created_at,
+      is_anonymous: d.is_anonymous,
+      user_name: d.user_name,
+      user_email: d.user_email,
+    }));
+
+    const mappedSubscriptions = subscriptionsResult.rows.map(s => ({
+      id: s.id,
+      type: 'subscription',
+      from_user: s.from_user,
+      amount: Number(s.amount),
+      created_at: s.created_at,
+      stripe_subscription_id: s.stripe_subscription_id,
+    }));
+
+    const history = [...mappedDonations, ...mappedSubscriptions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // Total donated is sum of one-time donations + subscription amounts (treat subscription.amount as contributed amount)
+    const totalDonations = mappedDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const totalSubscriptions = mappedSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0);
+
+    campaign.donations = history; // keep backward compatibility: donations field contains overall history
+    campaign.subscriptions = subscriptionsResult.rows;
     campaign.owners = ownersResult.rows;
+    campaign.total_donated = totalDonations + totalSubscriptions;
 
     return campaign;
   } catch (error) {
@@ -99,13 +129,15 @@ async function getAllUsers() {
 async function getAllCampaigns() {
   try {
     const campaignsQuery = 'SELECT id, title, description, tags::text[] as tags, goal::integer as goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at FROM campaigns';
-    const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
+    const donationsQuery = 'SELECT d.id, d.from_user, d.to_campaign, d.amount::integer as amount, d.created_at, d.is_anonymous, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
+    const subscriptionsQuery = 'SELECT s.id, s.from_user, s.to_campaign, s.amount::numeric as amount, s.created_at, s.stripe_subscription_id FROM subscriptions s WHERE s.to_campaign = $1';
 
     const campaignsResult = await pool.query(campaignsQuery);
 
     const campaignsWithData = await Promise.all(
       campaignsResult.rows.map(async (campaign) => {
         const donationsResult = await pool.query(donationsQuery, [campaign.id]);
+        const subscriptionsResult = await pool.query(subscriptionsQuery, [campaign.id]);
         const ownersResult = await pool.query(
           'SELECT u.id, u.username, u.email FROM users u WHERE u.id = ANY($1::integer[])',
           [campaign.owner_ids || []]
@@ -114,7 +146,34 @@ async function getAllCampaigns() {
           'SELECT image_id FROM campaign_images WHERE campaign_id = $1 ORDER BY added_at ASC',
           [campaign.id]
         );
-        campaign.donations = donationsResult.rows;
+        const mappedDonations = donationsResult.rows.map(d => ({
+          id: d.id,
+          type: 'donation',
+          from_user: d.from_user,
+          amount: Number(d.amount),
+          created_at: d.created_at,
+          is_anonymous: d.is_anonymous,
+          user_name: d.user_name,
+          user_email: d.user_email,
+        }));
+
+        const mappedSubscriptions = subscriptionsResult.rows.map(s => ({
+          id: s.id,
+          type: 'subscription',
+          from_user: s.from_user,
+          amount: Number(s.amount),
+          created_at: s.created_at,
+          stripe_subscription_id: s.stripe_subscription_id,
+        }));
+
+        const history = [...mappedDonations, ...mappedSubscriptions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        const totalDonations = mappedDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
+        const totalSubscriptions = mappedSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0);
+
+        campaign.donations = history;
+        campaign.subscriptions = subscriptionsResult.rows;
+        campaign.total_donated = totalDonations + totalSubscriptions;
         campaign.owners = ownersResult.rows;
         campaign.image_ids = imagesResult.rows.map(r => r.image_id);
         return campaign;
@@ -140,14 +199,63 @@ async function createUser(userData) {
   }
 }
 
-async function findOrCreateOAuthUser({ provider, providerId, email, firstname, surname, username }) {
+async function fetchOAuthPhoto(photoUrl, userId) {
+  try {
+    const { default: https } = await import('https');
+    const { default: http } = await import('http');
+
+    const data = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Profile photo fetch timed out')), 5000);
+      const client = photoUrl.startsWith('https') ? https : http;
+
+      client.get(photoUrl, (res) => {
+        if (res.statusCode !== 200) {
+          clearTimeout(timeout);
+          reject(new Error(`Unexpected status code: ${res.statusCode}`));
+          return;
+        }
+        const chunks = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => {
+          clearTimeout(timeout);
+          resolve({ buffer: Buffer.concat(chunks), mimeType: res.headers['content-type'] || 'image/jpeg' });
+        });
+        res.on('error', (err) => { clearTimeout(timeout); reject(err); });
+      }).on('error', (err) => { clearTimeout(timeout); reject(err); });
+    });
+
+    const image = await executeQuery(
+      'INSERT INTO images (data, mime_type, uploaded_by) VALUES ($1, $2, $3) RETURNING id',
+      [data.buffer, data.mimeType, userId]
+    );
+    return image[0].id;
+  } catch (err) {
+    console.error('Failed to fetch OAuth profile photo:', err.message);
+    return null;
+  }
+}
+
+async function findOrCreateOAuthUser({ provider, providerId, email, firstname, surname, username, photoUrl }) {
   try {
     // 1. Find by provider + provider_id
     let result = await executeQuery(
       'SELECT * FROM users WHERE provider = $1 AND provider_id = $2',
       [provider, providerId]
     );
-    if (result.length > 0) return result[0];
+    if (result.length > 0) {
+      const user = result[0];
+      if (!user.profile_picture && photoUrl) {
+        const imageId = await fetchOAuthPhoto(photoUrl, user.id);
+        if (imageId) {
+          const updated = await executeQuery(
+            'UPDATE users SET profile_picture = $1 WHERE id = $2 RETURNING *',
+            [imageId, user.id]
+          );
+          return updated[0];
+        }
+      }
+      return user;
+    }
 
     // 2. Find local account with same email — link it
     result = await executeQuery('SELECT * FROM users WHERE email = $1', [email]);
@@ -164,7 +272,21 @@ async function findOrCreateOAuthUser({ provider, providerId, email, firstname, s
       'INSERT INTO users (username, email, firstname, surname, provider, provider_id, role) VALUES ($1, $2, $3, $4, $5, $6, \'user\') RETURNING *',
       [username, email, firstname, surname, provider, providerId]
     );
-    return created[0];
+    const user = created[0];
+
+    // 4. Fetch and store profile picture if available
+    if (photoUrl) {
+      const imageId = await fetchOAuthPhoto(photoUrl, user.id);
+      if (imageId) {
+        const updated = await executeQuery(
+          'UPDATE users SET profile_picture = $1 WHERE id = $2 RETURNING *',
+          [imageId, user.id]
+        );
+        return updated[0];
+      }
+    }
+
+    return user;
   } catch (error) {
     console.error('Error in findOrCreateOAuthUser:', error);
     throw error;
@@ -206,7 +328,9 @@ async function updateCampaign(campaignId, fields) {
 async function getDonationsByCampaign(campaignId) {
   try {
     const query = `
-      SELECT d.id, d.amount::integer as amount, d.created_at, u.username as sender_username, u.firstname as sender_firstname
+      SELECT d.id, d.amount::integer as amount, d.created_at, d.is_anonymous,
+        CASE WHEN d.is_anonymous THEN NULL ELSE u.username END as sender_username,
+        CASE WHEN d.is_anonymous THEN NULL ELSE u.firstname END as sender_firstname
       FROM donations d
       JOIN users u ON d.from_user = u.id
       WHERE d.to_campaign = $1
@@ -221,9 +345,9 @@ async function getDonationsByCampaign(campaignId) {
 
 async function createDonation(donationData) {
   try {
-    const { from_user, to_campaign, amount } = donationData;
-    const query = 'INSERT INTO donations (from_user, to_campaign, amount) VALUES ($1, $2, $3) RETURNING *';
-    const result = await executeQuery(query, [from_user, to_campaign, amount]);
+    const { from_user, to_campaign, amount, is_anonymous = false } = donationData;
+    const query = 'INSERT INTO donations (from_user, to_campaign, amount, is_anonymous) VALUES ($1, $2, $3, $4) RETURNING *';
+    const result = await executeQuery(query, [from_user, to_campaign, amount, is_anonymous]);
     return result[0];
   } catch (error) {
     console.error('Error creating donation:', error);

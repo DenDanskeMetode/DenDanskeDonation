@@ -28,18 +28,23 @@ function CampaignDetail() {
 
   const [donations, setDonations] = useState([]);
   const [creator, setCreator] = useState(null);
-  const [localRaised, setLocalRaised] = useState(campaign?.raised ?? 0);
+  const [localRaised, setLocalRaised] = useState(campaign?.total_donated ?? campaign?.raised ?? 0);
   const [allImages, setAllImages] = useState(campaign?.image ? [campaign.image] : []);
   const [carouselOpen, setCarouselOpen] = useState(false);
 
   useEffect(() => {
     if (!campaign) return;
     const token = localStorage.getItem('token');
-    fetch(`/api/campaigns/${campaign.id}/donations`, {
+    fetch(`/api/campaigns/${campaign.id}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setDonations(Array.isArray(data) ? data : []))
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return setDonations([]);
+        // backend now returns unified history in `donations` and aggregated `total_donated`
+        setDonations(Array.isArray(data.donations) ? data.donations : []);
+        setLocalRaised(Number(data.total_donated ?? data.raised ?? 0));
+      })
       .catch(() => setDonations([]));
 
     if (campaign.creator) {
@@ -68,7 +73,7 @@ function CampaignDetail() {
     es.onmessage = (e) => {
       const donation = JSON.parse(e.data);
       setDonations(prev => [donation, ...prev]);
-      setLocalRaised(prev => prev + Number(donation.amount));
+      setLocalRaised(prev => prev + Number(donation.amount || 0));
     };
     return () => es.close();
   }, [campaign?.id]);
@@ -114,13 +119,17 @@ function CampaignDetail() {
             {donations.length === 0 ? (
               <p className="cd-no-donations">Ingen donationer endnu</p>
             ) : (
-              donations.map(d => (
-                <div key={d.id} className="cd-donation-entry">
-                  <div className="cd-donation-who">{d.sender_firstname ?? d.sender_username}</div>
-                  <div className="cd-donation-amount">{Number(d.amount).toLocaleString('da-DK')} kr</div>
-                  <div className="cd-donation-when">{timeAgo(d.created_at)}</div>
-                </div>
-              ))
+              donations.map(d => {
+                const name = d.is_anonymous ? 'Anonym' : (d.sender_firstname || d.sender_username || d.user_name || 'Ukendt');
+                const label = d.type === 'subscription' ? 'Abonnement' : 'Donation';
+                return (
+                  <div key={`${d.type}-${d.id}`} className="cd-donation-entry">
+                    <div className="cd-donation-who">{name} <span style={{opacity:0.7, marginLeft:8}}>· {label}</span></div>
+                    <div className="cd-donation-amount">{Number(d.amount).toLocaleString('da-DK')} kr</div>
+                    <div className="cd-donation-when">{timeAgo(d.created_at)}</div>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
@@ -172,9 +181,6 @@ function CampaignDetail() {
           campaign={campaign}
           userId={parseInt(userId)}
           onClose={() => setShowDonationModal(false)}
-          onSuccess={() => {
-            setShowDonationModal(false);
-          }}
         />
       )}
     </div>

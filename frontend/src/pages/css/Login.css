@@ -153,3 +153,21 @@
     font-size: 1.2rem;
   }
 }
+
+/* ── Desktop: centered card ── */
+@media (min-width: 768px) {
+  body:has(.login) {
+    background: linear-gradient(135deg, #c0392b 0%, #922b21 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .login {
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+    min-height: unset;
+    padding: 48px 40px;
+  }
+}

@@ -4,13 +4,100 @@ import './css/Home.css';
 import CreateCampaignModal from '../components/CreateCampaignModal';
 import FilterModal from '../components/FilterModal';
 import useCampaignsStore from '../store/useCampaignsStore';
+import useUserStore from '../store/useUserStore';
 import CampaignCard from '../components/CampaignCard';
 
-const filters = ['Tæt på mig', 'Overraskelse', 'Kategori', 'Ny'];
+const filters = ['Udforsk', 'Tæt på mig', 'Sponsoreret', 'Nye brugere'];
+
+const MILEPÆLE_OPTIONS = ['Under 50%', '50–80%', 'Over 80%', 'Nået mål'];
+const DATO_OPTIONS = ['Seneste 24 timer', 'Seneste uge', 'Seneste måned'];
+const TYPE_OPTIONS = ['Personlig', 'Nonprofit', 'Skole', 'Sport'];
+
+function DesktopFilterSidebar({ activeFilters, setActiveFilters }) {
+  const campaigns = useCampaignsStore((state) => state.campaigns);
+  const [allowedTags, setAllowedTags] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/tags')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setAllowedTags(data); })
+      .catch(() => {});
+  }, []);
+
+  const cities = useMemo(() => {
+    const counts = {};
+    campaigns.forEach(c => {
+      if (c.location) counts[c.location] = (counts[c.location] || 0) + 1;
+    });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [campaigns]);
+
+  function toggle(sectionKey, option) {
+    setActiveFilters(prev => {
+      const current = new Set(prev[sectionKey] || []);
+      current.has(option) ? current.delete(option) : current.add(option);
+      return { ...prev, [sectionKey]: current };
+    });
+  }
+
+  function renderSection(sectionKey, label, options) {
+    return (
+      <div key={sectionKey} className="dsf-section">
+        <div className="dsf-section-title">{label}</div>
+        <div className="filter-options">
+          {options.map(opt => {
+            const checked = !!activeFilters[sectionKey]?.has(opt);
+            return (
+              <label key={opt} className="filter-option">
+                <span>{opt}</span>
+                <input type="checkbox" checked={checked} onChange={() => toggle(sectionKey, opt)} />
+                <span className="checkmark" />
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <aside className="desktop-filter-sidebar">
+      <div className="dsf-header">
+        <span className="dsf-title">Filtrer</span>
+        <button className="filter-reset-btn" onClick={() => setActiveFilters({})}>Nulstil</button>
+      </div>
+      {renderSection('kategorier', 'Kategorier', allowedTags)}
+      <div className="dsf-divider" />
+      {renderSection('milepæle', 'Milepæle og mål', MILEPÆLE_OPTIONS)}
+      <div className="dsf-divider" />
+      {renderSection('dato', 'Dato og tid', DATO_OPTIONS)}
+      <div className="dsf-divider" />
+      <div className="dsf-section">
+        <div className="dsf-section-title">Lokation</div>
+        <div className="filter-options filter-options--scroll">
+          {cities.map(([city, count]) => {
+            const checked = !!activeFilters.lokation?.has(city);
+            return (
+              <label key={city} className="filter-option">
+                <span>{city} <span className="city-count">({count})</span></span>
+                <input type="checkbox" checked={checked} onChange={() => toggle('lokation', city)} />
+                <span className="checkmark" />
+              </label>
+            );
+          })}
+        </div>
+      </div>
+      <div className="dsf-divider" />
+      {renderSection('type', 'Indsamlingstype', TYPE_OPTIONS)}
+    </aside>
+  );
+}
 
 function Home() {
   const campaigns = useCampaignsStore((state) => state.campaigns);
   const fetchCampaigns = useCampaignsStore((state) => state.fetchCampaigns);
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
   const navigate = useNavigate();
 
   const [activeFilter, setActiveFilter] = useState(filters[0]);
@@ -18,6 +105,23 @@ function Home() {
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [activeFilters, setActiveFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (user?.name) return;
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const token = localStorage.getItem('token');
+    if (!storedUser.id || !token) return;
+    fetch(`/api/user/${storedUser.id}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data) return;
+        setUser({
+          name: `${data.firstname} ${data.surname}`,
+          ...(data.profile_picture && { avatar: `/api/images/${data.profile_picture}` }),
+        });
+      })
+      .catch(() => {});
+  }, [user?.name, setUser]);
 
   useEffect(() => {
     fetchCampaigns().catch((err) => {
@@ -91,6 +195,7 @@ function Home() {
     <div className="home">
       {/* Sticky search + filters */}
       <div className="sticky-header">
+        <div className="sticky-header-inner">
         <div className="search-row">
           <div className="search-bar">
             <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -107,10 +212,13 @@ function Home() {
             </button>
           </div>
           <button className="profile-btn" onClick={() => navigate('/profile')}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <circle cx="12" cy="8" r="4" />
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-            </svg>
+            {user?.avatar?.startsWith('/api/images/')
+              ? <img src={user.avatar} alt="" className="profile-btn-avatar" />
+              : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                </svg>
+            }
           </button>
         </div>
 
@@ -122,13 +230,18 @@ function Home() {
             </div>
           ))}
         </div>
+        </div>{/* sticky-header-inner */}
       </div>
 
-      {/* Campaign cards */}
-      <div className="campaign-list">
-        {visibleCampaigns.map(c => (
-          <CampaignCard key={c.id} campaign={c} />
-        ))}
+      {/* Main content: sidebar + campaigns */}
+      <div className="home-content">
+        <DesktopFilterSidebar activeFilters={activeFilters} setActiveFilters={setActiveFilters} />
+
+        <div className="campaign-list">
+          {visibleCampaigns.map(c => (
+            <CampaignCard key={c.id} campaign={c} />
+          ))}
+        </div>
       </div>
 
       {/* FAB */}
@@ -137,7 +250,7 @@ function Home() {
       {/* Create campaign modal */}
       {showModal && <CreateCampaignModal onClose={() => setShowModal(false)} />}
 
-      {/* Filter modal */}
+      {/* Filter modal (mobile only) */}
       {showFilterModal && (
         <FilterModal
           selected={activeFilters}

@@ -22,7 +22,8 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - BACKEND_URL=${BACKEND_URL}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: npm start
 
   client:
@@ -34,6 +35,9 @@ services:
         - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
       - REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_51TCd9b4HA5votMsYw5mKy2hgwPvkgIwXgTVHv2HP4sLsRqotExeTNKBQeN4jAxNnxEaIghAFiZy5Xa7YuY2kr6Vm004XE27mIW
     depends_on:
@@ -51,6 +55,11 @@ services:
       POSTGRES_DB: mydatabase
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U giraf -d mydatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:

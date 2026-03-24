@@ -76,12 +76,16 @@ describe('Database Handler Tests', () => {
       pool.query
         .mockImplementationOnce(() => Promise.resolve({ rows: [mockCampaign] }))
         .mockImplementationOnce(() => Promise.resolve({ rows: mockDonations }))
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))           // subscriptions
         .mockImplementationOnce(() => Promise.resolve({ rows: mockOwners }));
 
       const result = await getCampaignById(1);
 
-      expect(result).toEqual({ ...mockCampaign, donations: mockDonations, owners: mockOwners });
-      expect(pool.query).toHaveBeenCalledTimes(3);
+      expect(result).toMatchObject({ ...mockCampaign, owners: mockOwners });
+      expect(result).toHaveProperty('donations');
+      expect(result).toHaveProperty('subscriptions');
+      expect(result).toHaveProperty('total_donated');
+      expect(pool.query).toHaveBeenCalledTimes(4);
     });
 
     it('should return null when campaign does not exist', async () => {
@@ -130,11 +134,13 @@ describe('Database Handler Tests', () => {
         { id: 1, from_user: 1, to_campaign: 1, amount: 100, user_name: 'user1', user_email: 'user1@example.com' }
       ];
 
-      // 1 call for all campaigns, then for each campaign: 1 donations + 1 owners + 1 images = 7 total
+      // 1 call for all campaigns, then for each campaign: donations + subscriptions + owners + images = 9 total
       pool.query
         .mockImplementationOnce(() => Promise.resolve({ rows: mockCampaigns })) // getAllCampaigns
         .mockImplementationOnce(() => Promise.resolve({ rows: mockDonations })) // donations campaign 1
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // donations campaign 2
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // subscriptions campaign 1
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // subscriptions campaign 2
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // owners campaign 1
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // owners campaign 2
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // images campaign 1
@@ -149,7 +155,7 @@ describe('Database Handler Tests', () => {
       expect(result[1]).toHaveProperty('donations');
       expect(result[1]).toHaveProperty('owners');
       expect(result[1]).toHaveProperty('image_ids');
-      expect(pool.query).toHaveBeenCalledTimes(7);
+      expect(pool.query).toHaveBeenCalledTimes(9);
     });
   });
 
@@ -189,7 +195,7 @@ describe('Database Handler Tests', () => {
 
       expect(result).toMatchObject({ id: 1, title: 'New Campaign', owners: [{ id: 1 }] });
       expect(pool.query).toHaveBeenCalledWith(
-        'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by, owner_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, title, description, tags::text[] as tags, goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at',
+        'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by, owner_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, title, description, tags::text[] as tags, goal::integer as goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at',
         [mockCampaignData.title, mockCampaignData.description, mockCampaignData.tags, mockCampaignData.goal, mockCampaignData.milestones, mockCampaignData.city_name, mockCampaignData.created_by, [mockCampaignData.created_by]]
       );
     });
@@ -212,8 +218,8 @@ describe('Database Handler Tests', () => {
 
       expect(result).toEqual(mockCreatedDonation);
       expect(pool.query).toHaveBeenCalledWith(
-        'INSERT INTO donations (from_user, to_campaign, amount) VALUES ($1, $2, $3) RETURNING *',
-        [mockDonationData.from_user, mockDonationData.to_campaign, mockDonationData.amount]
+        'INSERT INTO donations (from_user, to_campaign, amount, is_anonymous) VALUES ($1, $2, $3, $4) RETURNING *',
+        [mockDonationData.from_user, mockDonationData.to_campaign, mockDonationData.amount, false]
       );
     });
 

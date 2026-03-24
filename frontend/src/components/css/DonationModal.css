@@ -12,6 +12,14 @@
   overflow: hidden;
 }
 
+/* Mobile: box is a transparent pass-through flex child */
+.modal-box {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
 .modal-body {
   flex: 1;
   overflow-y: auto;
@@ -29,6 +37,71 @@
 @keyframes slideOutLeft {
   from { transform: translateX(0); }
   to   { transform: translateX(-100%); }
+}
+
+/* ── Desktop: overlay = backdrop, modal-box = centered dialog ── */
+@media (min-width: 768px) {
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    max-width: none;
+    margin: 0;
+    align-items: center;
+    justify-content: center;
+    animation: dmFadeIn 0.2s ease;
+    overflow: visible;
+  }
+
+  .modal-overlay.closing {
+    animation: dmFadeOut 0.26s ease forwards;
+  }
+
+  .modal-overlay.closing .modal-box {
+    animation: dmScaleOut 0.26s ease forwards;
+  }
+
+  .modal-box {
+    background: #fff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 85vh;
+    overflow-y: auto;
+    flex: none;
+    animation: dmScaleIn 0.2s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-header {
+    padding: 24px 24px 12px;
+  }
+
+  .donation-body {
+    padding: 20px 24px;
+  }
+
+  .modal-actions {
+    padding: 16px 24px 24px;
+  }
+}
+
+@keyframes dmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes dmFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes dmScaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes dmScaleOut {
+  from { transform: scale(1);    opacity: 1; }
+  to   { transform: scale(0.95); opacity: 0; }
 }
 
 /* ── Header ── */
@@ -58,6 +131,98 @@
 /* ── Donation Body ── */
 .donation-body {
   padding: 20px 16px;
+}
+
+/* ── Payment type toggle ── */
+.donation-type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.type-btn {
+  padding: 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.type-btn:hover {
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+.type-btn.active {
+  background: #4caf50;
+  color: #fff;
+  border-color: #4caf50;
+}
+
+/* ── Success screen ── */
+.donation-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px 32px;
+  text-align: center;
+  gap: 16px;
+}
+
+.success-icon {
+  width: 72px;
+  height: 72px;
+  background: #4caf50;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.donation-success h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.donation-success p {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.success-profile-hint {
+  font-size: 0.82rem;
+  color: #aaa;
+  margin: -4px 0 0 0;
+}
+
+.close-success-btn {
+  margin-top: 8px;
+  padding: 14px 40px;
+  border-radius: 12px;
+  border: none;
+  background: #4caf50;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.close-success-btn:hover {
+  background: #43a047;
 }
 
 .donation-section {
@@ -133,6 +298,26 @@
   font-weight: 500;
 }
 
+/* ── Anonymous toggle ── */
+.anonymous-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: #444;
+  font-weight: 500;
+}
+
+.anonymous-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #4caf50;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 /* ── Payment section ── */
 .payment-section {
   background: #f9f9f9;
@@ -167,10 +352,22 @@
   cursor: not-allowed;
 }
 
-.payment-section p {
+.card-element-wrapper {
+  padding: 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.card-element-wrapper:focus-within {
+  border-color: #4caf50;
+}
+
+.payment-error {
   font-size: 0.85rem;
-  color: #666;
-  margin: 8px 0 0 0;
+  color: #e53935;
+  margin: 4px 0 0 0;
 }
 
 /* ── Bottom actions ── */

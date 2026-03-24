@@ -3,13 +3,13 @@ import { issueToken, validateToken } from '../backend/JWTHandler.js';
 describe('JWTHandler', () => {
   describe('issueToken', () => {
     it('returns a JWT string with three parts', () => {
-      const token = issueToken({ userId: 1, email: 'a@b.com', username: 'foo', role: 'user' as const });
+      const token = issueToken({ userId: 1, email: 'a@b.com', username: 'foo', firstname: 'Foo', role: 'user' as const });
       expect(typeof token).toBe('string');
       expect(token.split('.')).toHaveLength(3);
     });
 
     it('encodes the payload correctly', () => {
-      const payload = { userId: 42, email: 'user@test.com', username: 'testuser', role: 'user' as const };
+      const payload = { userId: 42, email: 'user@test.com', username: 'testuser', firstname: 'Test', role: 'user' as const };
       const token = issueToken(payload);
       const decoded = validateToken(token);
       expect(decoded.userId).toBe(42);
@@ -20,7 +20,7 @@ describe('JWTHandler', () => {
 
   describe('validateToken', () => {
     it('returns the correct payload for a valid token', () => {
-      const payload = { userId: 1, email: 'a@b.com', username: 'foo', role: 'user' as const };
+      const payload = { userId: 1, email: 'a@b.com', username: 'foo', firstname: 'Foo', role: 'user' as const };
       const token = issueToken(payload);
       const decoded = validateToken(token);
       expect(decoded.userId).toBe(1);
@@ -38,7 +38,7 @@ describe('JWTHandler', () => {
     });
 
     it('throws on an expired token', () => {
-      const token = issueToken({ userId: 1, email: 'a@b.com', username: 'foo', role: 'user' as const }, '-1s');
+      const token = issueToken({ userId: 1, email: 'a@b.com', username: 'foo', firstname: 'Foo', role: 'user' as const }, '-1s');
       expect(() => validateToken(token)).toThrow();
     });
   });

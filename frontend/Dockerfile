@@ -11,14 +11,21 @@ ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 RUN npm install
 
 COPY . .
-RUN npm run build
+RUN NODE_OPTIONS=--max_old_space_size=512 npm run build
 
 # Serve with nginx
 FROM nginx:alpine
 
+RUN apk add --no-cache openssl && \
+    mkdir -p /etc/letsencrypt/live/dendanskedonation.norwayeast.cloudapp.azure.com && \
+    openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+      -keyout /etc/letsencrypt/live/dendanskedonation.norwayeast.cloudapp.azure.com/privkey.pem \
+      -out /etc/letsencrypt/live/dendanskedonation.norwayeast.cloudapp.azure.com/fullchain.pem \
+      -subj "/CN=localhost"
+
 COPY --from=build /app/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+EXPOSE 80 443
 
 CMD ["nginx", "-g", "daemon off;"]
