@@ -54,7 +54,8 @@ const useCampaignsStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       const data = await campaignApi.getAll();
-      set({ campaigns: data.map(normalizeCampaign), loading: false });
+      const sorted = data.map(normalizeCampaign).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      set({ campaigns: sorted, loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
       throw err;

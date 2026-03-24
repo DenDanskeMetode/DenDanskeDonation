@@ -116,7 +116,7 @@ function CampaignDetail() {
             ) : (
               donations.map(d => (
                 <div key={d.id} className="cd-donation-entry">
-                  <div className="cd-donation-who">{d.sender_firstname ?? d.sender_username}</div>
+                  <div className="cd-donation-who">{d.is_anonymous ? 'Anonym' : (d.sender_firstname ?? d.sender_username)}</div>
                   <div className="cd-donation-amount">{Number(d.amount).toLocaleString('da-DK')} kr</div>
                   <div className="cd-donation-when">{timeAgo(d.created_at)}</div>
                 </div>

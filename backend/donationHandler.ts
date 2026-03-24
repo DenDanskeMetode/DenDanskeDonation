@@ -4,6 +4,7 @@ interface DonationInput {
   from_user: number;
   to_campaign: number;
   amount: number;
+  is_anonymous?: boolean;
 }
 
 interface DonationResult {

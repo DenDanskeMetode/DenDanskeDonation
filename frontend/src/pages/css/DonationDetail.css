@@ -157,3 +157,84 @@
 .receipt-btn:hover {
   background: #f1f8f1;
 }
+
+/* Cancel subscription button */
+.cancel-subscription-btn {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 16px 16px 32px;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1.5px solid #e53935;
+  background: #fff;
+  color: #e53935;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancel-subscription-btn:hover {
+  background: #fff5f5;
+}
+
+.cancel-subscription-confirm {
+  margin: 16px 16px 32px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #fff5f5;
+  border: 1.5px solid #ffcdd2;
+}
+
+.cancel-subscription-confirm p {
+  font-size: 0.92rem;
+  color: #c62828;
+  text-align: center;
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+
+.cancel-subscription-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.cancel-subscription-back-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: #e0e0e0;
+  color: #333;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancel-subscription-back-btn:hover:not(:disabled) {
+  background: #d0d0d0;
+}
+
+.cancel-subscription-confirm-btn {
+  flex: 2;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: #e53935;
+  color: #fff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancel-subscription-confirm-btn:hover:not(:disabled) {
+  background: #c62828;
+}
+
+.cancel-subscription-confirm-btn:disabled,
+.cancel-subscription-back-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

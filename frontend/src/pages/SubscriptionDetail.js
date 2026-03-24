@@ -25,6 +25,25 @@ function SubscriptionDetail() {
   const [sub, setSub] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+
+  async function handleCancel() {
+    setCancelling(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/subscriptions/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Fejl ved annullering');
+      navigate('/profile', { replace: true });
+    } catch {
+      setCancelling(false);
+      setConfirmCancel(false);
+      setError('Kunne ikke stoppe abonnementet. Prøv igen.');
+    }
+  }
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -103,6 +122,26 @@ function SubscriptionDetail() {
         <div className="detail-divider" />
         <DetailRow label="Abonnement oprettet" value={formatDate(sub.created_at)} />
       </div>
+
+      {error && <p style={{ color: '#e53935', textAlign: 'center', fontSize: '0.88rem', padding: '12px 16px 0' }}>{error}</p>}
+
+      {!confirmCancel ? (
+        <button className="cancel-subscription-btn" onClick={() => setConfirmCancel(true)}>
+          Stop abonnement
+        </button>
+      ) : (
+        <div className="cancel-subscription-confirm">
+          <p>Er du sikker på, at du vil stoppe dit månedlige abonnement?</p>
+          <div className="cancel-subscription-actions">
+            <button className="cancel-subscription-back-btn" onClick={() => setConfirmCancel(false)} disabled={cancelling}>
+              Fortryd
+            </button>
+            <button className="cancel-subscription-confirm-btn" onClick={handleCancel} disabled={cancelling}>
+              {cancelling ? 'Stopper...' : 'Ja, stop abonnement'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
