@@ -4,14 +4,18 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     firstname VARCHAR(100) NOT NULL,
     surname VARCHAR(100) NOT NULL,
-    password_hash TEXT NOT NULL,
+    password_hash TEXT,
     age INTEGER,
     gender VARCHAR(50),
     profile_picture INTEGER,
     role VARCHAR(20) NOT NULL DEFAULT 'user',
+    provider VARCHAR(20) NOT NULL DEFAULT 'local',
+    provider_id TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT users_role_check CHECK (role IN ('user', 'admin'))
+    CONSTRAINT users_role_check CHECK (role IN ('user', 'admin')),
+    CONSTRAINT users_provider_check CHECK (provider IN ('local', 'google', 'facebook')),
+    CONSTRAINT users_provider_id_unique UNIQUE (provider, provider_id)
 );
 
 CREATE TYPE campaign_tag AS ENUM (
@@ -28,7 +32,7 @@ CREATE TABLE campaigns (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     tags campaign_tag[],
-    goal DECIMAL(15, 2),
+    goal INTEGER,
     is_complete BOOLEAN DEFAULT FALSE,
     milestones TEXT[],
     city_name VARCHAR(100),
@@ -64,7 +68,7 @@ CREATE TABLE donations (
     id SERIAL PRIMARY KEY,
     from_user INTEGER NOT NULL,
     to_campaign INTEGER NOT NULL,
-    amount DECIMAL(10, 2) NOT NULL,
+    amount INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (from_user) REFERENCES users(id),
     FOREIGN KEY (to_campaign) REFERENCES campaigns(id)

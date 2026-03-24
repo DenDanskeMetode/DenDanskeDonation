@@ -10,6 +10,7 @@ import Profile from './pages/Profile';
 import CampaignSettings from './pages/CampaignSettings';
 import DonationDetail from './pages/DonationDetail';
 import SubscriptionDetail from './pages/SubscriptionDetail';
+import OAuthCallback from './pages/OAuthCallback';
 
 const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
@@ -31,6 +32,7 @@ function App() {
           <Route path="/subscriptions/:id" element={<PrivateRoute><SubscriptionDetail /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/login" element={<Login />} />
+          <Route path="/oauth-callback" element={<OAuthCallback />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -139,6 +139,18 @@ declare function upsertUserCpr(userId: number, cprNumber: string): Promise<UserC
 declare function getUserWithCpr(userId: number): Promise<(User & { cpr_number: string | null }) | null>;
 declare function getAllUsersWithCpr(): Promise<(User & { cpr_number: string | null })[]>;
 
+export interface OAuthUserData {
+  provider: string;
+  providerId: string;
+  email?: string;
+  firstname: string;
+  surname: string;
+  username: string;
+  photoUrl?: string;
+}
+
+declare function findOrCreateOAuthUser(data: OAuthUserData): Promise<User>;
+
 export {
   getUserById,
   getCampaignById,
@@ -162,4 +174,5 @@ export {
   upsertUserCpr,
   getUserWithCpr,
   getAllUsersWithCpr,
+  findOrCreateOAuthUser,
 };

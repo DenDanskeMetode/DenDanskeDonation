@@ -16,6 +16,7 @@ module.exports = {
   },
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^stripe$': '<rootDir>/__mocks__/stripe.js',
   },
   moduleDirectories: ['node_modules', '../backend/node_modules'],
   setupFiles: ['<rootDir>/setup.ts'],

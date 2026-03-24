@@ -13,7 +13,14 @@ services:
       - POSTGRES_USER=giraf
       - POSTGRES_PASSWORD=bearattack
       - POSTGRES_DB=mydatabase
+      - JWT_SECRET=${JWT_SECRET}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - FACEBOOK_APP_ID=${FACEBOOK_APP_ID}
+      - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - BACKEND_URL=${BACKEND_URL}
     depends_on:
       - db
     command: npm start
@@ -24,8 +31,12 @@ services:
       context: ./frontend
       args:
         - REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_51TCd9b4HA5votMsYw5mKy2hgwPvkgIwXgTVHv2HP4sLsRqotExeTNKBQeN4jAxNnxEaIghAFiZy5Xa7YuY2kr6Vm004XE27mIW
+        - REACT_APP_BACKEND_URL=${REACT_APP_BACKEND_URL}
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     environment:
       - REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_51TCd9b4HA5votMsYw5mKy2hgwPvkgIwXgTVHv2HP4sLsRqotExeTNKBQeN4jAxNnxEaIghAFiZy5Xa7YuY2kr6Vm004XE27mIW
     depends_on:

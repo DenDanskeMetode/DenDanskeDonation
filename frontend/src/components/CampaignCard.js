@@ -13,7 +13,7 @@ function CampaignCard({ campaign, onClick }) {
           <div className="progress-bar">
             <div className="progress-fill" style={{ width: `${pct}%` }} />
           </div>
-          <span className="campaign-raised">{campaign.goal}kr</span>
+          <span className="campaign-raised">{Number(campaign.goal).toLocaleString('da-DK')} kr</span>
         </div>
         <p className="campaign-title">{campaign.title}</p>
         <p className="campaign-meta">

@@ -160,11 +160,35 @@
 * 10:50 - 17:00
 * Victor
 
-### Dynamic donations + Facebook login
-* 11:00 - 
+
+### Dynamic donations + Facebook, Google login
+* 11:00 - 14:00
+* 19:00 - 23:00
 * Nicholas
 
 ### Subscriptions (kodning, bugfixing, frontend, backend)
 * 18:00 - 20:10
 * 22:00 - 00:00
+* Felix
+
+# 24/3
+
+### Morgenmøde (møde, planlægning)
+* 10:00 - 10:15
+* Alle
+
+### Billede karrousel i kampagner (frontend, bugfixing)
+* 10:15 - 11:00
+* Victor
+
+### Something else
+* 11:00 -
+* Victor
+
+### Facebook login funktionalitet
+* 11:00 -
+* Nicholas
+
+### Subscriptions and profile (kodning, bugfixing, frontend, backend)
+* 10:15 - 
 * Felix

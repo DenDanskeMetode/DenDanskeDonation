@@ -3,30 +3,16 @@ import cors from "cors";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import Stripe from 'stripe';
+import session from 'express-session';
 import { UserManager } from './userHandler.js';
 import { getUserWithCpr, getAllUsersWithCpr } from './dbHandler.js';
 import CampaignManager from './campaignHandler.js';
 import ImageHandler from './imageHandler.js';
 import DonationManager from './donationHandler.js';
 import { issueToken, validateToken } from './JWTHandler.js';
+import { authRouter, passport } from './authHandler.js';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
-
-// Extend Express Request type to include user property
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: number;
-        email: string;
-        username: string;
-        role: 'user' | 'admin';
-      };
-    }
-  }
-}
-
-dotenv.config();
 
 const app = express();
 const PORT = 5000;
@@ -50,6 +36,15 @@ const stripe = process.env.STRIPE_SECRET_KEY
 
 app.use(cors());
 app.use(express.json());
+app.use(session({
+  secret: process.env.JWT_SECRET!,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 5 * 60 * 1000 },
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(authRouter);
 
 // Database connection
 const pool = new Pool({
@@ -445,7 +440,11 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
 
     res.status(201).json(donation);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (error.message?.includes('Amount must be') || error.message?.includes('required')) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error("Error processing donation:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

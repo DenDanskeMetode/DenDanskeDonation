@@ -179,7 +179,7 @@ function Profile() {
         {activeTab === 'donations' && (
           <div className="donation-list">
             {myDonations.map(d => (
-              <DonationItem key={d.id} donation={{ campaign: d.campaign_title, amount: `${d.amount} kr.`, image: d.image, date: d.date }} onClick={() => {}} />
+              <DonationItem key={d.id} donation={{ campaign: d.campaign_title, amount: `${Number(d.amount).toLocaleString('da-DK')} kr.`, image: d.image, date: d.date }} onClick={() => {}} />
             ))}
           </div>
         )}
