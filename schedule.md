@@ -190,5 +190,9 @@
 * Nicholas
 
 ### Subscriptions and profile (kodning, bugfixing, frontend, backend)
-* 10:15 - 
+* 10:15 - 14:30
+* Felix
+
+### Presentation setup
+* 15:40 - 
 * Felix
