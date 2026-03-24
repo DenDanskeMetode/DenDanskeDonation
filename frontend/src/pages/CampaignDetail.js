@@ -26,6 +26,8 @@ function CampaignDetail() {
   const campaign = state ?? campaigns.find(c => c.id === Number(id));
 
   const [donations, setDonations] = useState([]);
+  const [creator, setCreator] = useState(null);
+  const [localRaised, setLocalRaised] = useState(campaign?.raised ?? 0);
 
   useEffect(() => {
     if (!campaign) return;
@@ -36,7 +38,26 @@ function CampaignDetail() {
       .then(r => r.ok ? r.json() : [])
       .then(data => setDonations(Array.isArray(data) ? data : []))
       .catch(() => setDonations([]));
+
+    if (campaign.creator) {
+      fetch(`/api/users/${campaign.creator}/public`)
+        .then(r => r.ok ? r.json() : null)
+        .then(setCreator)
+        .catch(() => {});
+    }
   }, [campaign]);
+
+  useEffect(() => {
+    if (!campaign?.id) return;
+    const token = localStorage.getItem('token');
+    const es = new EventSource(`/api/campaigns/${campaign.id}/stream?token=${token}`);
+    es.onmessage = (e) => {
+      const donation = JSON.parse(e.data);
+      setDonations(prev => [donation, ...prev]);
+      setLocalRaised(prev => prev + Number(donation.amount));
+    };
+    return () => es.close();
+  }, [campaign?.id]);
 
   if (!campaign) {
     navigate('/');
@@ -59,14 +80,14 @@ function CampaignDetail() {
         <div className="cd-hero">
           <div className="cd-hero-left">
             <CircularProgress
-              raised={campaign.raised}
+              raised={localRaised}
               goal={campaign.goal}
               image={campaign.image}
               title={campaign.title}
               size={150}
             />
             <p className="cd-raised-text">
-              <strong>{campaign.raised}kr</strong>
+              <strong>{localRaised}kr</strong>
               <br />
               <span>af {campaign.goal}kr</span>
             </p>
@@ -92,8 +113,10 @@ function CampaignDetail() {
         <div className="cd-content">
           {/* Creator */}
           <div className="cd-creator">
-            <div className="cd-avatar" />
-            <span className="cd-creator-name">{campaign.creator ?? 'Ukendt'}</span>
+            {creator?.avatar
+              ? <img className="cd-avatar" src={creator.avatar} alt="" />
+              : <div className="cd-avatar" />}
+            <span className="cd-creator-name">{creator?.name ?? 'Ukendt'}</span>
           </div>
 
           <h1 className="cd-title">{campaign.title}</h1>

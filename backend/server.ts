@@ -3,39 +3,46 @@ import cors from "cors";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 import Stripe from 'stripe';
+import session from 'express-session';
 import { UserManager } from './userHandler.js';
 import { getUserWithCpr, getAllUsersWithCpr } from './dbHandler.js';
 import CampaignManager from './campaignHandler.js';
 import ImageHandler from './imageHandler.js';
 import DonationManager from './donationHandler.js';
 import { issueToken, validateToken } from './JWTHandler.js';
+import { authRouter, passport } from './authHandler.js';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 
-// Extend Express Request type to include user property
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: number;
-        email: string;
-        username: string;
-        role: 'user' | 'admin';
-      };
-    }
-  }
-}
-
-dotenv.config();
-
 const app = express();
 const PORT = 5000;
+
+// SSE: track connected clients per campaign
+const sseClients = new Map<number, Set<Response>>();
+
+function broadcastDonation(campaignId: number, donation: object) {
+  const clients = sseClients.get(campaignId);
+  if (!clients || clients.size === 0) return;
+  const payload = `data: ${JSON.stringify(donation)}\n\n`;
+  for (const client of clients) {
+    client.write(payload);
+  }
+}
 const stripe = process.env.STRIPE_SECRET_KEY 
   ? new Stripe(process.env.STRIPE_SECRET_KEY) 
   : null as any;
 
 app.use(cors());
 app.use(express.json());
+app.use(session({
+  secret: process.env.JWT_SECRET!,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false, maxAge: 5 * 60 * 1000 },
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(authRouter);
 
 // Database connection
 const pool = new Pool({
@@ -68,7 +75,36 @@ app.get("/api/message", (req: Request, res: Response) => {
   res.json({ message: "Hello from backend 🚀" });
 });
 
+app.get("/api/tags", async (_req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT unnest(enum_range(NULL::campaign_tag))::text AS tag`
+    );
+    res.json(result.rows.map((r: { tag: string }) => r.tag));
+  } catch (error) {
+    console.error("Error fetching tags:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 // Check if a user exists by email
+app.get("/api/users/:userId/public", async (req: Request, res: Response) => {
+  try {
+    const userId = parseInt(req.params.userId as string);
+    const userInfo = await UserManager.getUserInfo(userId);
+    if (!userInfo) return res.status(404).json({ error: "User not found" });
+    res.json({
+      id: userInfo.id,
+      username: userInfo.username,
+      name: `${userInfo.firstname} ${userInfo.surname}`,
+      avatar: userInfo.profile_picture ? `/api/images/${userInfo.profile_picture}` : null,
+    });
+  } catch (error) {
+    console.error("Error fetching public user info:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 app.get("/api/user-exists", async (req: Request, res: Response) => {
   const { email } = req.query;
   if (!email || typeof email !== 'string') {
@@ -321,6 +357,37 @@ app.get("/api/campaigns/:campaignId/donations", authenticateJWT, async (req: Req
   }
 });
 
+// SSE endpoint — clients subscribe to live donation updates for a campaign
+// Auth via query param because EventSource doesn't support custom headers
+app.get("/api/campaigns/:campaignId/stream", (req: Request, res: Response) => {
+  const token = typeof req.query.token === 'string' ? req.query.token : null;
+  if (!token) {
+    res.status(401).end();
+    return;
+  }
+  const decoded = validateToken(token);
+  if (!decoded) {
+    res.status(403).end();
+    return;
+  }
+
+  const campaignId = parseInt(req.params.campaignId as string);
+
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  if (!sseClients.has(campaignId)) {
+    sseClients.set(campaignId, new Set());
+  }
+  sseClients.get(campaignId)!.add(res);
+
+  req.on('close', () => {
+    sseClients.get(campaignId)?.delete(res);
+  });
+});
+
 // Protected endpoint to make a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
   try {
@@ -346,6 +413,14 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
       }
       await UserManager.upsertCpr(req.user!.userId, cpr_number);
     }
+
+    broadcastDonation(Number(to_campaign), {
+      id: donation.id,
+      amount: donation.amount,
+      created_at: donation.created_at,
+      sender_username: req.user!.username,
+      sender_firstname: null,
+    });
 
     res.status(201).json(donation);
   } catch (error: any) {

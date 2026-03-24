@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './css/Home.css';
 import CreateCampaignModal from '../components/CreateCampaignModal';
@@ -11,20 +11,81 @@ const filters = ['Tæt på mig', 'Overraskelse', 'Kategori', 'Ny'];
 function Home() {
   const campaigns = useCampaignsStore((state) => state.campaigns);
   const fetchCampaigns = useCampaignsStore((state) => state.fetchCampaigns);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchCampaigns();
-  }, [fetchCampaigns]);
   const [activeFilter, setActiveFilter] = useState(filters[0]);
   const [showModal, setShowModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [activeFilters, setActiveFilters] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    fetchCampaigns().catch((err) => {
+      if (err.status === 401 || err.status === 403) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      }
+    });
+  }, [fetchCampaigns, navigate]);
 
   const filterCount = Object.values(activeFilters).reduce(
     (sum, set) => sum + (set?.size || 0), 0
   );
+
+  const visibleCampaigns = useMemo(() => {
+    let result = campaigns;
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(c =>
+        c.title?.toLowerCase().includes(q) ||
+        c.description?.toLowerCase().includes(q) ||
+        c.location?.toLowerCase().includes(q) ||
+        c.tags?.some(t => t.toLowerCase().includes(q))
+      );
+    }
+
+    const kategorier = activeFilters.kategorier;
+    if (kategorier?.size > 0) {
+      result = result.filter(c => c.tags?.some(t => kategorier.has(t)));
+    }
+
+    const milepæle = activeFilters.milepæle;
+    if (milepæle?.size > 0) {
+      result = result.filter(c => {
+        const pct = c.goal > 0 ? (c.raised / c.goal) * 100 : 0;
+        return [...milepæle].some(opt => {
+          if (opt === 'Under 50%')  return pct < 50;
+          if (opt === '50–80%')     return pct >= 50 && pct <= 80;
+          if (opt === 'Over 80%')   return pct > 80 && pct < 100;
+          if (opt === 'Nået mål')   return pct >= 100;
+          return false;
+        });
+      });
+    }
+
+    const dato = activeFilters.dato;
+    if (dato?.size > 0) {
+      const now = Date.now();
+      result = result.filter(c => {
+        if (!c.created_at) return false;
+        const ms = now - new Date(c.created_at).getTime();
+        return [...dato].some(opt => {
+          if (opt === 'Seneste 24 timer') return ms <= 24 * 3600 * 1000;
+          if (opt === 'Seneste uge')      return ms <= 7 * 24 * 3600 * 1000;
+          if (opt === 'Seneste måned')    return ms <= 30 * 24 * 3600 * 1000;
+          return false;
+        });
+      });
+    }
+
+    const lokation = activeFilters.lokation;
+    if (lokation?.size > 0) {
+      result = result.filter(c => lokation.has(c.location));
+    }
+
+    return result;
+  }, [campaigns, searchQuery, activeFilters]);
 
   return (
     <div className="home">
@@ -35,7 +96,7 @@ function Home() {
             <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input type="text" placeholder="Find kampagner" />
+            <input type="text" placeholder="Find kampagner" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
             <button className="filter-icon-btn" onClick={() => setShowFilterModal(true)}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="4" y1="6" x2="20" y2="6" />
@@ -65,7 +126,7 @@ function Home() {
 
       {/* Campaign cards */}
       <div className="campaign-list">
-        {campaigns.map(c => (
+        {visibleCampaigns.map(c => (
           <CampaignCard key={c.id} campaign={c} />
         ))}
       </div>

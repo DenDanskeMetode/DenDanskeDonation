@@ -16,5 +16,5 @@ COPY ./init.sql /docker-entrypoint-initdb.d/01_init.sql
 COPY ./testData.sql /docker-entrypoint-initdb.d/02_testData.sql
 
 # Enable pg_cron. Set cron.database_name to match POSTGRES_DB if it differs from 'postgres'.
-CMD ["postgres", "-c", "shared_preload_libraries=pg_cron"]
+CMD ["postgres", "-c", "shared_preload_libraries=pg_cron", "-c", "cron.database_name=mydatabase"]
 
