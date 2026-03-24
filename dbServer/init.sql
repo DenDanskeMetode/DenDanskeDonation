@@ -32,7 +32,7 @@ CREATE TABLE campaigns (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     tags campaign_tag[],
-    goal DECIMAL(15, 2),
+    goal INTEGER,
     is_complete BOOLEAN DEFAULT FALSE,
     milestones TEXT[],
     city_name VARCHAR(100),
@@ -68,7 +68,7 @@ CREATE TABLE donations (
     id SERIAL PRIMARY KEY,
     from_user INTEGER NOT NULL,
     to_campaign INTEGER NOT NULL,
-    amount DECIMAL(10, 2) NOT NULL,
+    amount INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (from_user) REFERENCES users(id),
     FOREIGN KEY (to_campaign) REFERENCES campaigns(id)

@@ -52,7 +52,7 @@ async function getUserById(userId) {
 
 async function getCampaignById(campaignId) {
   try {
-    const campaignQuery = 'SELECT id, title, description, tags::text[] as tags, goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at FROM campaigns WHERE id = $1';
+    const campaignQuery = 'SELECT id, title, description, tags::text[] as tags, goal::integer as goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at FROM campaigns WHERE id = $1';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
     const campaignResult = await pool.query(campaignQuery, [campaignId]);
     if (campaignResult.rows.length === 0) return null;
@@ -98,7 +98,7 @@ async function getAllUsers() {
 
 async function getAllCampaigns() {
   try {
-    const campaignsQuery = 'SELECT id, title, description, tags::text[] as tags, goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at FROM campaigns';
+    const campaignsQuery = 'SELECT id, title, description, tags::text[] as tags, goal::integer as goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at FROM campaigns';
     const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
 
     const campaignsResult = await pool.query(campaignsQuery);
@@ -176,7 +176,7 @@ async function createCampaign(campaignData) {
     const { title, description, tags, goal, milestones, city_name, created_by } = campaignData;
     const ownerIds = created_by ? [created_by] : [];
     const result = await executeQuery(
-      'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by, owner_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, title, description, tags::text[] as tags, goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at',
+      'INSERT INTO campaigns (title, description, tags, goal, milestones, city_name, created_by, owner_ids) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, title, description, tags::text[] as tags, goal::integer as goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at',
       [title, description, tags, goal, milestones, city_name, created_by, ownerIds]
     );
     const campaign = result[0];
@@ -206,7 +206,7 @@ async function updateCampaign(campaignId, fields) {
 async function getDonationsByCampaign(campaignId) {
   try {
     const query = `
-      SELECT d.id, d.amount, d.created_at, u.username as sender_username, u.firstname as sender_firstname
+      SELECT d.id, d.amount::integer as amount, d.created_at, u.username as sender_username, u.firstname as sender_firstname
       FROM donations d
       JOIN users u ON d.from_user = u.id
       WHERE d.to_campaign = $1

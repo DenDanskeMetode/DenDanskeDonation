@@ -137,6 +137,24 @@
   object-fit: cover;
 }
 
+/* ── Image count badge ── */
+.cd-image-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 12px;
+  padding: 3px 7px 3px 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  pointer-events: auto;
+  backdrop-filter: blur(2px);
+}
+
 /* ── Raised text ── */
 .cd-raised-text {
   font-size: 0.82rem;
@@ -154,6 +172,14 @@
 .cd-content {
   padding: 8px 20px 16px;
   flex: 1;
+}
+
+/* ── Tags row ── */
+.cd-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 /* ── Creator ── */

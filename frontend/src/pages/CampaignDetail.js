@@ -4,6 +4,7 @@ import './css/CampaignDetail.css';
 import useCampaignsStore from '../store/useCampaignsStore';
 import CircularProgress from '../components/CircularProgress';
 import DonationModal from '../components/DonationModal';
+import ImageCarouselModal from '../components/ImageCarouselModal';
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -28,6 +29,8 @@ function CampaignDetail() {
   const [donations, setDonations] = useState([]);
   const [creator, setCreator] = useState(null);
   const [localRaised, setLocalRaised] = useState(campaign?.raised ?? 0);
+  const [allImages, setAllImages] = useState(campaign?.image ? [campaign.image] : []);
+  const [carouselOpen, setCarouselOpen] = useState(false);
 
   useEffect(() => {
     if (!campaign) return;
@@ -45,6 +48,17 @@ function CampaignDetail() {
         .then(setCreator)
         .catch(() => {});
     }
+
+    fetch(`/api/campaigns/${campaign.id}/images`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : [])
+      .then(imgs => {
+        if (Array.isArray(imgs) && imgs.length > 0) {
+          setAllImages(imgs.map(img => `/api/images/${img.id}`));
+        }
+      })
+      .catch(() => {});
   }, [campaign]);
 
   useEffect(() => {
@@ -85,6 +99,8 @@ function CampaignDetail() {
               image={campaign.image}
               title={campaign.title}
               size={150}
+              onClick={allImages.length > 0 ? () => setCarouselOpen(true) : undefined}
+              imageCount={allImages.length}
             />
             <p className="cd-raised-text">
               <strong>{localRaised}kr</strong>
@@ -101,7 +117,7 @@ function CampaignDetail() {
               donations.map(d => (
                 <div key={d.id} className="cd-donation-entry">
                   <div className="cd-donation-who">{d.sender_firstname ?? d.sender_username}</div>
-                  <div className="cd-donation-amount">{d.amount} kr</div>
+                  <div className="cd-donation-amount">{Number(d.amount).toLocaleString('da-DK')} kr</div>
                   <div className="cd-donation-when">{timeAgo(d.created_at)}</div>
                 </div>
               ))
@@ -111,6 +127,15 @@ function CampaignDetail() {
 
         {/* Content */}
         <div className="cd-content">
+          {/* Tags */}
+          {campaign.tags?.length > 0 && (
+            <div className="cd-tags-row">
+              {campaign.tags.map(t => (
+                <span key={t} className="tag-pill">{t}</span>
+              ))}
+            </div>
+          )}
+
           {/* Creator */}
           <div className="cd-creator">
             {creator?.avatar
@@ -131,6 +156,15 @@ function CampaignDetail() {
       <div className="cd-footer">
         <button className="cd-donate-btn" onClick={() => setShowDonationModal(true)}>Donér Nu</button>
       </div>
+
+      {/* Image Carousel Modal */}
+      {carouselOpen && allImages.length > 0 && (
+        <ImageCarouselModal
+          images={allImages}
+          initialIndex={0}
+          onClose={() => setCarouselOpen(false)}
+        />
+      )}
 
       {/* Donation Modal */}
       {showDonationModal && userId && (
