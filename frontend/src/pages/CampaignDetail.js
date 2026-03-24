@@ -100,6 +100,7 @@ function CampaignDetail() {
               title={campaign.title}
               size={150}
               onClick={allImages.length > 0 ? () => setCarouselOpen(true) : undefined}
+              imageCount={allImages.length}
             />
             <p className="cd-raised-text">
               <strong>{localRaised}kr</strong>
