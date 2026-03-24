@@ -25,7 +25,7 @@ function PaymentForm({ amount, to_campaign, isRecurring, onSuccess, onError }) {
   });
 
   if (!res.ok) throw new Error("Failed to create payment intent");
-  const { clientSecret } = await res.json();
+  const { clientSecret, stripeSubscriptionId } = await res.json();
 
   // 2. Bekræft betaling med Stripe
   const result = await stripe.confirmCardPayment(clientSecret, {
@@ -38,14 +38,19 @@ function PaymentForm({ amount, to_campaign, isRecurring, onSuccess, onError }) {
     setMessage(result.error.message);
     onError?.(result.error.message);
   } else {
-    if (!isRecurring) {
-      // 3. Gem donation i databasen - kun ved engangsbetaling
+    if (isRecurring) {
+      // 3a. Gem bekræftet abonnement i databasen
+      const subRes = await fetch("/api/subscriptions/record", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ stripe_subscription_id: stripeSubscriptionId, to_campaign, amount }),
+      });
+      if (!subRes.ok) throw new Error("Failed to save subscription");
+    } else {
+      // 3b. Gem donation i databasen - kun ved engangsbetaling
       const donationRes = await fetch("/api/donations", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ to_campaign, amount }),
       });
       if (!donationRes.ok) throw new Error("Failed to save donation");

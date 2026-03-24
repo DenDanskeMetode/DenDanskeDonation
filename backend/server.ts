@@ -14,6 +14,22 @@ import { authRouter, passport } from './authHandler.js';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 
+// Extend Express Request type to include user property
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        userId: number;
+        email: string;
+        username: string;
+        role: 'user' | 'admin';
+      };
+    }
+  }
+}
+
+dotenv.config();
+
 const app = express();
 const PORT = 5000;
 
@@ -529,15 +545,33 @@ app.post("/api/payments/create-subscription", authenticateJWT, async (req: Reque
       return res.status(500).json({ error: "No client secret on payment intent" });
     }
 
-    await pool.query(
-      'INSERT INTO subscriptions (from_user, to_campaign, amount, stripe_subscription_id) VALUES ($1, $2, $3, $4)',
-      [from_user, to_campaign, amount, subscription.id]
-    );
-
-    res.json({ clientSecret });
+    res.json({ clientSecret, stripeSubscriptionId: subscription.id });
 } catch (error: any) {
   res.status(500).json({ error: error.message });
 }
+});
+
+// Record a confirmed subscription after frontend payment confirmation + broadcast to SSE
+app.post("/api/subscriptions/record", authenticateJWT, async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const { stripe_subscription_id, to_campaign, amount } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO subscriptions (from_user, to_campaign, amount, stripe_subscription_id) VALUES ($1, $2, $3, $4) RETURNING *',
+      [userId, to_campaign, amount, stripe_subscription_id]
+    );
+    const sub = result.rows[0];
+    broadcastDonation(Number(to_campaign), {
+      id: sub.id,
+      amount: sub.amount,
+      created_at: sub.created_at,
+      sender_username: req.user!.username,
+      sender_firstname: null,
+    });
+    res.status(201).json(sub);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Get current user's subscriptions

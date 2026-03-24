@@ -75,7 +75,10 @@ function Profile() {
     Promise.all([
       fetch('/api/campaigns', { headers }).then(checkAuth),
       fetch(`/api/user/${storedUser.id}`, { headers }).then(checkAuth),
-      fetch('/api/subscriptions', { headers }).then(r => r.ok ? r.json() : []),
+      fetch('/api/subscriptions', { headers }).then(r => {
+        if (r.status === 401 || r.status === 403) return checkAuth(r);
+        return r.ok ? r.json() : [];
+      }),
     ]).then(([campaigns, userInfo, subscriptions]) => {
       setMyCampaigns(
         campaigns
