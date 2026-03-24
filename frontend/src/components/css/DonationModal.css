@@ -12,6 +12,14 @@
   overflow: hidden;
 }
 
+/* Mobile: box is a transparent pass-through flex child */
+.modal-box {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
 .modal-body {
   flex: 1;
   overflow-y: auto;
@@ -29,6 +37,71 @@
 @keyframes slideOutLeft {
   from { transform: translateX(0); }
   to   { transform: translateX(-100%); }
+}
+
+/* ── Desktop: overlay = backdrop, modal-box = centered dialog ── */
+@media (min-width: 768px) {
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    max-width: none;
+    margin: 0;
+    align-items: center;
+    justify-content: center;
+    animation: dmFadeIn 0.2s ease;
+    overflow: visible;
+  }
+
+  .modal-overlay.closing {
+    animation: dmFadeOut 0.26s ease forwards;
+  }
+
+  .modal-overlay.closing .modal-box {
+    animation: dmScaleOut 0.26s ease forwards;
+  }
+
+  .modal-box {
+    background: #fff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 85vh;
+    overflow-y: auto;
+    flex: none;
+    animation: dmScaleIn 0.2s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-header {
+    padding: 24px 24px 12px;
+  }
+
+  .donation-body {
+    padding: 20px 24px;
+  }
+
+  .modal-actions {
+    padding: 16px 24px 24px;
+  }
+}
+
+@keyframes dmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes dmFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes dmScaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes dmScaleOut {
+  from { transform: scale(1);    opacity: 1; }
+  to   { transform: scale(0.95); opacity: 0; }
 }
 
 /* ── Header ── */
