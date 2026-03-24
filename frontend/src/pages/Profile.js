@@ -127,13 +127,13 @@ function Profile() {
           className={`profile-tab${activeTab === 'campaigns' ? ' active' : ''}`}
           onClick={() => setActiveTab('campaigns')}
         >
-          Mine Kampagner
+          Kampagner
         </button>
         <button
           className={`profile-tab${activeTab === 'donations' ? ' active' : ''}`}
           onClick={() => setActiveTab('donations')}
         >
-          Mine Donationer
+          Donationer
         </button>
       </div>
       </div>
