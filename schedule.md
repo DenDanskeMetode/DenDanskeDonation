@@ -173,5 +173,9 @@
 * Alle
 
 ### Billede karrousel i kampagner (frontend, bugfixing)
-* 10:15 -
+* 10:15 - 11:00
+* Victor
+
+### Something else
+* 11:00 -
 * Victor
