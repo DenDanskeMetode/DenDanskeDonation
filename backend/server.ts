@@ -61,6 +61,20 @@ const pool = new Pool({
 });
 
 
+// Create subscriptions table if it doesn't exist yet
+pool.query(`
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    id SERIAL PRIMARY KEY,
+    from_user INTEGER NOT NULL,
+    to_campaign INTEGER NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    stripe_subscription_id TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (from_user) REFERENCES users(id),
+    FOREIGN KEY (to_campaign) REFERENCES campaigns(id)
+  )
+`).catch(console.error);
+
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
@@ -516,10 +530,77 @@ app.post("/api/payments/create-subscription", authenticateJWT, async (req: Reque
       return res.status(500).json({ error: "No client secret on payment intent" });
     }
 
+    await pool.query(
+      'INSERT INTO subscriptions (from_user, to_campaign, amount, stripe_subscription_id) VALUES ($1, $2, $3, $4)',
+      [from_user, to_campaign, amount, subscription.id]
+    );
+
     res.json({ clientSecret });
 } catch (error: any) {
   res.status(500).json({ error: error.message });
 }
+});
+
+// Get current user's subscriptions
+app.get("/api/subscriptions", authenticateJWT, async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  try {
+    const result = await pool.query(`
+      SELECT s.id, s.amount, s.created_at, c.title AS campaign_title, c.id AS campaign_id,
+             ARRAY_AGG(ci.image_id ORDER BY ci.added_at) FILTER (WHERE ci.image_id IS NOT NULL) AS image_ids
+      FROM subscriptions s
+      JOIN campaigns c ON s.to_campaign = c.id
+      LEFT JOIN campaign_images ci ON c.id = ci.campaign_id
+      WHERE s.from_user = $1
+      GROUP BY s.id, s.amount, s.created_at, c.title, c.id
+      ORDER BY s.created_at DESC
+    `, [userId]);
+    res.json(result.rows);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get a single subscription with Stripe details (next payment, payment count, total paid)
+app.get("/api/subscriptions/:id", authenticateJWT, async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+  const subscriptionId = parseInt(req.params.id as string);
+  try {
+    const result = await pool.query(`
+      SELECT s.id, s.amount, s.created_at, s.stripe_subscription_id,
+             c.title AS campaign_title, c.id AS campaign_id,
+             ARRAY_AGG(ci.image_id ORDER BY ci.added_at) FILTER (WHERE ci.image_id IS NOT NULL) AS image_ids
+      FROM subscriptions s
+      JOIN campaigns c ON s.to_campaign = c.id
+      LEFT JOIN campaign_images ci ON c.id = ci.campaign_id
+      WHERE s.id = $1 AND s.from_user = $2
+      GROUP BY s.id, s.amount, s.created_at, s.stripe_subscription_id, c.title, c.id
+    `, [subscriptionId, userId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Subscription not found' });
+    }
+
+    const sub = result.rows[0];
+    const stripeSub = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
+    const invoices = await stripe.invoices.list({
+      subscription: sub.stripe_subscription_id,
+      status: 'paid',
+      limit: 100,
+    });
+
+    const paymentCount = invoices.data.length;
+    const totalPaid = paymentCount * Number(sub.amount);
+
+    res.json({
+      ...sub,
+      next_payment_date: new Date(stripeSub.current_period_end * 1000).toISOString(),
+      payment_count: paymentCount,
+      total_paid: totalPaid,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Protected endpoint to delete a campaign (own campaigns only)

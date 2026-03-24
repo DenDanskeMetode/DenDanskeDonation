@@ -60,6 +60,98 @@
   padding: 20px 16px;
 }
 
+/* ── Payment type toggle ── */
+.donation-type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.type-btn {
+  padding: 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.type-btn:hover {
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+.type-btn.active {
+  background: #4caf50;
+  color: #fff;
+  border-color: #4caf50;
+}
+
+/* ── Success screen ── */
+.donation-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px 32px;
+  text-align: center;
+  gap: 16px;
+}
+
+.success-icon {
+  width: 72px;
+  height: 72px;
+  background: #4caf50;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #fff;
+  font-weight: 700;
+}
+
+.donation-success h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.donation-success p {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.success-profile-hint {
+  font-size: 0.82rem;
+  color: #aaa;
+  margin: -4px 0 0 0;
+}
+
+.close-success-btn {
+  margin-top: 8px;
+  padding: 14px 40px;
+  border-radius: 12px;
+  border: none;
+  background: #4caf50;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.close-success-btn:hover {
+  background: #43a047;
+}
+
 .donation-section {
   margin-bottom: 24px;
 }
@@ -167,10 +259,22 @@
   cursor: not-allowed;
 }
 
-.payment-section p {
+.card-element-wrapper {
+  padding: 14px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.card-element-wrapper:focus-within {
+  border-color: #4caf50;
+}
+
+.payment-error {
   font-size: 0.85rem;
-  color: #666;
-  margin: 8px 0 0 0;
+  color: #e53935;
+  margin: 4px 0 0 0;
 }
 
 /* ── Bottom actions ── */

@@ -165,6 +165,6 @@
 * Nicholas
 
 ### Subscriptions (kodning, bugfixing, frontend, backend)
-* 18:40 - 20:10
+* 18:00 - 20:10
 * 22:00 - 00:00
 * Felix

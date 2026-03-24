@@ -66,11 +66,13 @@ function PaymentForm({ amount, to_campaign, isRecurring, onSuccess, onError }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <CardElement />
+      <div className="card-element-wrapper">
+        <CardElement options={{ style: { base: { fontSize: '16px', color: '#1a1a1a', '::placeholder': { color: '#bbb' } } } }} />
+      </div>
       <button type="submit" disabled={!stripe || loading}>
         {loading ? "Behandler..." : `Donér ${amount} kr.`}
       </button>
-      {message && <p>{message}</p>}
+      {message && <p className="payment-error">{message}</p>}
     </form>
   );
 }

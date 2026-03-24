@@ -34,10 +34,24 @@ function DonationItem({ donation, onClick }) {
   );
 }
 
+function SubscriptionItem({ subscription, onClick }) {
+  return (
+    <div className="donation-item" onClick={onClick} style={{ cursor: 'pointer' }}>
+      <img src={subscription.image} alt="" className="donation-thumb" />
+      <div className="donation-info">
+        <p className="donation-campaign">{subscription.campaign}</p>
+        <p className="donation-meta">{subscription.amount} kr. / måned &bull; siden {subscription.date}</p>
+        <span className="subscription-badge">Aktiv</span>
+      </div>
+    </div>
+  );
+}
+
 function Profile() {
   const [activeTab, setActiveTab] = useState('campaigns');
   const [myCampaigns, setMyCampaigns] = useState([]);
   const [myDonations, setMyDonations] = useState([]);
+  const [mySubscriptions, setMySubscriptions] = useState([]);
   const navigate = useNavigate();
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
@@ -61,7 +75,8 @@ function Profile() {
     Promise.all([
       fetch('/api/campaigns', { headers }).then(checkAuth),
       fetch(`/api/user/${storedUser.id}`, { headers }).then(checkAuth),
-    ]).then(([campaigns, userInfo]) => {
+      fetch('/api/subscriptions', { headers }).then(r => r.ok ? r.json() : []),
+    ]).then(([campaigns, userInfo, subscriptions]) => {
       setMyCampaigns(
         campaigns
           .filter(c => c.created_by === storedUser.id)
@@ -95,6 +110,15 @@ function Profile() {
             ? `/api/images/${campaignById[d.to_campaign].image_ids[0]}`
             : undefined,
           date: d.created_at ? timeAgo(d.created_at) : '',
+        }))
+      );
+
+      setMySubscriptions(
+        (subscriptions || []).map(s => ({
+          ...s,
+          campaign: s.campaign_title,
+          image: s.image_ids?.[0] ? `/api/images/${s.image_ids[0]}` : undefined,
+          date: s.created_at ? timeAgo(s.created_at) : '',
         }))
       );
     }).catch(console.error);
@@ -135,21 +159,39 @@ function Profile() {
         >
           Mine Donationer
         </button>
+        <button
+          className={`profile-tab${activeTab === 'subscriptions' ? ' active' : ''}`}
+          onClick={() => setActiveTab('subscriptions')}
+        >
+          Mine Abonnementer
+        </button>
       </div>
       </div>
 
       <div className="profile-content">
-        {activeTab === 'campaigns' ? (
+        {activeTab === 'campaigns' && (
           <div className="campaign-list">
             {myCampaigns.map(c => (
               <CampaignCard key={c.id} campaign={c} onClick={() => navigate(`/campaigns/${c.id}/edit`)} />
             ))}
           </div>
-        ) : (
+        )}
+        {activeTab === 'donations' && (
           <div className="donation-list">
             {myDonations.map(d => (
               <DonationItem key={d.id} donation={{ campaign: d.campaign_title, amount: `${d.amount} kr.`, image: d.image, date: d.date }} onClick={() => {}} />
             ))}
+          </div>
+        )}
+        {activeTab === 'subscriptions' && (
+          <div className="donation-list">
+            {mySubscriptions.length === 0 ? (
+              <p className="profile-empty">Ingen aktive abonnementer endnu.</p>
+            ) : (
+              mySubscriptions.map(s => (
+                <SubscriptionItem key={s.id} subscription={s} onClick={() => navigate(`/subscriptions/${s.id}`, { state: { image: s.image } })} />
+              ))
+            )}
           </div>
         )}
       </div>

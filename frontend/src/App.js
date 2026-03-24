@@ -9,6 +9,7 @@ import CampaignDetail from './pages/CampaignDetail';
 import Profile from './pages/Profile';
 import CampaignSettings from './pages/CampaignSettings';
 import DonationDetail from './pages/DonationDetail';
+import SubscriptionDetail from './pages/SubscriptionDetail';
 
 const stripePromise = process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY)
@@ -27,6 +28,7 @@ function App() {
           <Route path="/campaigns/:id" element={<PrivateRoute><CampaignDetail /></PrivateRoute>} />
           <Route path="/campaigns/:id/edit" element={<PrivateRoute><CampaignSettings /></PrivateRoute>} />
           <Route path="/donations/:id" element={<PrivateRoute><DonationDetail /></PrivateRoute>} />
+          <Route path="/subscriptions/:id" element={<PrivateRoute><SubscriptionDetail /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="*" element={<NotFound />} />
