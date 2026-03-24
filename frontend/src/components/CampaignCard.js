@@ -1,12 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import './css/CampaignCard.css';
 
-function CampaignCard({ campaign, onClick }) {
+function CampaignCard({ campaign, onClick, index = 0 }) {
   const navigate = useNavigate();
   const pct = Math.min((campaign.raised / campaign.goal) * 100, 100);
   const handleClick = onClick ?? (() => navigate(`/campaigns/${campaign.id}`, { state: campaign }));
+
   return (
-    <div className="campaign-card" onClick={handleClick}>
+    <div className="campaign-card" onClick={handleClick} style={{ '--card-index': index }}>
       <img src={campaign.image} alt={campaign.title} className="campaign-image-placeholder" />
       <div className="campaign-body">
         <div className="campaign-progress-row">

@@ -30,11 +30,19 @@
   cursor: pointer;
   color: #555;
   flex-shrink: 0;
+  transition: transform 0.18s ease, background 0.15s, box-shadow 0.18s;
 }
 
 .profile-btn:hover {
-  background: #e4e4e4;
+  background: #e0e0e0;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(76, 175, 80, 0.15);
 }
+
+.profile-btn:active {
+  transform: scale(0.9);
+}
+
 
 .profile-btn-avatar {
   width: 100%;

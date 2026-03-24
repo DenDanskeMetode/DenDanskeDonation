@@ -1,3 +1,14 @@
+@keyframes profilePageIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .profile-page {
   background: #fff;
   min-height: 100vh;
@@ -6,6 +17,7 @@
   position: relative;
   padding-top: 330px;
   padding-bottom: 40px;
+  animation: profilePageIn 0.3s ease both;
 }
 
 .profile-sticky {
@@ -91,8 +103,21 @@
 }
 
 /* ── Content area ── */
+@keyframes profileContentIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .profile-content {
   padding-top: 20px;
+  animation: profileContentIn 0.38s ease both;
+  animation-delay: 0.1s;
 }
 
 /* ── Donation list ── */
@@ -103,13 +128,44 @@
   padding: 0 16px;
 }
 
+@keyframes listItemIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .donation-item {
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
   overflow: hidden;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: listItemIn 0.35s ease both;
 }
+
+.donation-item:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.11);
+}
+
+.donation-item:active {
+  transform: scale(0.97);
+  transition: transform 0.09s ease;
+}
+
+.donation-list > :nth-child(1) { animation-delay: 0.08s; }
+.donation-list > :nth-child(2) { animation-delay: 0.13s; }
+.donation-list > :nth-child(3) { animation-delay: 0.18s; }
+.donation-list > :nth-child(4) { animation-delay: 0.23s; }
+.donation-list > :nth-child(5) { animation-delay: 0.28s; }
+.donation-list > :nth-child(6) { animation-delay: 0.33s; }
+.donation-list > :nth-child(n+7) { animation-delay: 0.35s; }
 
 .donation-thumb {
   width: 100%;

@@ -108,7 +108,8 @@ function CreateCampaignModal({ onClose }) {
   }
 
   return (
-    <div className={`modal-overlay${closing ? ' closing' : ''}`}>
+    <div className={`modal-overlay${closing ? ' closing' : ''}`} onClick={handleClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
       {/* Header */}
       <div className="modal-header">
         <button className="modal-back-btn" onClick={handleClose}>‹</button>
@@ -220,6 +221,7 @@ function CreateCampaignModal({ onClose }) {
           {isSubmitting ? 'Publicerer...' : 'Publicér'}
         </button>
       </div>
+      </div>{/* end modal-box */}
     </div>
   );
 }

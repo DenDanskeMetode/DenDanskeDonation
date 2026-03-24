@@ -238,8 +238,8 @@ function Home() {
         <DesktopFilterSidebar activeFilters={activeFilters} setActiveFilters={setActiveFilters} />
 
         <div className="campaign-list">
-          {visibleCampaigns.map(c => (
-            <CampaignCard key={c.id} campaign={c} />
+          {visibleCampaigns.map((c, i) => (
+            <CampaignCard key={c.id} campaign={c} index={i} />
           ))}
         </div>
       </div>

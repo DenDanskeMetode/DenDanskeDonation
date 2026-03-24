@@ -1,3 +1,15 @@
+/* ── Page entrance ── */
+@keyframes cdPageIn {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ── Page ── */
 .cd-page {
   background: #fff;
@@ -7,6 +19,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  animation: cdPageIn 0.3s ease both;
 }
 
 .cd-scroll {

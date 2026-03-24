@@ -12,9 +12,18 @@
   overflow: hidden;
 }
 
+/* Mobile: box is a transparent pass-through flex child */
+.modal-box {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
 .modal-body {
   flex: 1;
   overflow-y: auto;
+  padding-top: 8px;
 }
 
 .modal-overlay.closing {
@@ -29,6 +38,67 @@
 @keyframes slideOutLeft {
   from { transform: translateX(0); }
   to   { transform: translateX(-100%); }
+}
+
+/* ── Desktop: overlay = backdrop, modal-box = centered dialog ── */
+@media (min-width: 768px) {
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    max-width: none;
+    margin: 0;
+    align-items: center;
+    justify-content: center;
+    animation: ccFadeIn 0.2s ease;
+    overflow: visible;
+  }
+
+  .modal-overlay.closing {
+    animation: ccFadeOut 0.26s ease forwards;
+  }
+
+  .modal-overlay.closing .modal-box {
+    animation: ccScaleOut 0.26s ease forwards;
+  }
+
+  .modal-box {
+    background: #fff;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 580px;
+    max-height: 85vh;
+    overflow-y: auto;
+    flex: none;
+    animation: ccScaleIn 0.2s ease;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-header {
+    padding: 20px 24px 12px;
+  }
+
+  .modal-actions {
+    padding: 16px 24px 24px;
+  }
+}
+
+@keyframes ccFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes ccFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes ccScaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes ccScaleOut {
+  from { transform: scale(1);    opacity: 1; }
+  to   { transform: scale(0.95); opacity: 0; }
 }
 
 /* ── Header ── */
@@ -58,20 +128,44 @@
 /* ── Image row ── */
 .image-row {
   display: flex;
+  align-items: flex-start;
   gap: 12px;
-  padding: 8px 16px 20px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  padding: 0 16px 24px;
 }
 
-.image-row::-webkit-scrollbar {
-  display: none;
+/* Scrollable strip of uploaded images */
+.img-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
+  scrollbar-width: auto;
+  scrollbar-color: #bbb #f0f0f0;
+}
+
+.img-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.img-scroll::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 6px;
+}
+
+.img-scroll::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 6px;
+}
+
+.img-scroll::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 
 .img-box {
-  width: 110px;
-  height: 110px;
+  width: 150px;
+  height: 150px;
   border-radius: 14px;
   overflow: hidden;
   flex-shrink: 0;
@@ -79,8 +173,8 @@
 }
 
 .img-box-placeholder {
-  width: 110px;
-  height: 110px;
+  width: 150px;
+  height: 150px;
   border-radius: 14px;
   border: 2px dashed #ccc;
   display: flex;
@@ -97,6 +191,11 @@
 
 .img-box-placeholder svg {
   color: #bbb;
+}
+
+.img-box-placeholder:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .img-preview {
@@ -131,7 +230,7 @@
   color: #1a1a1a;
   border: none;
   outline: none;
-  padding: 0 16px 10px;
+  padding: 0 16px 8px;
   width: 100%;
   background: transparent;
 }
@@ -146,7 +245,7 @@
   border: none;
   outline: none;
   padding: 0 16px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   width: 100%;
   background: transparent;
   resize: none;
@@ -163,7 +262,7 @@
 
 /* ── Form fields ── */
 .form-section {
-  padding: 0 16px 18px;
+  padding: 0 16px 24px;
   display: flex;
   flex-direction: column;
   gap: 6px;
