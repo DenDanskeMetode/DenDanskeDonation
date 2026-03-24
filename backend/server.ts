@@ -14,19 +14,6 @@ import { authRouter, passport } from './authHandler.js';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 
-// Extend Express Request type to include user property
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: number;
-        email: string;
-        username: string;
-        role: 'user' | 'admin';
-      };
-    }
-  }
-}
 
 dotenv.config();
 
