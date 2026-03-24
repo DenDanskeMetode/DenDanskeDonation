@@ -178,6 +178,7 @@ app.post("/api/login", async (req: Request, res: Response) => {
       userId: user.id,
       email: user.email,
       username: user.username,
+      firstname: user.firstname,
       role: user.role,
     });
 
@@ -263,6 +264,7 @@ app.post("/api/register", async (req: Request, res: Response) => {
       userId: newUser.id,
       email: newUser.email,
       username: newUser.username,
+      firstname: newUser.firstname,
       role: newUser.role,
     });
 
@@ -457,7 +459,7 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
       amount: donation.amount,
       created_at: donation.created_at,
       sender_username: req.user!.username,
-      sender_firstname: null,
+      sender_firstname: req.user!.firstname,
     });
 
     res.status(201).json(donation);
@@ -572,7 +574,7 @@ app.post("/api/subscriptions/record", authenticateJWT, async (req: Request, res:
       amount: sub.amount,
       created_at: sub.created_at,
       sender_username: req.user!.username,
-      sender_firstname: null,
+      sender_firstname: req.user!.firstname,
     });
     res.status(201).json(sub);
   } catch (error: any) {
