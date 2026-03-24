@@ -154,19 +154,19 @@ function Profile() {
           className={`profile-tab${activeTab === 'campaigns' ? ' active' : ''}`}
           onClick={() => setActiveTab('campaigns')}
         >
-          Mine Kampagner
+          Kampagner
         </button>
         <button
           className={`profile-tab${activeTab === 'donations' ? ' active' : ''}`}
           onClick={() => setActiveTab('donations')}
         >
-          Mine Donationer
+          Donationer
         </button>
         <button
           className={`profile-tab${activeTab === 'subscriptions' ? ' active' : ''}`}
           onClick={() => setActiveTab('subscriptions')}
         >
-          Mine Abonnementer
+          Abonnementer
         </button>
       </div>
       </div>
@@ -174,16 +174,24 @@ function Profile() {
       <div className="profile-content">
         {activeTab === 'campaigns' && (
           <div className="campaign-list">
-            {myCampaigns.map(c => (
-              <CampaignCard key={c.id} campaign={c} onClick={() => navigate(`/campaigns/${c.id}/edit`)} />
-            ))}
+            {myCampaigns.length === 0 ? (
+              <p className="profile-empty">Ingen kampagner oprettet endnu.</p>
+            ) : (
+              myCampaigns.map(c => (
+                <CampaignCard key={c.id} campaign={c} onClick={() => navigate(`/campaigns/${c.id}/edit`)} />
+              ))
+            )}
           </div>
         )}
         {activeTab === 'donations' && (
           <div className="donation-list">
-            {myDonations.map(d => (
-              <DonationItem key={d.id} donation={{ campaign: d.campaign_title, amount: `${Number(d.amount).toLocaleString('da-DK')} kr.`, image: d.image, date: d.date }} onClick={() => {}} />
-            ))}
+            {myDonations.length === 0 ? (
+              <p className="profile-empty">Ingen donationer endnu.</p>
+            ) : (
+              myDonations.map(d => (
+                <DonationItem key={d.id} donation={{ campaign: d.campaign_title, amount: `${Number(d.amount).toLocaleString('da-DK')} kr.`, image: d.image, date: d.date }} onClick={() => {}} />
+              ))
+            )}
           </div>
         )}
         {activeTab === 'subscriptions' && (
