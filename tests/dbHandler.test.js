@@ -76,12 +76,16 @@ describe('Database Handler Tests', () => {
       pool.query
         .mockImplementationOnce(() => Promise.resolve({ rows: [mockCampaign] }))
         .mockImplementationOnce(() => Promise.resolve({ rows: mockDonations }))
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))           // subscriptions
         .mockImplementationOnce(() => Promise.resolve({ rows: mockOwners }));
 
       const result = await getCampaignById(1);
 
-      expect(result).toEqual({ ...mockCampaign, donations: mockDonations, owners: mockOwners });
-      expect(pool.query).toHaveBeenCalledTimes(3);
+      expect(result).toMatchObject({ ...mockCampaign, owners: mockOwners });
+      expect(result).toHaveProperty('donations');
+      expect(result).toHaveProperty('subscriptions');
+      expect(result).toHaveProperty('total_donated');
+      expect(pool.query).toHaveBeenCalledTimes(4);
     });
 
     it('should return null when campaign does not exist', async () => {
@@ -130,11 +134,13 @@ describe('Database Handler Tests', () => {
         { id: 1, from_user: 1, to_campaign: 1, amount: 100, user_name: 'user1', user_email: 'user1@example.com' }
       ];
 
-      // 1 call for all campaigns, then for each campaign: 1 donations + 1 owners + 1 images = 7 total
+      // 1 call for all campaigns, then for each campaign: donations + subscriptions + owners + images = 9 total
       pool.query
         .mockImplementationOnce(() => Promise.resolve({ rows: mockCampaigns })) // getAllCampaigns
         .mockImplementationOnce(() => Promise.resolve({ rows: mockDonations })) // donations campaign 1
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // donations campaign 2
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // subscriptions campaign 1
+        .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // subscriptions campaign 2
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // owners campaign 1
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // owners campaign 2
         .mockImplementationOnce(() => Promise.resolve({ rows: [] }))            // images campaign 1
@@ -149,7 +155,7 @@ describe('Database Handler Tests', () => {
       expect(result[1]).toHaveProperty('donations');
       expect(result[1]).toHaveProperty('owners');
       expect(result[1]).toHaveProperty('image_ids');
-      expect(pool.query).toHaveBeenCalledTimes(7);
+      expect(pool.query).toHaveBeenCalledTimes(9);
     });
   });
 
