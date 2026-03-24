@@ -15,7 +15,8 @@ services:
       - ./backend:/app
       - /app/node_modules
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/message', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 5s
@@ -51,6 +52,11 @@ services:
       POSTGRES_DB: mydatabase
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U giraf -d mydatabase"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   postgres_data:

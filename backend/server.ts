@@ -72,7 +72,7 @@ const pool = new Pool({
 });
 
 
-// Create subscriptions table if it doesn't exist yet
+// Create subscriptions table and add is_anonymous columns if needed
 (async () => {
   try {
     await pool.query(`
@@ -87,6 +87,8 @@ const pool = new Pool({
         FOREIGN KEY (to_campaign) REFERENCES campaigns(id)
       )
     `);
+    await pool.query(`ALTER TABLE donations ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN NOT NULL DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS is_anonymous BOOLEAN NOT NULL DEFAULT FALSE`);
   } catch (e) {
     console.error(e);
   }
@@ -431,7 +433,7 @@ app.get("/api/campaigns/:campaignId/stream", (req: Request, res: Response) => {
 // Protected endpoint to confirm a donation
 app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) => {
   try {
-    const { to_campaign, amount, cpr_number } = req.body;
+    const { to_campaign, amount, cpr_number, is_anonymous = false } = req.body;
 
     if (!amount || amount <= 0) {
       return res.status(400).json({ error: "Amount must be greater than 0" });
@@ -445,6 +447,7 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
       from_user: req.user!.userId,
       to_campaign,
       amount,
+      is_anonymous,
     });
 
     if (cpr_number) {
@@ -458,8 +461,9 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
       id: donation.id,
       amount: donation.amount,
       created_at: donation.created_at,
-      sender_username: req.user!.username,
-      sender_firstname: req.user!.firstname,
+      is_anonymous,
+      sender_username: is_anonymous ? null : req.user!.username,
+      sender_firstname: is_anonymous ? null : req.user!.firstname,
     });
 
     res.status(201).json(donation);
@@ -562,19 +566,20 @@ app.post("/api/payments/create-subscription", authenticateJWT, async (req: Reque
 // Record a confirmed subscription after frontend payment confirmation + broadcast to SSE
 app.post("/api/subscriptions/record", authenticateJWT, async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { stripe_subscription_id, to_campaign, amount } = req.body;
+  const { stripe_subscription_id, to_campaign, amount, is_anonymous = false } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO subscriptions (from_user, to_campaign, amount, stripe_subscription_id) VALUES ($1, $2, $3, $4) RETURNING *',
-      [userId, to_campaign, amount, stripe_subscription_id]
+      'INSERT INTO subscriptions (from_user, to_campaign, amount, stripe_subscription_id, is_anonymous) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [userId, to_campaign, amount, stripe_subscription_id, is_anonymous]
     );
     const sub = result.rows[0];
     broadcastDonation(Number(to_campaign), {
       id: sub.id,
       amount: sub.amount,
       created_at: sub.created_at,
-      sender_username: req.user!.username,
-      sender_firstname: req.user!.firstname,
+      is_anonymous,
+      sender_username: is_anonymous ? null : req.user!.username,
+      sender_firstname: is_anonymous ? null : req.user!.firstname,
     });
     res.status(201).json(sub);
   } catch (error: any) {

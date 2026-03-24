@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
-function PaymentForm({ amount, to_campaign, isRecurring, onSuccess, onError }) {
+function PaymentForm({ amount, to_campaign, isRecurring, isAnonymous = false, onSuccess, onError }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ function PaymentForm({ amount, to_campaign, isRecurring, onSuccess, onError }) {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${token}`
     },
-    body: JSON.stringify({ amount, to_campaign }),
+    body: JSON.stringify({ amount, to_campaign, is_anonymous: isAnonymous }),
   });
 
   if (!res.ok) throw new Error("Failed to create payment intent");
@@ -43,7 +43,7 @@ function PaymentForm({ amount, to_campaign, isRecurring, onSuccess, onError }) {
       const subRes = await fetch("/api/subscriptions/record", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ stripe_subscription_id: stripeSubscriptionId, to_campaign, amount }),
+        body: JSON.stringify({ stripe_subscription_id: stripeSubscriptionId, to_campaign, amount, is_anonymous: isAnonymous }),
       });
       if (!subRes.ok) throw new Error("Failed to save subscription");
     } else {
@@ -51,7 +51,7 @@ function PaymentForm({ amount, to_campaign, isRecurring, onSuccess, onError }) {
       const donationRes = await fetch("/api/donations", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({ to_campaign, amount }),
+        body: JSON.stringify({ to_campaign, amount, is_anonymous: isAnonymous }),
       });
       if (!donationRes.ok) throw new Error("Failed to save donation");
     }
