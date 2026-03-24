@@ -179,3 +179,7 @@
 ### Something else
 * 11:00 -
 * Victor
+
+### Facebook login funktionalitet
+* 11:00 -
+* Nicholas

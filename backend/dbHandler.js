@@ -140,7 +140,43 @@ async function createUser(userData) {
   }
 }
 
-async function findOrCreateOAuthUser({ provider, providerId, email, firstname, surname, username }) {
+async function fetchOAuthPhoto(photoUrl, userId) {
+  try {
+    const { default: https } = await import('https');
+    const { default: http } = await import('http');
+
+    const data = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Profile photo fetch timed out')), 5000);
+      const client = photoUrl.startsWith('https') ? https : http;
+
+      client.get(photoUrl, (res) => {
+        if (res.statusCode !== 200) {
+          clearTimeout(timeout);
+          reject(new Error(`Unexpected status code: ${res.statusCode}`));
+          return;
+        }
+        const chunks = [];
+        res.on('data', (chunk) => chunks.push(chunk));
+        res.on('end', () => {
+          clearTimeout(timeout);
+          resolve({ buffer: Buffer.concat(chunks), mimeType: res.headers['content-type'] || 'image/jpeg' });
+        });
+        res.on('error', (err) => { clearTimeout(timeout); reject(err); });
+      }).on('error', (err) => { clearTimeout(timeout); reject(err); });
+    });
+
+    const image = await executeQuery(
+      'INSERT INTO images (data, mime_type, uploaded_by) VALUES ($1, $2, $3) RETURNING id',
+      [data.buffer, data.mimeType, userId]
+    );
+    return image[0].id;
+  } catch (err) {
+    console.error('Failed to fetch OAuth profile photo:', err.message);
+    return null;
+  }
+}
+
+async function findOrCreateOAuthUser({ provider, providerId, email, firstname, surname, username, photoUrl }) {
   try {
     // 1. Find by provider + provider_id
     let result = await executeQuery(
@@ -164,7 +200,21 @@ async function findOrCreateOAuthUser({ provider, providerId, email, firstname, s
       'INSERT INTO users (username, email, firstname, surname, provider, provider_id, role) VALUES ($1, $2, $3, $4, $5, $6, \'user\') RETURNING *',
       [username, email, firstname, surname, provider, providerId]
     );
-    return created[0];
+    const user = created[0];
+
+    // 4. Fetch and store profile picture if available
+    if (photoUrl) {
+      const imageId = await fetchOAuthPhoto(photoUrl, user.id);
+      if (imageId) {
+        const updated = await executeQuery(
+          'UPDATE users SET profile_picture = $1 WHERE id = $2 RETURNING *',
+          [imageId, user.id]
+        );
+        return updated[0];
+      }
+    }
+
+    return user;
   } catch (error) {
     console.error('Error in findOrCreateOAuthUser:', error);
     throw error;

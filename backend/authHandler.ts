@@ -39,7 +39,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           .toLowerCase()
           .slice(0, 50);
 
-        const dbUser = await findOrCreateOAuthUser({ provider: 'google', providerId: profile.id, email, firstname, surname, username });
+        const photoUrl = profile.photos?.[0]?.value;
+        const dbUser = await findOrCreateOAuthUser({ provider: 'google', providerId: profile.id, email, firstname, surname, username, photoUrl });
         done(null, { userId: dbUser.id, email: dbUser.email, username: dbUser.username, role: dbUser.role });
       } catch (err) {
         done(err as Error);
@@ -54,7 +55,7 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
       clientID: process.env.FACEBOOK_APP_ID,
       clientSecret: process.env.FACEBOOK_APP_SECRET,
       callbackURL: `${process.env.BACKEND_URL}/auth/facebook/callback`,
-      profileFields: ['id', 'emails', 'name'],
+      profileFields: ['id', 'emails', 'name', 'picture'],
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
@@ -66,7 +67,8 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
           .toLowerCase()
           .slice(0, 50);
 
-        const dbUser = await findOrCreateOAuthUser({ provider: 'facebook', providerId: profile.id, email, firstname, surname, username });
+        const photoUrl = profile.photos?.[0]?.value;
+        const dbUser = await findOrCreateOAuthUser({ provider: 'facebook', providerId: profile.id, email, firstname, surname, username, photoUrl });
         done(null, { userId: dbUser.id, email: dbUser.email, username: dbUser.username, role: dbUser.role });
       } catch (err) {
         done(err as Error);
