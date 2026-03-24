@@ -165,3 +165,13 @@
 * 11:00 - 14:00
 * 19:00 - 23:00
 * Nicholas
+
+# 24/3
+
+### Morgenmøde (møde, planlægning)
+* 10:00 - 10:15
+* Alle
+
+### Billede karrousel i kampagner (frontend, bugfixing)
+* 10:15 -
+* Victor
