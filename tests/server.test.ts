@@ -73,6 +73,7 @@ jest.mock('../backend/emailHandler', () => ({
 jest.mock('../backend/dbHandler', () => ({
   getUserWithCpr: jest.fn(),
   getAllUsersWithCpr: jest.fn(),
+  getCampaignTitle: jest.fn().mockResolvedValue('Mock Campaign'),
 }));
 
 import { app } from '../backend/server.js';
