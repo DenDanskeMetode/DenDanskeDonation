@@ -73,18 +73,24 @@ const pool = new Pool({
 
 
 // Create subscriptions table if it doesn't exist yet
-pool.query(`
-  CREATE TABLE IF NOT EXISTS subscriptions (
-    id SERIAL PRIMARY KEY,
-    from_user INTEGER NOT NULL,
-    to_campaign INTEGER NOT NULL,
-    amount DECIMAL(10, 2) NOT NULL,
-    stripe_subscription_id TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (from_user) REFERENCES users(id),
-    FOREIGN KEY (to_campaign) REFERENCES campaigns(id)
-  )
-`).catch(console.error);
+(async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS subscriptions (
+        id SERIAL PRIMARY KEY,
+        from_user INTEGER NOT NULL,
+        to_campaign INTEGER NOT NULL,
+        amount DECIMAL(10, 2) NOT NULL,
+        stripe_subscription_id TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (from_user) REFERENCES users(id),
+        FOREIGN KEY (to_campaign) REFERENCES campaigns(id)
+      )
+    `);
+  } catch (e) {
+    console.error(e);
+  }
+})();
 
 const upload = multer({
   storage: multer.memoryStorage(),
