@@ -15,6 +15,17 @@ function CreateCampaignModal({ onClose }) {
   const [closing, setClosing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [allowedTags, setAllowedTags] = useState([]);
+  const [showTagPicker, setShowTagPicker] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/tags')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setAllowedTags(data); })
+      .catch(err => console.error('Failed to fetch tags:', err));
+  }, []);
+
+  const fetchCampaigns = useCampaignsStore((state) => state.fetchCampaigns);
 
   const canPublish = Boolean(title.trim() && description.trim() && Number(goal) > 0 && cityName.trim() && tags.length >= 1 && images.length >= 1);
 
@@ -42,9 +53,8 @@ function CreateCampaignModal({ onClose }) {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
   }
 
-  function addTag() {
-    const tag = prompt('Tilføj tag:');
-    if (tag && tag.trim()) setTags(prev => [...prev, tag.trim()]);
+  function toggleTag(tag) {
+    setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
   }
 
   function addPartner() {
@@ -86,6 +96,7 @@ function CreateCampaignModal({ onClose }) {
             body: JSON.stringify({ imageId: imgData.id }),
           });
         }
+        await fetchCampaigns();
         handleClose();
       }
     } catch (err) {
@@ -156,12 +167,31 @@ function CreateCampaignModal({ onClose }) {
         <div className="form-section">
           <span className="form-label">Tags</span>
           <div className="tags-row">
-            {tags.map((t, i) => (
-              <span key={i} className="tag-pill">{t}</span>
+            {tags.map(t => (
+              <span key={t} className="tag-pill" onClick={() => toggleTag(t)}>{t} ×</span>
             ))}
-            <button className="add-tag-btn" onClick={addTag}>+ Tilføj tag</button>
+            <button className="add-tag-btn" type="button" onClick={() => setShowTagPicker(true)}>+ Tilføj tag</button>
           </div>
         </div>
+
+        {/* Tag picker popup */}
+        {showTagPicker && (
+          <div className="tag-picker-overlay" onClick={() => setShowTagPicker(false)}>
+            <div className="tag-picker" onClick={e => e.stopPropagation()}>
+              <p className="tag-picker-title">Vælg tags</p>
+              <div className="tags-row">
+                {allowedTags.map(t => (
+                  <span
+                    key={t}
+                    className={`tag-pill${tags.includes(t) ? ' tag-pill--selected' : ''}`}
+                    onClick={() => toggleTag(t)}
+                  >{t}</span>
+                ))}
+              </div>
+              <button className="add-tag-btn" type="button" onClick={() => setShowTagPicker(false)}>Færdig</button>
+            </div>
+          </div>
+        )}
 
         {/* Partners */}
         <div className="form-section">

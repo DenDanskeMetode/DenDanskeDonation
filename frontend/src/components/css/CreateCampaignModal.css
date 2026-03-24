@@ -214,6 +214,39 @@
   background: #e8f5e9;
   color: #388e3c;
   font-size: 0.88rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tag-pill--selected {
+  background: #388e3c;
+  color: #fff;
+}
+
+.tag-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tag-picker {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tag-picker-title {
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0;
 }
 
 /* ── Bottom actions ── */

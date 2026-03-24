@@ -177,6 +177,9 @@ jobs:
           context: ./frontend
           push: true
           tags: ghcr.io/dendanskemetode/dendanskedonation/client:latest
+          build-args: |
+            REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_51TCd9b4HA5votMsYw5mKy2hgwPvkgIwXgTVHv2HP4sLsRqotExeTNKBQeN4jAxNnxEaIghAFiZy5Xa7YuY2kr6Vm004XE27mIW
+            REACT_APP_BACKEND_URL=http://dendanskedonation.norwayeast.cloudapp.azure.com
           cache-from: type=gha,scope=client
           cache-to: type=gha,mode=max,scope=client
 
@@ -207,8 +210,6 @@ jobs:
         env:
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GHCR_USER: ${{ github.actor }}
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -T ${{ secrets.VM_USERNAME }}@${{ secrets.VM_IPV4 }} \
             "set -e && \
@@ -218,9 +219,6 @@ jobs:
              cd /opt/DenDanskeDonation && \
              echo '=== Pulling latest code from main ===' && \
              git pull origin main && \
-             echo '=== Creating .env file ===' && \
-             echo 'STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY' > .env && \
-             echo 'JWT_SECRET=$JWT_SECRET' >> .env && \
              echo '=== Pulling latest Docker images ===' && \
              docker-compose pull && \
              echo '=== Stopping old containers ===' && \

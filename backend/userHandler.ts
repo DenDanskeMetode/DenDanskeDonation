@@ -6,6 +6,7 @@ import {
   getUserById,
   getAllUsers,
   createUser,
+  findOrCreateOAuthUser,
   updateUser,
   deleteUser,
   setProfilePicture,
@@ -18,11 +19,13 @@ interface User {
   email: string;
   firstname: string;
   surname: string;
-  password_hash: string;
+  password_hash?: string | null;
   age?: number | null;
   gender?: string | null;
   profile_picture?: number | null;
   role: 'user' | 'admin';
+  provider?: 'local' | 'google' | 'facebook';
+  provider_id?: string | null;
   created_at?: string;
   updated_at?: string;
   donations?: any[];
@@ -38,6 +41,15 @@ interface UserCreationData {
   gender?: string | null;
 }
 
+interface OAuthUserData {
+  provider: 'google' | 'facebook';
+  providerId: string;
+  email: string;
+  firstname: string;
+  surname: string;
+  username: string;
+}
+
 export class UserManager {
   /**
    * Authenticate a user by email and password
@@ -48,7 +60,7 @@ export class UserManager {
   static async authenticateUser(email: string, password: string): Promise<User | null> {
     try {
       const user = await this.findUserByEmail(email);
-      if (!user) {
+      if (!user || !user.password_hash) {
         return null;
       }
 
@@ -118,7 +130,7 @@ export class UserManager {
         throw new Error('Invalid email format');
       }
 
-      return await createUser(userData);
+      return await createUser({ ...userData, email: userData.email.toLowerCase() });
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
@@ -185,7 +197,7 @@ export class UserManager {
   private static async findUserByEmail(email: string): Promise<User | null> {
     try {
       const allUsers = await getAllUsers();
-      return allUsers.find((user: User) => user.email === email) || null;
+      return allUsers.find((user: User) => user.email.toLowerCase() === email.toLowerCase()) || null;
     } catch (error) {
       console.error(`Error finding user by email ${email}:`, error);
       throw error;
@@ -203,6 +215,15 @@ export class UserManager {
       return !!user;
     } catch (error) {
       console.error(`Error checking if user exists with email ${email}:`, error);
+      throw error;
+    }
+  }
+
+  static async findOrCreateOAuthUser(data: OAuthUserData): Promise<User> {
+    try {
+      return await findOrCreateOAuthUser(data);
+    } catch (error) {
+      console.error('Error in findOrCreateOAuthUser:', error);
       throw error;
     }
   }
