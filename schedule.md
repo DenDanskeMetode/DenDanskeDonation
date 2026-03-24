@@ -181,8 +181,8 @@
 * 10:15 - 11:00
 * Victor
 
-### Something else
-* 11:00 -
+### Småtteri UI og VM bugfixing (frontend, backend, bugfixing)
+* 11:00 - 18:00
 * Victor
 
 ### Facebook login funktionalitet
