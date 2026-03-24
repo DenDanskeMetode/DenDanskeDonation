@@ -28,7 +28,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     ports:
+<<<<<<< HEAD
+      - "80:80"
+      - "3000:3000"
+=======
       - "80:3000"
+>>>>>>> 7cde01779f0344f86b75a2aee8a672959bef32b5
     environment:
       - REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_51TCd9b4HA5votMsYw5mKy2hgwPvkgIwXgTVHv2HP4sLsRqotExeTNKBQeN4jAxNnxEaIghAFiZy5Xa7YuY2kr6Vm004XE27mIW
       - WATCHPACK_POLLING=true

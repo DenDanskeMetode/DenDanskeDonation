@@ -424,7 +424,11 @@ app.post("/api/donations", authenticateJWT, async (req: Request, res: Response) 
 
     res.status(201).json(donation);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    if (error.message?.includes('Amount must be') || error.message?.includes('required')) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error("Error processing donation:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
