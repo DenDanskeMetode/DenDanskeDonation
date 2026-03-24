@@ -53,19 +53,49 @@ async function getUserById(userId) {
 async function getCampaignById(campaignId) {
   try {
     const campaignQuery = 'SELECT id, title, description, tags::text[] as tags, goal::integer as goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at FROM campaigns WHERE id = $1';
-    const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
+    const donationsQuery = 'SELECT d.id, d.from_user, d.to_campaign, d.amount::integer as amount, d.created_at, d.is_anonymous, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
+    const subscriptionsQuery = 'SELECT s.id, s.from_user, s.to_campaign, s.amount::numeric as amount, s.created_at, s.stripe_subscription_id FROM subscriptions s WHERE s.to_campaign = $1';
     const campaignResult = await pool.query(campaignQuery, [campaignId]);
     if (campaignResult.rows.length === 0) return null;
-
     const donationsResult = await pool.query(donationsQuery, [campaignId]);
+    const subscriptionsResult = await pool.query(subscriptionsQuery, [campaignId]);
     const ownersResult = await pool.query(
       'SELECT u.id, u.username, u.email FROM users u WHERE u.id = ANY($1::integer[])',
       [campaignResult.rows[0].owner_ids || []]
     );
 
     const campaign = campaignResult.rows[0];
-    campaign.donations = donationsResult.rows;
+    // Map donations and subscriptions into a unified history list
+    const mappedDonations = donationsResult.rows.map(d => ({
+      id: d.id,
+      type: 'donation',
+      from_user: d.from_user,
+      amount: Number(d.amount),
+      created_at: d.created_at,
+      is_anonymous: d.is_anonymous,
+      user_name: d.user_name,
+      user_email: d.user_email,
+    }));
+
+    const mappedSubscriptions = subscriptionsResult.rows.map(s => ({
+      id: s.id,
+      type: 'subscription',
+      from_user: s.from_user,
+      amount: Number(s.amount),
+      created_at: s.created_at,
+      stripe_subscription_id: s.stripe_subscription_id,
+    }));
+
+    const history = [...mappedDonations, ...mappedSubscriptions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    // Total donated is sum of one-time donations + subscription amounts (treat subscription.amount as contributed amount)
+    const totalDonations = mappedDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const totalSubscriptions = mappedSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0);
+
+    campaign.donations = history; // keep backward compatibility: donations field contains overall history
+    campaign.subscriptions = subscriptionsResult.rows;
     campaign.owners = ownersResult.rows;
+    campaign.total_donated = totalDonations + totalSubscriptions;
 
     return campaign;
   } catch (error) {
@@ -99,13 +129,15 @@ async function getAllUsers() {
 async function getAllCampaigns() {
   try {
     const campaignsQuery = 'SELECT id, title, description, tags::text[] as tags, goal::integer as goal, is_complete, milestones, city_name, owner_ids, created_by, created_at, updated_at FROM campaigns';
-    const donationsQuery = 'SELECT d.*, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
+    const donationsQuery = 'SELECT d.id, d.from_user, d.to_campaign, d.amount::integer as amount, d.created_at, d.is_anonymous, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1';
+    const subscriptionsQuery = 'SELECT s.id, s.from_user, s.to_campaign, s.amount::numeric as amount, s.created_at, s.stripe_subscription_id FROM subscriptions s WHERE s.to_campaign = $1';
 
     const campaignsResult = await pool.query(campaignsQuery);
 
     const campaignsWithData = await Promise.all(
       campaignsResult.rows.map(async (campaign) => {
         const donationsResult = await pool.query(donationsQuery, [campaign.id]);
+        const subscriptionsResult = await pool.query(subscriptionsQuery, [campaign.id]);
         const ownersResult = await pool.query(
           'SELECT u.id, u.username, u.email FROM users u WHERE u.id = ANY($1::integer[])',
           [campaign.owner_ids || []]
@@ -114,7 +146,34 @@ async function getAllCampaigns() {
           'SELECT image_id FROM campaign_images WHERE campaign_id = $1 ORDER BY added_at ASC',
           [campaign.id]
         );
-        campaign.donations = donationsResult.rows;
+        const mappedDonations = donationsResult.rows.map(d => ({
+          id: d.id,
+          type: 'donation',
+          from_user: d.from_user,
+          amount: Number(d.amount),
+          created_at: d.created_at,
+          is_anonymous: d.is_anonymous,
+          user_name: d.user_name,
+          user_email: d.user_email,
+        }));
+
+        const mappedSubscriptions = subscriptionsResult.rows.map(s => ({
+          id: s.id,
+          type: 'subscription',
+          from_user: s.from_user,
+          amount: Number(s.amount),
+          created_at: s.created_at,
+          stripe_subscription_id: s.stripe_subscription_id,
+        }));
+
+        const history = [...mappedDonations, ...mappedSubscriptions].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        const totalDonations = mappedDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
+        const totalSubscriptions = mappedSubscriptions.reduce((sum, s) => sum + (s.amount || 0), 0);
+
+        campaign.donations = history;
+        campaign.subscriptions = subscriptionsResult.rows;
+        campaign.total_donated = totalDonations + totalSubscriptions;
         campaign.owners = ownersResult.rows;
         campaign.image_ids = imagesResult.rows.map(r => r.image_id);
         return campaign;
