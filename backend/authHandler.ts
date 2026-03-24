@@ -13,6 +13,7 @@ declare global {
       userId: number;
       email: string;
       username: string;
+      firstname: string;
       role: 'user' | 'admin';
     }
   }
@@ -41,7 +42,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 
         const photoUrl = profile.photos?.[0]?.value;
         const dbUser = await findOrCreateOAuthUser({ provider: 'google', providerId: profile.id, email, firstname, surname, username, photoUrl });
-        done(null, { userId: dbUser.id, email: dbUser.email, username: dbUser.username, role: dbUser.role });
+        done(null, { userId: dbUser.id, email: dbUser.email, username: dbUser.username, firstname: dbUser.firstname, role: dbUser.role });
       } catch (err) {
         done(err as Error);
       }
@@ -69,7 +70,7 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
 
         const photoUrl = profile.photos?.[0]?.value;
         const dbUser = await findOrCreateOAuthUser({ provider: 'facebook', providerId: profile.id, email, firstname, surname, username, photoUrl });
-        done(null, { userId: dbUser.id, email: dbUser.email, username: dbUser.username, role: dbUser.role });
+        done(null, { userId: dbUser.id, email: dbUser.email, username: dbUser.username, firstname: dbUser.firstname, role: dbUser.role });
       } catch (err) {
         done(err as Error);
       }
@@ -87,6 +88,7 @@ function redirectWithToken(req: Request, res: Response) {
     userId: user.userId,
     email: user.email,
     username: user.username,
+    firstname: user.firstname,
     role: user.role,
   });
   const userParam = encodeURIComponent(JSON.stringify({

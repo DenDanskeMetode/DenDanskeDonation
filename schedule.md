@@ -186,7 +186,7 @@
 * Victor
 
 ### Facebook login funktionalitet
-* 11:00 -
+* 11:00 - 13:00
 * Nicholas
 
 ### Subscriptions and profile (kodning, bugfixing, frontend, backend)

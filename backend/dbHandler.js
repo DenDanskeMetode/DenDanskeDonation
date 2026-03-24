@@ -269,7 +269,9 @@ async function updateCampaign(campaignId, fields) {
 async function getDonationsByCampaign(campaignId) {
   try {
     const query = `
-      SELECT d.id, d.amount::integer as amount, d.created_at, u.username as sender_username, u.firstname as sender_firstname
+      SELECT d.id, d.amount::integer as amount, d.created_at, d.is_anonymous,
+        CASE WHEN d.is_anonymous THEN NULL ELSE u.username END as sender_username,
+        CASE WHEN d.is_anonymous THEN NULL ELSE u.firstname END as sender_firstname
       FROM donations d
       JOIN users u ON d.from_user = u.id
       WHERE d.to_campaign = $1
@@ -284,9 +286,9 @@ async function getDonationsByCampaign(campaignId) {
 
 async function createDonation(donationData) {
   try {
-    const { from_user, to_campaign, amount } = donationData;
-    const query = 'INSERT INTO donations (from_user, to_campaign, amount) VALUES ($1, $2, $3) RETURNING *';
-    const result = await executeQuery(query, [from_user, to_campaign, amount]);
+    const { from_user, to_campaign, amount, is_anonymous = false } = donationData;
+    const query = 'INSERT INTO donations (from_user, to_campaign, amount, is_anonymous) VALUES ($1, $2, $3, $4) RETURNING *';
+    const result = await executeQuery(query, [from_user, to_campaign, amount, is_anonymous]);
     return result[0];
   } catch (error) {
     console.error('Error creating donation:', error);

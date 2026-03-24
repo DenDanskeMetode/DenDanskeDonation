@@ -32,8 +32,9 @@ export interface CampaignDonation {
   id: number;
   amount: number;
   created_at: string;
-  sender_username: string;
-  sender_firstname: string;
+  is_anonymous: boolean;
+  sender_username: string | null;
+  sender_firstname: string | null;
 }
 
 export interface CampaignOwner {
@@ -91,6 +92,7 @@ export interface DonationCreationData {
   from_user: number;
   to_campaign: number;
   amount: number;
+  is_anonymous?: boolean;
 }
 
 export interface UserCpr {

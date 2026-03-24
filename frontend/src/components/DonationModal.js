@@ -7,6 +7,7 @@ function DonationModal({ campaign, userId, onClose, onSuccess }) {
   const [customAmount, setCustomAmount] = useState(false);
   const [closing, setClosing] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(null);
 
   useEffect(() => {
@@ -118,6 +119,15 @@ function DonationModal({ campaign, userId, onClose, onSuccess }) {
           </div>
         </div>
 
+        <label className="anonymous-toggle">
+          <input
+            type="checkbox"
+            checked={isAnonymous}
+            onChange={(e) => setIsAnonymous(e.target.checked)}
+          />
+          <span>Donér anonymt</span>
+        </label>
+
         {amount && parseInt(amount) > 0 && (
           <div className="payment-section">
             <PaymentForm
@@ -125,6 +135,7 @@ function DonationModal({ campaign, userId, onClose, onSuccess }) {
               from_user={userId}
               to_campaign={campaign.id}
               isRecurring={isRecurring}
+              isAnonymous={isAnonymous}
               onSuccess={handleSuccess}
               onError={() => {}}
             />
