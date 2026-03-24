@@ -11,7 +11,7 @@ ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
 RUN npm install
 
 COPY . .
-RUN npm run build
+RUN NODE_OPTIONS=--max_old_space_size=512 npm run build
 
 # Serve with nginx
 FROM nginx:alpine
