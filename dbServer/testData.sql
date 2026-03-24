@@ -11,9 +11,9 @@ VALUES
 -- Insert test campaigns with the new schema
 INSERT INTO campaigns (title, description, tags, goal, is_complete, milestones, city_name, created_by, owner_ids)
 VALUES
-  ('Clean Water Initiative', 'Providing clean water to rural communities', ARRAY['Humanitær', 'Sundhed']::campaign_tag[], 50000.00, FALSE, ARRAY['Phase 1: Assessment', 'Phase 2: Implementation'], 'Nairobi', 1, ARRAY[1]),
-  ('Education for All', 'Building schools and providing educational materials', ARRAY['Uddannelse']::campaign_tag[], 75000.00, FALSE, ARRAY['Fundraising', 'Construction', 'Hiring Teachers'], 'Accra', 2, ARRAY[2]),
-  ('Reforestation Project', 'Planting trees to combat deforestation', ARRAY['Natur og miljø']::campaign_tag[], 30000.00, FALSE, ARRAY['Land Preparation', 'Planting', 'Maintenance'], 'Lagos', 3, ARRAY[3]);
+  ('Clean Water Initiative', 'Providing clean water to rural communities', ARRAY['Humanitær', 'Sundhed']::campaign_tag[], 50000, FALSE, ARRAY['Phase 1: Assessment', 'Phase 2: Implementation'], 'Nairobi', 1, ARRAY[1]),
+  ('Education for All', 'Building schools and providing educational materials', ARRAY['Uddannelse']::campaign_tag[], 75000, FALSE, ARRAY['Fundraising', 'Construction', 'Hiring Teachers'], 'Accra', 2, ARRAY[2]),
+  ('Reforestation Project', 'Planting trees to combat deforestation', ARRAY['Natur og miljø']::campaign_tag[], 30000, FALSE, ARRAY['Land Preparation', 'Planting', 'Maintenance'], 'Lagos', 3, ARRAY[3]);
 
 -- Insert test images and link them to campaigns
 INSERT INTO images (data, mime_type, uploaded_by)
@@ -31,9 +31,9 @@ VALUES
 -- Insert test donations linking users to campaigns
 INSERT INTO donations (from_user, to_campaign, amount)
 VALUES 
-  (1, 1, 1000.00),  -- John Doe donates to Clean Water Initiative
-  (1, 2, 1500.00),  -- John Doe donates to Education for All
-  (2, 1, 750.00),   -- Jane Doe donates to Clean Water Initiative
-  (2, 3, 500.00),   -- Jane Doe donates to Reforestation Project
-  (3, 2, 2000.00),  -- Bob Smith donates to Education for All
-  (3, 3, 1200.00);  -- Bob Smith donates to Reforestation Project
+  (1, 1, 1000),  -- John Doe donates to Clean Water Initiative
+  (1, 2, 1500),  -- John Doe donates to Education for All
+  (2, 1, 750),   -- Jane Doe donates to Clean Water Initiative
+  (2, 3, 500),   -- Jane Doe donates to Reforestation Project
+  (3, 2, 2000),  -- Bob Smith donates to Education for All
+  (3, 3, 1200);  -- Bob Smith donates to Reforestation Project
