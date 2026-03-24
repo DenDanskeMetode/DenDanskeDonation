@@ -138,6 +138,8 @@ declare function isCampaignOwner(campaignId: number, userId: number): Promise<bo
 declare function upsertUserCpr(userId: number, cprNumber: string): Promise<UserCpr>;
 declare function getUserWithCpr(userId: number): Promise<(User & { cpr_number: string | null }) | null>;
 declare function getAllUsersWithCpr(): Promise<(User & { cpr_number: string | null })[]>;
+declare function getUserForEmail(userId: number): Promise<{ email: string; firstname: string; surname: string } | null>;
+declare function getCampaignTitle(campaignId: number): Promise<string | null>;
 
 export interface OAuthUserData {
   provider: string;
@@ -174,4 +176,6 @@ export {
   getUserWithCpr,
   getAllUsersWithCpr,
   findOrCreateOAuthUser,
+  getUserForEmail,
+  getCampaignTitle,
 };

@@ -25,6 +25,6 @@
     "esm": true,
     "experimentalSpecifierResolution": "node"
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "emailHandler.ts"],
   "exclude": ["node_modules", "dist"]
 }
