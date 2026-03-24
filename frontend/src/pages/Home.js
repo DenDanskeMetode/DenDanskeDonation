@@ -6,7 +6,7 @@ import FilterModal from '../components/FilterModal';
 import useCampaignsStore from '../store/useCampaignsStore';
 import CampaignCard from '../components/CampaignCard';
 
-const filters = ['Tæt på mig', 'Overraskelse', 'Kategori', 'Ny'];
+const filters = ['Udforsk', 'Tæt på mig', 'Sponsoreret', 'Nye brugere'];
 
 function Home() {
   const campaigns = useCampaignsStore((state) => state.campaigns);
