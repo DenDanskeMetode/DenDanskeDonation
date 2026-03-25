@@ -4,14 +4,14 @@
 import bcrypt from 'bcrypt';
 import {
   getUserById,
-  getAllUsers,
+  getUserByEmail,
   createUser,
   findOrCreateOAuthUser,
   updateUser,
   deleteUser,
   setProfilePicture,
   upsertUserCpr
-} from './dbHandler.js';
+} from '../dbHandler.js';
 
 interface User {
   id: number;
@@ -24,7 +24,7 @@ interface User {
   gender?: string | null;
   profile_picture?: number | null;
   role: 'user' | 'admin';
-  provider?: 'local' | 'google' | 'facebook';
+  provider?: string | null;
   provider_id?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -36,7 +36,7 @@ interface UserCreationData {
   email: string;
   firstname: string;
   surname: string;
-  password_hash: string;
+  password: string;
   age?: number | null;
   gender?: string | null;
 }
@@ -121,8 +121,7 @@ export class UserManager {
    */
   static async createUser(userData: UserCreationData): Promise<User> {
     try {
-      // Basic validation
-      if (!userData.username || !userData.email || !userData.password_hash) {
+      if (!userData.username || !userData.email || !userData.password) {
         throw new Error('Missing required user data');
       }
 
@@ -130,7 +129,9 @@ export class UserManager {
         throw new Error('Invalid email format');
       }
 
-      return await createUser({ ...userData, email: userData.email.toLowerCase() });
+      const password_hash = await bcrypt.hash(userData.password, 10);
+
+      return await createUser({ ...userData, email: userData.email.toLowerCase(), password_hash });
     } catch (error) {
       console.error('Error creating user:', error);
       throw error;
@@ -196,8 +197,7 @@ export class UserManager {
    */
   private static async findUserByEmail(email: string): Promise<User | null> {
     try {
-      const allUsers = await getAllUsers();
-      return allUsers.find((user: User) => user.email.toLowerCase() === email.toLowerCase()) || null;
+      return await getUserByEmail(email.toLowerCase());
     } catch (error) {
       console.error(`Error finding user by email ${email}:`, error);
       throw error;

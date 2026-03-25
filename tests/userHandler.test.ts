@@ -1,8 +1,8 @@
-import { UserManager } from '../backend/userHandler.js';
+import { UserManager } from '../backend/services/userHandler.js';
 
 jest.mock('../backend/dbHandler', () => ({
   getUserById: jest.fn(),
-  getAllUsers: jest.fn(),
+  getUserByEmail: jest.fn(),
   createUser: jest.fn(),
 }));
 
@@ -15,9 +15,10 @@ import * as dbHandler from '../backend/dbHandler.js';
 import bcrypt from 'bcrypt';
 
 const mockGetUserById = dbHandler.getUserById as jest.Mock;
-const mockGetAllUsers = dbHandler.getAllUsers as jest.Mock;
+const mockGetUserByEmail = dbHandler.getUserByEmail as jest.Mock;
 const mockCreateUser = dbHandler.createUser as jest.Mock;
 const mockBcryptCompare = bcrypt.compare as jest.Mock;
+const mockBcryptHash = bcrypt.hash as jest.Mock;
 
 const mockUser = {
   id: 1,
@@ -34,28 +35,28 @@ describe('UserManager', () => {
 
   describe('authenticateUser', () => {
     it('returns user on valid credentials', async () => {
-      mockGetAllUsers.mockResolvedValue([mockUser]);
+      mockGetUserByEmail.mockResolvedValue(mockUser);
       mockBcryptCompare.mockResolvedValue(true);
       const result = await UserManager.authenticateUser('john@example.com', 'password123');
       expect(result).toEqual(mockUser);
     });
 
     it('returns null when email not found', async () => {
-      mockGetAllUsers.mockResolvedValue([mockUser]);
+      mockGetUserByEmail.mockResolvedValue(null);
       const result = await UserManager.authenticateUser('nobody@example.com', 'password123');
       expect(result).toBeNull();
       expect(mockBcryptCompare).not.toHaveBeenCalled();
     });
 
     it('returns null on wrong password', async () => {
-      mockGetAllUsers.mockResolvedValue([mockUser]);
+      mockGetUserByEmail.mockResolvedValue(mockUser);
       mockBcryptCompare.mockResolvedValue(false);
       const result = await UserManager.authenticateUser('john@example.com', 'wrongpass');
       expect(result).toBeNull();
     });
 
     it('propagates db errors', async () => {
-      mockGetAllUsers.mockRejectedValue(new Error('DB error'));
+      mockGetUserByEmail.mockRejectedValue(new Error('DB error'));
       await expect(UserManager.authenticateUser('john@example.com', 'pass')).rejects.toThrow('DB error');
     });
   });
@@ -95,15 +96,17 @@ describe('UserManager', () => {
       email: 'jane@example.com',
       firstname: 'Jane',
       surname: 'Doe',
-      password_hash: 'hashed',
+      password: 'plainpassword',
     };
 
     it('creates and returns the new user', async () => {
-      const created = { id: 2, ...newUserData, donations: [] };
+      const created = { id: 2, ...newUserData, password_hash: 'hashed', donations: [] };
+      mockBcryptHash.mockResolvedValue('hashed');
       mockCreateUser.mockResolvedValue(created);
       const result = await UserManager.createUser(newUserData);
       expect(result).toEqual(created);
-      expect(mockCreateUser).toHaveBeenCalledWith(newUserData);
+      expect(mockBcryptHash).toHaveBeenCalledWith('plainpassword', 10);
+      expect(mockCreateUser).toHaveBeenCalledWith(expect.objectContaining({ password_hash: 'hashed' }));
     });
 
     it('throws on invalid email format', async () => {
@@ -119,17 +122,17 @@ describe('UserManager', () => {
 
   describe('userExists', () => {
     it('returns true when user with that email exists', async () => {
-      mockGetAllUsers.mockResolvedValue([mockUser]);
+      mockGetUserByEmail.mockResolvedValue(mockUser);
       expect(await UserManager.userExists('john@example.com')).toBe(true);
     });
 
     it('returns false when no user with that email', async () => {
-      mockGetAllUsers.mockResolvedValue([mockUser]);
+      mockGetUserByEmail.mockResolvedValue(null);
       expect(await UserManager.userExists('nobody@example.com')).toBe(false);
     });
 
     it('returns false for empty user list', async () => {
-      mockGetAllUsers.mockResolvedValue([]);
+      mockGetUserByEmail.mockResolvedValue(null);
       expect(await UserManager.userExists('john@example.com')).toBe(false);
     });
   });

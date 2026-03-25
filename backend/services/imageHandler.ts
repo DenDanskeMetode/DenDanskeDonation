@@ -1,5 +1,5 @@
-import { getImageById, createImage } from './dbHandler.js';
-import type { Image, ImageCreationData } from './dbHandler.js';
+import { getImageById, createImage } from '../dbHandler.js';
+import type { Image, ImageCreationData } from '../dbHandler.js';
 
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
