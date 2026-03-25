@@ -196,3 +196,11 @@
 ### Presentation setup (Design)
 * 15:40 - 18:40
 * Felix
+
+# 25/3
+
+### Fælles møde (møde, planlægning)
+* 13:00 - 13:30
+
+### Figma Slides (præsentation)
+*13:30 - 
