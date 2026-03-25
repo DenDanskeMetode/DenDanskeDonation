@@ -44,9 +44,8 @@ export async function createStripeSubscription(
     expand: ['payment_intent'],
   });
 
-  const paymentIntentId = typeof invoice.payment_intent === 'string'
-    ? invoice.payment_intent
-    : invoice.payment_intent?.id;
+  const pi = (invoice as any).payment_intent;
+  const paymentIntentId = typeof pi === 'string' ? pi : pi?.id;
 
   if (!paymentIntentId) throw new Error('No payment intent on invoice');
 

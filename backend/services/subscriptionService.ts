@@ -67,7 +67,7 @@ export async function getSubscriptionById(subscriptionId: number, userId: number
 
   return {
     ...sub,
-    next_payment_date: new Date(stripeSub.current_period_end * 1000).toISOString(),
+    next_payment_date: new Date((stripeSub as any).current_period_end * 1000).toISOString(),
     payment_count: paymentCount,
     total_paid: paymentCount * Number(sub.amount),
   };

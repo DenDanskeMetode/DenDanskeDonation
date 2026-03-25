@@ -24,7 +24,7 @@ interface User {
   gender?: string | null;
   profile_picture?: number | null;
   role: 'user' | 'admin';
-  provider?: 'local' | 'google' | 'facebook';
+  provider?: string | null;
   provider_id?: string | null;
   created_at?: string;
   updated_at?: string;

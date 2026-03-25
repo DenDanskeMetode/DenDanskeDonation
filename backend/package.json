@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Run tests from project root with npm test\"",
-    "build": "tsc && cp dbHandler.js dist/",
+    "build": "tsc",
     "start": "node dist/server.js",
     "migrate": "node --loader ts-node/esm migrate.ts",
     "dev": "nodemon --ext ts --exec \"node --loader ts-node/esm server.ts\""
