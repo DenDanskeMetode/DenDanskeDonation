@@ -196,3 +196,19 @@
 ### Presentation setup (Design)
 * 15:40 - 18:40
 * Felix
+
+# 25/3
+
+### Fælles møde (møde, planlægning)
+* 13:00 - 13:30
+
+### Figma Slides (præsentation)
+*13:30 - 
+
+### Last minute changes (frontend, bugfixing)
+* 13:30 - 14:30
+* Victor
+
+### Projektledelse + demo slides (præsentation)
+* 15:15 - 16:30
+* Victor
