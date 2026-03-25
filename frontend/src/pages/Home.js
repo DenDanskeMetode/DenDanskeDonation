@@ -61,6 +61,7 @@ function DesktopFilterSidebar({ activeFilters, setActiveFilters }) {
   }
 
   return (
+    <div className="sidebar-sticky-wrapper">
     <aside className="desktop-filter-sidebar">
       <div className="dsf-header">
         <span className="dsf-title">Filtrer</span>
@@ -90,6 +91,7 @@ function DesktopFilterSidebar({ activeFilters, setActiveFilters }) {
       <div className="dsf-divider" />
       {renderSection('type', 'Indsamlingstype', TYPE_OPTIONS)}
     </aside>
+    </div>
   );
 }
 

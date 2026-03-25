@@ -273,6 +273,10 @@
 }
 
 /* ── Desktop filter sidebar ── */
+.sidebar-sticky-wrapper {
+  display: none;
+}
+
 .desktop-filter-sidebar {
   display: none;
 }
@@ -338,17 +342,24 @@
   }
 
   /* ── Sidebar ── */
-  .desktop-filter-sidebar {
+  /* Wrapper stays in the flex flow to reserve space; sidebar floats fixed */
+  .sidebar-sticky-wrapper {
     display: block;
     width: 240px;
     flex-shrink: 0;
+  }
+
+  .desktop-filter-sidebar {
+    display: block;
+    position: fixed;
+    top: 130px;
+    width: 240px;
+    left: max(32px, calc(50vw - 700px + 32px));
     background: #fff;
     border-radius: 16px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
     padding: 16px;
-    position: sticky;
-    top: 150px;
-    max-height: calc(100vh - 170px);
+    max-height: calc(100vh - 150px);
     overflow-y: auto;
     scrollbar-width: none;
   }
