@@ -208,6 +208,8 @@
   color: #aaa;
   font-size: 0.9rem;
   padding: 40px 16px;
+  width: 100%;
+  grid-column: 1 / -1;
 }
 
 /* ── Desktop responsive ── */

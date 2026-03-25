@@ -81,6 +81,7 @@
   height: 100%;
   background: linear-gradient(to right, #f9c74f, #4caf50);
   border-radius: 4px;
+  transition: width 0.8s ease-out;
 }
 
 .campaign-raised {

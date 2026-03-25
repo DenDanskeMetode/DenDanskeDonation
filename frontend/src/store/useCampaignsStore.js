@@ -62,6 +62,22 @@ const useCampaignsStore = create((set) => ({
     }
   },
 
+  pollCampaigns: async () => {
+    try {
+      const data = await campaignApi.getAll();
+      const incoming = data.map(normalizeCampaign);
+      set((state) => {
+        const existingIds = new Set(state.campaigns.map((c) => c.id));
+        const updated = state.campaigns.map((c) => {
+          const fresh = incoming.find((i) => i.id === c.id);
+          return fresh ? { ...c, raised: fresh.raised } : c;
+        });
+        const newOnes = incoming.filter((c) => !existingIds.has(c.id));
+        return { campaigns: [...updated, ...newOnes] };
+      });
+    } catch (_) {}
+  },
+
   addCampaign: async (campaignData) => {
     const created = await campaignApi.create(campaignData);
     const normalized = normalizeCampaign(created);
