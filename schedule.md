@@ -29,9 +29,9 @@
 * 13.30 - 15.30
 * Victor
 
-### Kodning af diverse opgaver (Kodning)
-* 13:30 - 
-* Alle
+### CI/CD (Kodning)
+* 13:30 - 15:30
+* Felix
 
 ### Møde og catch-up
 * 15.30 - 16.00
@@ -193,6 +193,6 @@
 * 10:15 - 14:30
 * Felix
 
-### Presentation setup
-* 15:40 - 
+### Presentation setup (Design)
+* 15:40 - 18:40
 * Felix
