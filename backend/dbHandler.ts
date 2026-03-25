@@ -178,7 +178,7 @@ export async function getCampaignById(campaignId: number): Promise<Campaign | nu
 
     const [donationsResult, subscriptionsResult, ownersResult] = await Promise.all([
       pool.query(
-        'SELECT d.id, d.from_user, d.to_campaign, d.amount::integer as amount, d.created_at, d.is_anonymous, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1',
+        `SELECT d.id, d.from_user, d.to_campaign, d.amount::integer as amount, d.created_at, d.is_anonymous, CASE WHEN d.is_anonymous THEN NULL ELSE u.username END as sender_username, CASE WHEN d.is_anonymous THEN NULL ELSE CONCAT(u.firstname, ' ', u.surname) END as sender_firstname FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1`,
         [campaignId]
       ),
       pool.query(
@@ -195,7 +195,7 @@ export async function getCampaignById(campaignId: number): Promise<Campaign | nu
       id: d.id, type: 'donation' as const, from_user: d.from_user,
       to_campaign: campaignId, amount: Number(d.amount),
       created_at: d.created_at, is_anonymous: d.is_anonymous,
-      user_name: d.user_name, user_email: d.user_email,
+      sender_username: d.sender_username, sender_firstname: d.sender_firstname,
     }));
 
     const mappedSubscriptions: Donation[] = subscriptionsResult.rows.map(s => ({
@@ -252,7 +252,7 @@ export async function getAllCampaigns(): Promise<Campaign[]> {
       campaignsResult.rows.map(async (campaign: Campaign) => {
         const [donationsResult, subscriptionsResult, ownersResult, imagesResult] = await Promise.all([
           pool.query(
-            'SELECT d.id, d.from_user, d.to_campaign, d.amount::integer as amount, d.created_at, d.is_anonymous, u.username as user_name, u.email as user_email FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1',
+            `SELECT d.id, d.from_user, d.to_campaign, d.amount::integer as amount, d.created_at, d.is_anonymous, CASE WHEN d.is_anonymous THEN NULL ELSE u.username END as sender_username, CASE WHEN d.is_anonymous THEN NULL ELSE CONCAT(u.firstname, ' ', u.surname) END as sender_firstname FROM donations d JOIN users u ON d.from_user = u.id WHERE d.to_campaign = $1`,
             [campaign.id]
           ),
           pool.query(
@@ -273,7 +273,7 @@ export async function getAllCampaigns(): Promise<Campaign[]> {
           id: d.id, type: 'donation' as const, from_user: d.from_user,
           to_campaign: campaign.id, amount: Number(d.amount),
           created_at: d.created_at, is_anonymous: d.is_anonymous,
-          user_name: d.user_name, user_email: d.user_email,
+          sender_username: d.sender_username, sender_firstname: d.sender_firstname,
         }));
 
         const mappedSubscriptions: Donation[] = subscriptionsResult.rows.map(s => ({

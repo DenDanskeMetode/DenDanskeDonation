@@ -80,7 +80,9 @@ CREATE TABLE subscriptions (
     to_campaign INTEGER NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
     stripe_subscription_id TEXT NOT NULL,
+    is_anonymous BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    cancelled_at TIMESTAMP,
     FOREIGN KEY (from_user) REFERENCES users(id),
     FOREIGN KEY (to_campaign) REFERENCES campaigns(id)
 );
