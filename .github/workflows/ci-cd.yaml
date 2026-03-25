@@ -226,12 +226,12 @@ jobs:
              echo '=== Starting new containers ===' && \
              docker-compose up -d --no-build && \
              echo '=== Verifying containers are running ===' && \
-             sleep 3 && \
+             sleep 10 && \
              docker-compose ps || { echo 'ERROR: Containers failed to start'; docker-compose logs; exit 1; } && \
              echo '=== Checking backend health ===' && \
-             for i in \$(seq 1 10); do \
+             for i in \$(seq 1 30); do \
                curl -sf http://localhost:5000 && { echo 'Backend is healthy'; exit 0; } || echo \"Attempt \$i: backend not ready yet...\"; \
-               [ \$i -lt 10 ] && sleep 2; \
+               sleep 3; \
              done && \
              echo 'ERROR: Backend failed to become healthy after deployment' && \
              docker-compose logs && \
