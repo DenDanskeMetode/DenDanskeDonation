@@ -199,11 +199,15 @@
 
 # 25/3
 
+### Bugfixing, architecture cleanup (kodning, arkitektur)
+* 10:00 - 14:00
+* Nicholas
+
 ### Fælles møde (møde, planlægning)
 * 13:00 - 13:30
 
 ### Figma Slides (præsentation)
-*13:30 - 
+* 13:30 - 
 
 ### Last minute changes (frontend, bugfixing)
 * 13:30 - 14:30
@@ -212,3 +216,7 @@
 ### Projektledelse + demo slides (præsentation)
 * 15:15 - 16:30
 * Victor
+
+### CI/CD slides (præsentation)
+* 15:00 - 16:30
+* Nicholas
