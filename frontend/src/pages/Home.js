@@ -98,6 +98,7 @@ function DesktopFilterSidebar({ activeFilters, setActiveFilters }) {
 function Home() {
   const campaigns = useCampaignsStore((state) => state.campaigns);
   const fetchCampaigns = useCampaignsStore((state) => state.fetchCampaigns);
+  const pollCampaigns = useCampaignsStore((state) => state.pollCampaigns);
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
   const navigate = useNavigate();
@@ -132,7 +133,9 @@ function Home() {
         navigate('/login');
       }
     });
-  }, [fetchCampaigns, navigate]);
+    const interval = setInterval(pollCampaigns, 5000);
+    return () => clearInterval(interval);
+  }, [fetchCampaigns, pollCampaigns, navigate]);
 
   const filterCount = Object.values(activeFilters).reduce(
     (sum, set) => sum + (set?.size || 0), 0
