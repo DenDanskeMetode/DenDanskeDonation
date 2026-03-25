@@ -1,4 +1,4 @@
-import { CampaignManager } from '../backend/campaignHandler.js';
+import { CampaignManager } from '../backend/services/campaignHandler.js';
 
 jest.mock('../backend/dbHandler', () => ({
   getCampaignById: jest.fn(),

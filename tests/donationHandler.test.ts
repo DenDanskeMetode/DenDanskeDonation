@@ -1,4 +1,4 @@
-import { DonationManager } from '../backend/donationHandler.js';
+import { DonationManager } from '../backend/services/donationHandler.js';
 
 jest.mock('../backend/dbHandler', () => ({
   createDonation: jest.fn(),
