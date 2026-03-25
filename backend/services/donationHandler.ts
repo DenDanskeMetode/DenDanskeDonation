@@ -1,4 +1,4 @@
-import { createDonation, getDonationsByCampaign } from './dbHandler.js';
+import { createDonation, getDonationsByCampaign } from '../dbHandler.js';
 
 interface DonationInput {
   from_user: number;

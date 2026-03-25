@@ -11,8 +11,8 @@ import {
   removeImageFromCampaign,
   getCampaignImages,
   isCampaignOwner,
-} from './dbHandler.js';
-import type { CampaignImageEntry, CampaignOwner } from './dbHandler.js';
+} from '../dbHandler.js';
+import type { CampaignImageEntry, CampaignOwner } from '../dbHandler.js';
 
 interface Campaign {
   id: number;

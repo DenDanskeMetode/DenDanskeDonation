@@ -3,12 +3,12 @@ import dotenv from "dotenv";
 import path from "path";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
-import { getUserForEmail } from "./dbHandler.js";
+import { getUserForEmail } from "../dbHandler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const transporter: Transporter = nodemailer.createTransport({
   service: "gmail",
@@ -39,7 +39,7 @@ export async function sendThankYouEmail(
       ? "basicThankYouEmailTemplate.html"
       : "personalThankYouEmailTemplate.html";
 
-  const templatePath = path.join(__dirname, "emailTemplates", templateName);
+  const templatePath = path.join(__dirname, "../emailTemplates", templateName);
   let html = readFileSync(templatePath, "utf-8");
 
   const fullName = `${user.firstname} ${user.surname}`;

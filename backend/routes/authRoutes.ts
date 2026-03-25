@@ -2,8 +2,8 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
 import { Router, Request, Response } from 'express';
-import { issueToken } from './JWTHandler.js';
-import { findOrCreateOAuthUser } from './dbHandler.js';
+import { issueToken } from '../services/JWTHandler.js';
+import { findOrCreateOAuthUser } from '../dbHandler.js';
 import dotenv from 'dotenv';
 
 // Augment Express.User to match the shape used throughout the app
