@@ -1,4 +1,4 @@
-import { issueToken, validateToken } from '../backend/JWTHandler.js';
+import { issueToken, validateToken } from '../backend/services/JWTHandler.js';
 
 describe('JWTHandler', () => {
   describe('issueToken', () => {

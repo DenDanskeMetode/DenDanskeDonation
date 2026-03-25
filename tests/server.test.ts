@@ -14,13 +14,13 @@ jest.mock('bcrypt', () => ({
 }));
 
 // Mock JWTHandler
-jest.mock('../backend/JWTHandler', () => ({
+jest.mock('../backend/services/JWTHandler', () => ({
   issueToken: jest.fn().mockReturnValue('mock-jwt-token'),
   validateToken: jest.fn().mockReturnValue({ userId: 1, email: 'john@example.com', username: 'johndoe' }),
 }));
 
 // Mock UserManager
-jest.mock('../backend/userHandler', () => ({
+jest.mock('../backend/services/userHandler', () => ({
   UserManager: {
     authenticateUser: jest.fn(),
     createUser: jest.fn(),
@@ -34,7 +34,7 @@ jest.mock('../backend/userHandler', () => ({
 }));
 
 // Mock CampaignManager
-jest.mock('../backend/campaignHandler', () => ({
+jest.mock('../backend/services/campaignHandler', () => ({
   __esModule: true,
   default: {
     getAllCampaigns: jest.fn(),
@@ -48,7 +48,7 @@ jest.mock('../backend/campaignHandler', () => ({
 }));
 
 // Mock DonationManager
-jest.mock('../backend/donationHandler', () => ({
+jest.mock('../backend/services/donationHandler', () => ({
   __esModule: true,
   default: {
     donate: jest.fn(),
@@ -56,7 +56,7 @@ jest.mock('../backend/donationHandler', () => ({
 }));
 
 // Mock ImageHandler
-jest.mock('../backend/imageHandler', () => ({
+jest.mock('../backend/services/imageHandler', () => ({
   __esModule: true,
   default: {
     getImage: jest.fn(),
@@ -65,7 +65,7 @@ jest.mock('../backend/imageHandler', () => ({
 }));
 
 // Mock emailHandler to avoid import.meta.url (ESM-only) breaking ts-jest in CommonJS mode
-jest.mock('../backend/emailHandler', () => ({
+jest.mock('../backend/services/emailHandler', () => ({
   sendThankYouEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
@@ -77,11 +77,11 @@ jest.mock('../backend/dbHandler', () => ({
 }));
 
 import { app } from '../backend/server.js';
-import { UserManager } from '../backend/userHandler.js';
-import CampaignManager from '../backend/campaignHandler.js';
-import DonationManager from '../backend/donationHandler.js';
-import ImageHandler from '../backend/imageHandler.js';
-import { validateToken } from '../backend/JWTHandler.js';
+import { UserManager } from '../backend/services/userHandler.js';
+import CampaignManager from '../backend/services/campaignHandler.js';
+import DonationManager from '../backend/services/donationHandler.js';
+import ImageHandler from '../backend/services/imageHandler.js';
+import { validateToken } from '../backend/services/JWTHandler.js';
 import * as dbHandler from '../backend/dbHandler.js';
 
 const mockUserManager = UserManager as jest.Mocked<typeof UserManager>;
