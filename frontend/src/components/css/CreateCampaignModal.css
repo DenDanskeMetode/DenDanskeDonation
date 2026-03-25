@@ -24,6 +24,8 @@
   flex: 1;
   overflow-y: auto;
   padding-top: 8px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-overlay.closing {
