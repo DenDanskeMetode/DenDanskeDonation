@@ -32,5 +32,8 @@ hashScript.js
 # compiled ts
 dist/
 
-#claude config
+# claude config
 .claude
+
+# docker throwup
+server/

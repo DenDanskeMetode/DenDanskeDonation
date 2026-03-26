@@ -196,3 +196,10 @@
 ### Presentation setup (Design)
 * 15:40 - 18:40
 * Felix
+
+### starting email service
+* 10:15 - 11:30
+* 22:00 - 23:10
+* Christian
+
+
