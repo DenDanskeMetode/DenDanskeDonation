@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './css/DonationReceiptModal.css';
 
 const DANISH_MONTHS = [
@@ -29,7 +30,7 @@ function DonationReceiptModal({ donation, donorName, onClose }) {
     setTimeout(onClose, 260);
   }
 
-  return (
+  return createPortal(
     <div className={`receipt-overlay${closing ? ' closing' : ''}`} onClick={handleClose}>
       <div className="receipt-sheet" onClick={(e) => e.stopPropagation()}>
         <button className="receipt-close-btn" onClick={handleClose} aria-label="Luk">
@@ -78,7 +79,8 @@ function DonationReceiptModal({ donation, donorName, onClose }) {
 
         <button className="receipt-done-btn" onClick={handleClose}>Luk</button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

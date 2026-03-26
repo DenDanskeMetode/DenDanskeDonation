@@ -61,6 +61,7 @@ function DesktopFilterSidebar({ activeFilters, setActiveFilters }) {
   }
 
   return (
+    <div className="sidebar-sticky-wrapper">
     <aside className="desktop-filter-sidebar">
       <div className="dsf-header">
         <span className="dsf-title">Filtrer</span>
@@ -90,12 +91,14 @@ function DesktopFilterSidebar({ activeFilters, setActiveFilters }) {
       <div className="dsf-divider" />
       {renderSection('type', 'Indsamlingstype', TYPE_OPTIONS)}
     </aside>
+    </div>
   );
 }
 
 function Home() {
   const campaigns = useCampaignsStore((state) => state.campaigns);
   const fetchCampaigns = useCampaignsStore((state) => state.fetchCampaigns);
+  const pollCampaigns = useCampaignsStore((state) => state.pollCampaigns);
   const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
   const navigate = useNavigate();
@@ -130,7 +133,9 @@ function Home() {
         navigate('/login');
       }
     });
-  }, [fetchCampaigns, navigate]);
+    const interval = setInterval(pollCampaigns, 5000);
+    return () => clearInterval(interval);
+  }, [fetchCampaigns, pollCampaigns, navigate]);
 
   const filterCount = Object.values(activeFilters).reduce(
     (sum, set) => sum + (set?.size || 0), 0
@@ -212,13 +217,11 @@ function Home() {
             </button>
           </div>
           <button className="profile-btn" onClick={() => navigate('/profile')}>
-            {user?.avatar?.startsWith('/api/images/')
-              ? <img src={user.avatar} alt="" className="profile-btn-avatar" />
-              : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                </svg>
-            }
+            <img
+              src={user?.avatar?.startsWith('/api/images/') ? user.avatar : '/images/default-avatar.jpg'}
+              alt=""
+              className="profile-btn-avatar"
+            />
           </button>
         </div>
 
