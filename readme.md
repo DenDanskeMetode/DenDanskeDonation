@@ -1,1 +1,1 @@
-Cool awesome project!
+Cool awesome project! You can make epic donations
